@@ -338,7 +338,13 @@ while ( my $line = <BFASTA>) {
 		
 		if (my ($M) = $var =~ m/(\d+)[MX=]/) { $curr_pos += $M; } # match, only update the current position
 		elsif (my ($I) = $var =~ m/(\d+)I/)  {
-			substr($seq,($curr_pos+$before-$c5p),0,"-" x $I);  #insert x gap in the REFERENCE since insertion. Must correct with $around and soft clipping
+			
+			if(($curr_pos+$before-$c5p) > length($seq)) {
+				substr($seq,length($seq),0,"-" x $I); 
+			}
+			else {
+				substr($seq,($curr_pos+$before-$c5p),0,"-" x $I);  #insert x gap in the REFERENCE since insertion. Must correct with $around and soft clipping
+			}
 			$curr_pos  += $I;
 			$nbIns += $I;
 			#print "insert $I gaps at $curr_pos - $c5p ".($curr_pos+$before-$c5p)."\n";
