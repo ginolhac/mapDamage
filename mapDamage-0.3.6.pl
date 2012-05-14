@@ -1427,8 +1427,12 @@ sub initializeHash { # for map
 }	
 sub checkExecutable {
      
-	die ("samtools is not present in your \$PATH\n") unless `which samtools 2>&1` =~ /samtools$/; 
-	die ("bedtools is not present in your \$PATH\n") unless `which bedtools 2>&1` =~ /bedtools$/;
+        my $check = 0;
+	$check+=1 if `which samtools 2>&1` =~ /samtools$/;
+	die ("samtools is not present in your \$PATH\n") unless $check == 1; 
+	$check+=1 if `which bedtools 2>&1` =~ /bedtools$/;
+	$check+=1  if `which fastaFromBed 2>&1` =~ /fastaFromBed$/;
+	die ("bedtools is not present in your \$PATH\n") unless $check > 1;
 }
 sub checkFastaRef { # for map
 	
