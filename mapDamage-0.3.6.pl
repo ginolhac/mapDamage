@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
 
-# mapDamage.pl version 0.3.5, 120324
 
 # Add option -c to chained the three commands in a row with standard plot
 # added the plot options to be passed from map ->merge -> plot
@@ -34,7 +33,7 @@ use strict;
 use warnings;
 use Getopt::Std;
 
-my $version = "0.3.5";
+my $version = "0.3.6";
 
 &printUsage if (@ARGV < 1);
 
@@ -558,10 +557,12 @@ foreach my $chr (sort {$a cmp $b } keys(%$reference2)) {
 		my $strand = $read->{$key}{strand};
 		foreach my $i (1..scalar(@temp))	{
 			${${$nuclComp{-scalar(@temp)+$i-1}}{$strand}}{$temp[$i-1]}++; 
+			#print "before read $read->{$key}{name} letter $temp[$i-1] pos $i record (".(-scalar(@temp)+$i-1).")\n"
 		}
 		@temp = split(//,$read->{$key}{after}); # compute base composition of region AFTER
 		foreach my $i (1..scalar(@temp))	{
 			${${$nuclComp{99999+$i}}{$strand}}{$temp[$i-1]}++; 
+			#print "after read $read->{$key}{name} letter $temp[$i-1] pos $i (".(99999+$i).")\n"
 		}
 		
 		my $nbDel=0;
