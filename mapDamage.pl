@@ -1290,7 +1290,7 @@ print FILEF "lines(-sumhit\$vec,sumhit\$V2,xlim=c(-$opts{l},-1),ylim=c(0,$opts{m
 print FILEF "dev.off()\n";
 close (FILEF);
 print "plotting using R, it may take a while...\n";
-system("R CMD BATCH mapDamage.R");
+system("Rscript $folder/mapDamage.R $folder/mapDamage.Rout");
 print "pdf FragMisincorporation_$title.pdf generated\n";
 exit 0;
 }
