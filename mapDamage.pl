@@ -1087,14 +1087,14 @@ if($opts{m} != 0.3){
 	if($opts{m} <= 0 or $opts{m} > 1) {die("y plot limit must be >= 0 and < 1\n");}
 }
 
-my $file = "mapDamage.R";
+my $file = "$folder/mapDamage.R";
 open(FILEF,">$file") or die("Cannot open file $file\n");
 print FILEF "com<-read.csv(file=\"$folder/dnaFrag.all.txt\",sep=\"\\t\")\n";
 print FILEF "idx <- (com\$Pos > 99999) & (com\$Pos < 200000)\n";
 print FILEF "com\$Pos[idx] <- com\$Pos[idx] - 299999\n";
 print FILEF "idx <- (com\$Pos > 199999)\n";
 print FILEF "com\$Pos[idx] = -com\$Pos[idx] - 1\n";
-print FILEF "pdf(file=\"FragMisincorporation_$title.pdf\", title=\"mapDamage-$version $title\")\npar(oma=c(4,2,2,2),mar=c(1,2,1,1))\nlayout(matrix(c(1,2,3,4,5,6,7,8,9,9,10,10), 3, 4, byrow=TRUE))\n";
+print FILEF "pdf(file=\"$folder/FragMisincorporation_$title.pdf\", title=\"mapDamage-$version $title\")\npar(oma=c(4,2,2,2),mar=c(1,2,1,1))\nlayout(matrix(c(1,2,3,4,5,6,7,8,9,9,10,10), 3, 4, byrow=TRUE))\n";
 # for letter A, before - read
 print FILEF "n<-numeric\nplot(com\$Pos,com\$A/com\$Tot,pch='.',xlim=c(-$opts{a},$opts{a}),ylim=c(0,0.5),col=\"blue\",main=\"A\",";
 print FILEF "cex.axis=0.8,las=2,xlab=\"\",ylab=\"\",lab=c(".(2*$opts{a}).",6,0.2), axes=FALSE)\n";
