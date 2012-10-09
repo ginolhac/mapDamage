@@ -49,9 +49,9 @@ exit(0);
 
 sub map {
 
-my %opts = (i=>undef, d=>undef, l=>70, a=>10, f=>undef, r=>undef, j=>undef, u=>undef, k=>undef, c=>undef, m=>undef, b=>undef, t=>undef,  );
+my %opts = (i=>undef, d=>undef, l=>70, a=>10, f=>undef, r=>undef, j=>undef, u=>undef, k=>undef, c=>undef, m=>undef, b=>undef, t=>undef, n=>-1 );
 
-getopts('i:d:r:fl:a:j:ukcm:b:y:t:',\%opts);
+getopts('i:d:r:fl:a:j:ukcm:b:y:t:n:',\%opts);
 
 if(defined($opts{i}) and defined($opts{r})) { # mandatory options
     
@@ -87,6 +87,7 @@ my $types	= 'nuclComp';
 my $typesRev	= 'nuclCompReverse';
 my $max=0;
 my $cpt = 0;
+my $index = 0;
 my $i = 0;
 my $j=0;
 
@@ -140,7 +141,7 @@ undef($first);
 # filtered file written, trimmed for multiple hits or / and second file
 open(F_READ,"$fileOUT") or die ("Cannot open main file: $fileOUT\n");
 
-$cpt=0; 
+$index=0; 
 
 # initializing lengthDistrib & opening file to write distrib
 $lengthDistrib = initializeHash(0,1000,'+','-',%$lengthDistrib);
@@ -163,7 +164,16 @@ while ( my $line = <F_READ>  ){ # store in RAM read information
 	# 8 inferred insert size, forget about it
 	# 9 read sequence
 	# 10 read quality phred score
-	$cpt++;	# increment counter, read will be indexed by 1-offset
+	$index++;	# increment counter, read will be indexed by 1-offset
+
+	# Reservoir sampling, limit number of reads to value set via -n if positive
+	if (($opts{n} > 0) && ($index > $opts{n})) {
+	    $cpt=int(rand($index)) + 1;
+	    next if ($cpt > $opts{n});
+	} 
+	else {
+	    $cpt=$index;
+	}
 	
 	if($temp[1] & 0x0010) {	$read->{$cpt}{strand} = 16; } # at this step, unmapped read were removed
 	else { $read->{$cpt}{strand} = 0; }
@@ -185,22 +195,27 @@ while ( my $line = <F_READ>  ){ # store in RAM read information
 	else { print "Problem with SAM format(sequence field)! $temp[9]\n";exit 1 }
 	my $posEnd = $temp[3] + length($temp[9]); 
 	$read->{$cpt}{endPos} = $posEnd;
-
-	# compute size length 
-	my $lg = length($read->{$cpt}{seq});
-	if($max < $lg) {
-		$max = $lg;
-	}
-	if ( $read->{$cpt}{strand} & 0x0010) {
-		
-		$lengthDistrib->{'-'}{$lg}++;	
-	}	
-	else {
-		$lengthDistrib->{'+'}{$lg}++;
-	}	
 }
 close F_READ;
-print "$cpt reads put into RAM\n";
+print keys(%$read) . " reads put into RAM\n";
+
+
+foreach my $value (values(%$read)) {
+    # compute size length 
+    my $lg = length($value->{seq});
+    if($max < $lg) {
+	$max = $lg;
+    }
+
+    if ( $value->{strand} & 0x0010) {
+	$lengthDistrib->{'-'}{$lg}++;	
+    }	
+    else {
+	$lengthDistrib->{'+'}{$lg}++;
+    }	    
+}				
+
+
 
 # before writing results, create folder
 # with user name if provided via -d option
@@ -1510,8 +1525,8 @@ USAGE: $0 map -i input_SAM/BAM -d directory -r reference_fasta -l read_length -a
 	-b : the number of reference nucleotides to consider for ploting base composition in the region located upstream and downstream of every read [default: 10]
 	-y : graphical y-axis limit for nucleotide misincorporation frequencies [default: 0.30]
 	-m : read length, in nucleotides, considered for plotting nucleotide misincorporations [default: 25]
+        -n : use at most N randomly selected reads, if set to a positive value [default: -1]
 	\n";
-
 }
 
 sub printUsageMerge{
