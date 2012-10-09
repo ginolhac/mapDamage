@@ -230,7 +230,7 @@ if ( $max > $seqLength ) {
 print "recovery of genomic regions (-$around to +$around nt around match alignment)\n";
 open(F_FASTA,"$dbFasta") or die "Cannot open file: $dbFasta\n";
 
-my $bedFile = "$inputAncient.bed";
+my $bedFile = "$folder/genomic_regions.bed";
 open(BED, ">$bedFile") or die ("Can't write the bed file $bedFile\n");
 
 foreach my $key (sort {$a <=> $b} keys(%$read))	{
@@ -282,7 +282,7 @@ print "Genomic regions were written in $bedFile\n";
 print "Retrieving genomic regions using fastaFromBed, could take a while...\n";
 &checkFileEmpty($bedFile);
 open(BED, "$bedFile") or die("Cannot read file $bedFile\n");
-my $bedFasta = "${inputAncient}_ref.tab";
+my $bedFasta = "$folder/genomic_sequences.tab";
 system("fastaFromBed -fi $dbFasta -bed $bedFile -fo $bedFasta -tab");
 &checkFileEmpty($bedFasta);
 print "All genomic regions retrieved and written in $bedFasta, reading this file...\n";
