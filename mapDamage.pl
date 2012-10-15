@@ -224,6 +224,15 @@ elsif(defined($opts{u})){ $folder = "results_".$opts{i}.".filtered"; $folder =~ 
 else {$folder  = "results_".$opts{i}; $folder =~ s/\.bam/.sam/;}
 mkdir($folder);
 
+# Cannot proceed if the BAM was empty
+if ($cpt == 0) {
+    print "Cannot proceed: Input was did not contain any records.\n";
+    open(FLAG,">$folder/README") or die "Cannot open file: $folder/README\n";
+    print FLAG "Could not generate tables: Input was did not contain any records.\n";
+    close FLAG;
+    exit 0;
+}
+
 # write Distriblength one file per strand
 open(PLUS,">$folder/lengthDistribStrd+.txt") or die "Cannot open file: $folder/lengthDistribStrd+.txt\n";
 print PLUS "Length\tOccurences\n";
