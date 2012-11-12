@@ -62,12 +62,16 @@ def printComp(comp, op, out):
       for std in comp[ref][end].keys():
         if end == '5p':
           for i in range((-1*op.around), (op.length+1)):
+            if i == 0:
+              continue
             out.write("%s\t%s\t%s\t%d" % (ref, end, std, i))
             for base in mapdamage.seq.letters:
               out.write("\t%d" % comp[ref][end][std][base][i])
             out.write("\n")
         else:
           for i in range((-1*op.length), (op.around+1)):
+            if i == 0:
+              continue
             out.write("%s\t%s\t%s\t%d" % (ref, end, std, i))
             for base in mapdamage.seq.letters:
               out.write("\t%d" % comp[ref][end][std][base][i])

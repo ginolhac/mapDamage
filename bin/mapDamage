@@ -38,45 +38,6 @@ plot damage patterns from a SAM/BAM file
 """
 
 
-def getCoordinates(read):
-  
-  if read.is_reverse: 
-    fivep = read.aend
-    threep = read.pos
-  else:
-    fivep = read.pos
-    threep = read.aend
-  return(fivep, threep)
-
-
-def getAround(coord, chrom, reflengths, lg, ref):
-  
-  i = j = 0
-  before = after = ""
-  if min(coord) - lg > 0:
-    i = min(coord) - lg
-  if max(coord) + lg > reflengths[chrom]:
-    j = reflengths[chrom]
-  else:
-    j = max(coord) + lg 
-
-  before = ref.fetch(chrom, i, min(coord))
-  after = ref.fetch(chrom, max(coord), j)
-  
-  return(before, after)
-
-
-def writeFasta(read,ref, seq, refseq, start, end, before, after, fout):
-  if read.is_reverse:
-    std = '-'
-  else:
-    std = '+'
-  # output coordinate in 1-based offset
-  fout.write(">%s:%d-%d\n%s\n" % (ref, start-len(before), start, before))
-  fout.write(">%s:%d-%d\n%s\n>%s_%s\n%s\n" % (ref, start+1, end+1, refseq, read.qname, std, seq))
-  fout.write(">%s:%d-%d\n%s\n" % (ref, end+2, end+2+len(after), after))
-
-
 
 """ main """
 
@@ -139,11 +100,11 @@ def main(argv):
         continue
 
     # external coordinates 5' and 3' , 0-based offset
-    coordinate = getCoordinates(read)
+    coordinate = mapdamage.align.getCoordinates(read)
     # fetch reference name, chromosome or contig names 
     chrom = in_bam.getrname(read.tid)
  
-    (before, after) = getAround(coordinate, chrom, reflengths, options.around, ref)
+    (before, after) = mapdamage.align.getAround(coordinate, chrom, reflengths, options.around, ref)
     refseq = ref.fetch(chrom, min(coordinate), max(coordinate))
     # read.query contains aligned sequences while read.seq is the read itself 
     seq = read.query 
@@ -175,7 +136,7 @@ def main(argv):
 
 
     if options.fasta:
-      writeFasta(read, chrom, seq, refseq, min(coordinate), max(coordinate), before, after, ff)
+      mapdamage.seq.writeFasta(read, chrom, seq, refseq, min(coordinate), max(coordinate), before, after, ff)
 
     if options.verbose:
       if counter % 50000 == 0:

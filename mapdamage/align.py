@@ -17,6 +17,34 @@ import sys
 #X 8 sequence mismatch
 
 
+def getCoordinates(read):
+  
+  if read.is_reverse: 
+    fivep = read.aend
+    threep = read.pos
+  else:
+    fivep = read.pos
+    threep = read.aend
+  return(fivep, threep)
+
+
+def getAround(coord, chrom, reflengths, lg, ref):
+  
+  i = j = 0
+  before = after = ""
+  if min(coord) - lg > 0:
+    i = min(coord) - lg
+  if max(coord) + lg > reflengths[chrom]:
+    j = reflengths[chrom]
+  else:
+    j = max(coord) + lg 
+
+  before = ref.fetch(chrom, i, min(coord))
+  after = ref.fetch(chrom, max(coord), j)
+  
+  return(before, after)
+
+
 def align(cigarlist, seq, ref):
 
   ins = parseCigar(cigarlist, 1)
