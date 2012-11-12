@@ -2,6 +2,11 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 
+#functionname <- function(arg1, arg2)
+#{
+#  return(...)
+#}
+
 #print(args)
 
 comp<-args[1]
@@ -15,14 +20,14 @@ title<-args[8]
 version<-args[9]
 
 com<-read.table(file=comp,sep="\t", header=TRUE, as.is=TRUE)
-five=subset(com, End=="5p")
-three=subset(com, End=="3p")
+five=subset(com, End=="5p" & Std=='+')
+three=subset(com, End=="3p" & Std=='+')
 pdf(file=pdfout, title=paste("mapDamage-",version," plot"))
 par(oma=c(4,2,2,2),mar=c(1,2,1,1))
 layout(matrix(c(1,2,3,4,5,6,7,8,9,9,10,10), 3, 4, byrow=TRUE))
 # for letter A, before - read
 n<-numeric
-plot(five$Pos,five$A/five$Tot,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+plot(five$Pos,five$A/five$Tot,pch=46,xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A", cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)
 axis(side=1,labels=FALSE)
 mtext("Frequency",side=2,line=2.5,cex=0.7)
