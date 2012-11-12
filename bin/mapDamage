@@ -74,11 +74,6 @@ def main(argv):
       print("\t%d references are assumed in SAM/BAM file, for a total of %d nucleotides" % (len(reflengths), sum(reflengths.values())))
     print("\tWriting results to '%s/'" % options.folder)
 
-  # reference in BAM must be in the fasta reference file
-  #if not referenceCheck():
-    #sys.stderr.write("Error: %s reference was not found in the reference file provided\n" % (chrom))
-  #  return 1
-
 
   # open file handler to write alignements in fasta format
   if options.fasta:
