@@ -2,21 +2,20 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 
-#functionname <- function(tab, around)
+#bcompbefore <- function(tab, base, coul, around)
 #{
-#n<-numeric
-#plot(tab$Pos,tab$A/five$Total,pch=46,xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A", cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
-#axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)
-#axis(side=1,labels=FALSE)
-#mtext("Frequency",side=2,line=2.5,cex=0.7)
-#rect(0.5,0,around+0.5,0.5,border="darkgrey")
-#segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
-#for (i in c(-around:-1, 1:around)) { 
-#  n<-c(n,mean(five$A[(five$Pos==i)]/five$Total[(five$Pos==i)],na.rm=T)) 
-#}
-#points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="blue",type="b")
+#    n<-numeric
+#    plot(tab$Pos,tab$base/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col=coul,main=base, cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+#    axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)
+#    axis(side=1,labels=FALSE)
+#    mtext("Frequency",side=2,line=2.5,cex=0.7)
+#    rect(0.5,0,around+0.5,0.5,border="darkgrey")
+#    segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
+#    for (i in c(-around:-1, 1:around)) { 
+#	n<-c(n,mean(tab$base[(tab$Pos==i)]/tab$Total[(tab$Pos==i)],na.rm=T)) 
+#    }
+#    points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col=coul,type="b")
  
-#  return(...)
 #}
 
 #print(args)
@@ -38,6 +37,8 @@ pdf(file=pdfout, title=paste("mapDamage-",version," plot"))
 par(oma=c(4,2,2,2),mar=c(1,2,1,1))
 layout(matrix(c(1,2,3,4,5,6,7,8,9,9,10,10), 3, 4, byrow=TRUE))
 # for letter A, before - read
+base="A"
+#bcompbefore(five, base, "blue", around)
 n<-numeric
 plot(five$Pos,five$A/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A", cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)

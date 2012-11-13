@@ -39,7 +39,7 @@ def plot(op):
     return 0
   else:
     print("Error: plotting with R failed")
-    return 0
+    return 1
 
 def checkROneLib(name):
     """
