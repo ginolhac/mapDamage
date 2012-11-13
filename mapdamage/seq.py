@@ -21,6 +21,17 @@ def writeFasta(read,ref, seq, refseq, start, end, before, after, fout):
 
 def revcomp(seq):
 
+  """ return reverse complemented string """
+
   return seq.translate(table)[::-1]
 
+
+def recordLg(read, coordinate, tab):
+
+  std = '-' if read.is_reverse else '+'
+  lg = (max(coordinate) - min(coordinate))
+  if not read.is_paired:
+    tab[std][lg] = tab[std][lg] + 1
+    
+  return(tab)
 

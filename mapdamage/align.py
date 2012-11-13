@@ -18,17 +18,19 @@ import sys
 
 
 def getCoordinates(read):  
-  if read.is_reverse: 
-    fivep = read.aend
-    threep = read.pos
-  else:
-    fivep = read.pos
-    threep = read.aend
+
+  """ return external coordinates of aligned read bases """
+
+  fivep = read.aend if read.is_reverse else read.pos
+  threep = read.pos if read.is_reverse else read.aend
+  
   return(fivep, threep)
 
 
 def getAround(coord, chrom, reflengths, lg, ref):
   
+  """ return reference sequences before and after the read
+  check for extremities and return what available """
   i = j = 0
   before = after = ""
   if min(coord) - lg > 0:
@@ -46,28 +48,29 @@ def getAround(coord, chrom, reflengths, lg, ref):
 
 def align(cigarlist, seq, ref):
 
- # print("0 %s\n0 %s" % (ref, seq))
+  """ insert gaps according to the cigar string 
+  deletion: gaps to be inserted into read sequences, 
+  insertions: gaps to be inserted into reference sequence """  
   ins = parseCigar(cigarlist, 1)
   lref=list(ref)
   for nb,idx in ins:
     lref[idx:idx] = ["-"]*nb 
   ref = "".join(lref)
- # print("1 %s\n1 %s" % (ref, seq))
   delet = parseCigar(cigarlist, 2)
   lread = list(seq)
   for nb,idx in delet:
     lread[idx:idx] = ["-"]*nb 
   seq = "".join(lread)
- # print("2 %s\n2 %s" % (ref, seq))
 
   return(seq, ref)
 
 
 def getMis(read, seq, refseq, ref, length, tab, end):
-  if read.is_reverse:
-    std = '-'
-  else:
-    std = '+'
+
+  """ count mismatches using aligned reference and read,
+  must be redone since N in reference were randomly replaced by any bases """
+  std = '-' if read.is_reverse else '+'
+  
   for (i, nt) in enumerate(zip(seq, refseq)):
     if i > length-1:
       continue
@@ -77,16 +80,17 @@ def getMis(read, seq, refseq, ref, length, tab, end):
       # record base composition in the reference, only A, C, G, T
       tab[ref][end][std]['Total'][i] += 1
       tab[ref][end][std][nt[1]][i] += 1
-      #print("+1 for %s pos %d std %s (%d)" % (nt[1], i, std, misincorp[ref][std][nt[1]][i] ))
     try:
       # discard identities
       tab[ref][end][std][mut][i] += 1
-      #print("+1 for %s pos %d std %s (%d)" % (mut, i, std, misincorp[ref][std][mut][i] ))
     except:
       continue
 
 
 def parseCigar(cigarlist, op):
+
+  """ for a specific operation (mismach, match, insertion, deletion... see above
+  return occurences and index in the alignment """
   tlength = 0
   coordinate = []
   # count matches, indels and mismatches
@@ -99,9 +103,9 @@ def parseCigar(cigarlist, op):
   return coordinate
 
 
-# to be simplified without ref as arguments and subtables
+# to be simplified using subtables
 
-def recordSoftClipping(sclip, read, ref, tab, lg):
+def recordSoftClipping(sclip, read, tab, lg):
   #def update_table(left, right):
   #      subtable = tab[ref][left]['-']['S']
   #      for i in range(0,min(sclip[idx][0], lg)):
@@ -114,26 +118,26 @@ def recordSoftClipping(sclip, read, ref, tab, lg):
     if idx == 0:
       if read.is_reverse:
         for i in range(0,min(sclip[idx][0], lg)):
-          tab[ref]['3p']['-']['S'][i] += 1
+          tab['3p']['-']['S'][i] += 1
         for i in range(min(len(read.seq)-sclip[idx][0], lg), min(len(read.seq), lg)):
-          tab[ref]['5p']['-']['S'][i] += 1
+          tab['5p']['-']['S'][i] += 1
       else: 
         for i in range(0,min(sclip[idx][0], lg)):
-          tab[ref]['5p']['+']['S'][i] += 1
+          tab['5p']['+']['S'][i] += 1
         for i in range(min(len(read.seq)-sclip[idx][0], lg), min(len(read.seq), lg)):
-          tab[ref]['3p']['+']['S'][i] += 1
+          tab['3p']['+']['S'][i] += 1
     # for soft clip at right side
     else:
       if read.is_reverse:
         for i in range(0,min(sclip[idx][0], lg)):
-          tab[ref]['5p']['-']['S'][i] += 1
+          tab['5p']['-']['S'][i] += 1
         for i in range(min(len(read.seq)-sclip[idx][0], lg), min(len(read.seq), lg)):
-          tab[ref]['3p']['-']['S'][i] += 1
+          tab['3p']['-']['S'][i] += 1
       else:
         for i in range(0,min(sclip[idx][0], lg)):
-          tab[ref]['3p']['+']['S'][i] += 1
+          tab['3p']['+']['S'][i] += 1
         for i in range(min(len(read.seq)-sclip[idx][0], lg), min(len(read.seq), lg)):
-          tab[ref]['5p']['+']['S'][i] += 1
+          tab['5p']['+']['S'][i] += 1
 
 
 

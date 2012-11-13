@@ -52,14 +52,14 @@ def initializeComp(tab, ref, around,lg):
 
 
 def printComp(comp, op, out):
-  # print header
+
   out.write("# table produced by mapDamage version %s\n" % __version__)
   out.write("# using mapped file %s and %s as reference file\n" % (op.filename, op.ref))
   out.write("# Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads\n")
   out.write("Chr\tEnd\tStd\tPos\t%s\n" % ("\t".join(mapdamage.seq.letters)))
   for ref in sorted(comp):
-    for end in comp[ref].keys():
-      for std in comp[ref][end].keys():
+    for end in comp[ref]:
+      for std in comp[ref][end]:
         if end == '5p':
           for i in range((-1*op.around), (op.length+1)):
             if i == 0:
@@ -77,5 +77,22 @@ def printComp(comp, op, out):
               out.write("\t%d" % comp[ref][end][std][base][i])
             out.write("\n")
 
+def initializeLg(tab):
+  
+  tab = recursivedefaultdict() 
+  for std in ('+','-'):
+    tab[std] = collections.defaultdict(int)
 
+  return(tab)
+
+def printLg(tab, op, out):
+
+  out.write("# table produced by mapDamage version %s\n" % __version__)
+  out.write("# using mapped file %s and %s as reference file\n" % (op.filename, op.ref))
+  out.write("# Std: strand of reads\n")
+  out.write("Std\tLength\tOccurences \n")
+  for std in tab:
+    for i in tab[std]:
+      # write Length in 1-base offset
+      out.write("%s\t%d\t%d\n" % (std, i+1, tab[std][i]))
 

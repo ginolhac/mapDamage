@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: ASCII -*-
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 
 import sys
@@ -27,8 +27,8 @@ import mapdamage
 
 plot damage patterns from a SAM/BAM file
 
-:Author: Aurelien Ginolhac
-:Contact: aginolhac@snm.ku.dk
+:Author: Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson
+:Contact: aginolhac@snm.ku.dk, MSchubert@snm.ku.dk, h??@snm.ku.dk
 :Date: November 2012
 :Type: tool
 :Input: SAM/BAM
@@ -54,19 +54,24 @@ def main(argv):
   # open mapped reads and corresponding reference
   in_bam = pysam.Samfile(options.filename)
   ref = pysam.Fastafile(options.ref)
-
-  # for misincorporation patterns, to record mismaches, from 5'-ends
-  misincorp = {}
-  # for fragmentation patterns, record base compositions in the reference around
-  dnacomp = {}
-
   # fetch all references and associated lengths in nucleotides
   reflengths = dict(zip(in_bam.references, in_bam.lengths))
-  # initialize table of misincorporations with zeros
+
+
+  # for misincorporation patterns, record mismaches
+  misincorp = {}
+  # initialize table of misincorporations
   misincorp = mapdamage.tables.initializeMut(misincorp, reflengths, options.length)
-  # initialise base composition tables with zeros
+
+  # for fragmentation patterns, record base compositions
+  dnacomp = {}
+  # initialize base composition table
   dnacomp =  mapdamage.tables.initializeComp(dnacomp, reflengths, options.around, options.length)
 
+  # for length distributions
+  lgdistrib = {}
+  # initialize lg distribution table
+  lgdistrib =  mapdamage.tables.initializeLg(lgdistrib)
 
   if not options.quiet:
     print("\tReading from '%s'" % options.filename)
@@ -95,6 +100,8 @@ def main(argv):
     
     # external coordinates 5' and 3' , 0-based offset
     coordinate = mapdamage.align.getCoordinates(read)
+    # record aligned length for single-end reads
+    lgdistrib = mapdamage.seq.recordLg(read, coordinate, lgdistrib)
     # fetch reference name, chromosome or contig names 
     chrom = in_bam.getrname(read.tid)
  
@@ -116,7 +123,7 @@ def main(argv):
 
     # record soft clippinp when present
     if len(mapdamage.align.parseCigar(read.cigar, 4)) > 0:
-      mapdamage.align.recordSoftClipping(mapdamage.align.parseCigar(read.cigar, 4), read, chrom, misincorp, options.length)
+      mapdamage.align.recordSoftClipping(mapdamage.align.parseCigar(read.cigar, 4), read, misincorp[chrom], options.length)
     
     # count misincorparations by comparing read and reference base by base
     mapdamage.align.getMis(read, seq, refseq, chrom, options.length, misincorp, '5p')
@@ -148,14 +155,17 @@ def main(argv):
   # open file handlers to output results
   fmut = open(options.folder+"/"+"misincorporation.txt", 'w')
   fcomp = open(options.folder+"/"+"dnacomp.txt", 'w')
+  flg = open(options.folder+"/"+"lgdistribution.txt", 'w')
 
   # write summary tables to disk
   mapdamage.tables.printMut(misincorp, options, fmut)
   mapdamage.tables.printComp(dnacomp, options, fcomp)
+  mapdamage.tables.printLg(lgdistrib, options, flg)
 
   # close file handlers
   fmut.close()
   fcomp.close()
+  flg.close()
 
   # plot using R
   if not options.nor:
