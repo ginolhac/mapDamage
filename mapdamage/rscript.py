@@ -4,10 +4,11 @@ import os
 import subprocess
 from subprocess import CalledProcessError,check_call
 from mapdamage.version import __version__
+import mapdamage
 
 def constructRPath (name):
     """Construct a path to the R script given the name"""
-    return(os.path.join(__path__[0], "Rscripts",name))
+    return(os.path.join(mapdamage.__path__[0], "Rscripts",name))
 
 def plot(op):
   """
