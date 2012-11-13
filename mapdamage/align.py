@@ -17,18 +17,49 @@ import sys
 #X 8 sequence mismatch
 
 
+def getCoordinates(read):  
+  if read.is_reverse: 
+    fivep = read.aend
+    threep = read.pos
+  else:
+    fivep = read.pos
+    threep = read.aend
+  return(fivep, threep)
+
+
+def getAround(coord, chrom, reflengths, lg, ref):
+  
+  i = j = 0
+  before = after = ""
+  if min(coord) - lg > 0:
+    i = min(coord) - lg
+  if max(coord) + lg > reflengths[chrom]:
+    j = reflengths[chrom]
+  else:
+    j = max(coord) + lg 
+
+  before = ref.fetch(chrom, i, min(coord))
+  after = ref.fetch(chrom, max(coord), j)
+  
+  return(before, after)
+
+
 def align(cigarlist, seq, ref):
 
+ # print("0 %s\n0 %s" % (ref, seq))
   ins = parseCigar(cigarlist, 1)
   lref=list(ref)
   for nb,idx in ins:
     lref[idx:idx] = ["-"]*nb 
   ref = "".join(lref)
+ # print("1 %s\n1 %s" % (ref, seq))
   delet = parseCigar(cigarlist, 2)
   lread = list(seq)
   for nb,idx in delet:
     lread[idx:idx] = ["-"]*nb 
   seq = "".join(lread)
+ # print("2 %s\n2 %s" % (ref, seq))
+
   return(seq, ref)
 
 
@@ -44,7 +75,7 @@ def getMis(read, seq, refseq, ref, length, tab, end):
     mut = nt[1]+">"+nt[0] # mutation such as ref>read
     if nt[1] in mapdamage.seq.letters:
       # record base composition in the reference, only A, C, G, T
-      tab[ref][end][std]['Tot'][i] += 1
+      tab[ref][end][std]['Total'][i] += 1
       tab[ref][end][std][nt[1]][i] += 1
       #print("+1 for %s pos %d std %s (%d)" % (nt[1], i, std, misincorp[ref][std][nt[1]][i] ))
     try:
@@ -58,12 +89,8 @@ def getMis(read, seq, refseq, ref, length, tab, end):
 def parseCigar(cigarlist, op):
   tlength = 0
   coordinate = []
-  # for deletion, count matches, softclip and deletion 
-  if op == 2:
-      oplist = (0, 2, 4, 7, 8)
-  # for insertion and softclip count matches, softclip and insertions
-  else:
-      oplist = (0, 1, 4, 7, 8)
+  # count matches, indels and mismatches
+  oplist = (0, 1, 2, 7, 8)
   for operation,length in cigarlist:
     if operation == op:
         coordinate.append([length, tlength])

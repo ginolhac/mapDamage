@@ -21,7 +21,6 @@ except ImportError, e:
 import pysam
 
 import mapdamage
-from mapdamage.version import __version__
 
 
 """
@@ -36,45 +35,6 @@ plot damage patterns from a SAM/BAM file
 :Output: tabulated tables, pdf
 
 """
-
-
-def getCoordinates(read):
-  
-  if read.is_reverse: 
-    fivep = read.aend
-    threep = read.pos
-  else:
-    fivep = read.pos
-    threep = read.aend
-  return(fivep, threep)
-
-
-def getAround(coord, chrom, reflengths, lg, ref):
-  
-  i = j = 0
-  before = after = ""
-  if min(coord) - lg > 0:
-    i = min(coord) - lg
-  if max(coord) + lg > reflengths[chrom]:
-    j = reflengths[chrom]
-  else:
-    j = max(coord) + lg 
-
-  before = ref.fetch(chrom, i, min(coord))
-  after = ref.fetch(chrom, max(coord), j)
-  
-  return(before, after)
-
-
-def writeFasta(read,ref, seq, refseq, start, end, before, after, fout):
-  if read.is_reverse:
-    std = '-'
-  else:
-    std = '+'
-  # output coordinate in 1-based offset
-  fout.write(">%s:%d-%d\n%s\n" % (ref, start-len(before), start, before))
-  fout.write(">%s:%d-%d\n%s\n>%s_%s\n%s\n" % (ref, start+1, end+1, refseq, read.qname, std, seq))
-  fout.write(">%s:%d-%d\n%s\n" % (ref, end+2, end+2+len(after), after))
 
 
 
@@ -123,11 +83,6 @@ def main(argv):
       print("\t%d references are assumed in SAM/BAM file, for a total of %d nucleotides" % (len(reflengths), sum(reflengths.values())))
     print("\tWriting results to '%s/'" % options.folder)
 
-  # reference in BAM must be in the fasta reference file
-  #if not referenceCheck():
-    #sys.stderr.write("Error: %s reference was not found in the reference file provided\n" % (chrom))
-  #  return 1
-
 
   # open file handler to write alignements in fasta format
   if options.fasta:
@@ -146,13 +101,13 @@ def main(argv):
     if read.is_unmapped: 
         filtered +=1
         continue
-
+    
     # external coordinates 5' and 3' , 0-based offset
-    coordinate = getCoordinates(read)
+    coordinate = mapdamage.align.getCoordinates(read)
     # fetch reference name, chromosome or contig names 
     chrom = in_bam.getrname(read.tid)
  
-    (before, after) = getAround(coordinate, chrom, reflengths, options.around, ref)
+    (before, after) = mapdamage.align.getAround(coordinate, chrom, reflengths, options.around, ref)
     refseq = ref.fetch(chrom, min(coordinate), max(coordinate))
     # read.query contains aligned sequences while read.seq is the read itself 
     seq = read.query 
@@ -162,10 +117,10 @@ def main(argv):
     
     # reverse complement read and reference when mapped reverse strand
     if read.is_reverse:
-      refseq = refseq.translate(mapdamage.seq.table)[::-1]
-      seq = seq.translate(mapdamage.seq.table)[::-1]
-      beforerev = after.translate(mapdamage.seq.table)[::-1]
-      after = before.translate(mapdamage.seq.table)[::-1]
+      refseq = mapdamage.seq.revcomp(refseq)
+      seq =  mapdamage.seq.revcomp(seq)
+      beforerev =  mapdamage.seq.revcomp(after)
+      after =  mapdamage.seq.revcomp(before)
       before = beforerev
 
     # record soft clippinp when present
@@ -184,7 +139,7 @@ def main(argv):
 
 
     if options.fasta:
-      writeFasta(read, chrom, seq, refseq, min(coordinate), max(coordinate), before, after, ff)
+      mapdamage.seq.writeFasta(read, chrom, seq, refseq, min(coordinate), max(coordinate), before, after, ff)
 
     if options.verbose:
       if counter % 50000 == 0:

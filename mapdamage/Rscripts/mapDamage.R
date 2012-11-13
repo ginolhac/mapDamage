@@ -2,6 +2,23 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 
+#functionname <- function(tab, around)
+#{
+#n<-numeric
+#plot(tab$Pos,tab$A/five$Total,pch=46,xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A", cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+#axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)
+#axis(side=1,labels=FALSE)
+#mtext("Frequency",side=2,line=2.5,cex=0.7)
+#rect(0.5,0,around+0.5,0.5,border="darkgrey")
+#segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
+#for (i in c(-around:-1, 1:around)) { 
+#  n<-c(n,mean(five$A[(five$Pos==i)]/five$Total[(five$Pos==i)],na.rm=T)) 
+#}
+#points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="blue",type="b")
+ 
+#  return(...)
+#}
+
 #print(args)
 
 comp<-args[1]
@@ -22,96 +39,96 @@ par(oma=c(4,2,2,2),mar=c(1,2,1,1))
 layout(matrix(c(1,2,3,4,5,6,7,8,9,9,10,10), 3, 4, byrow=TRUE))
 # for letter A, before - read
 n<-numeric
-plot(five$Pos,five$A/five$Tot,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+plot(five$Pos,five$A/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A", cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)
 axis(side=1,labels=FALSE)
 mtext("Frequency",side=2,line=2.5,cex=0.7)
 rect(0.5,0,around+0.5,0.5,border="darkgrey")
 segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(five$A[(five$Pos==i)]/five$Tot[(five$Pos==i)],na.rm=T)) 
+  n<-c(n,mean(five$A[(five$Pos==i)]/five$Total[(five$Pos==i)],na.rm=T)) 
 }
 points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="blue",type="b")
 # for letter A, read - after
 n<-numeric
-plot(three$Pos,three$A/three$Tot,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+plot(three$Pos,three$A/three$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=4,labels=FALSE,line=0,las=2,cex.axis=0.8)
 axis(side=1,labels=FALSE)
 rect(-around-0.5,0,-0.5,0.5,border="darkgrey")
 segments(-around-0.5,0,-around-0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(three$A[(three$Pos==i)]/three$Tot[(three$Pos==i)],na.rm=T)) 
+  n<-c(n,mean(three$A[(three$Pos==i)]/three$Total[(three$Pos==i)],na.rm=T)) 
 }
 points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="blue",type="b")							 
 mtext(title, side=3, line=1.2, cex=0.8)
 
 # for letter C, before - read
 n<-numeric
-plot(five$Pos,five$C/five$Tot,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="green",main="C",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+plot(five$Pos,five$C/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="green",main="C",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=2,labels=FALSE,line=0,las=2,cex.axis=0.8)
 axis(side=1,labels=FALSE)
 rect(0.5,0,around+0.5,0.5,border="darkgrey")
 segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(five$C[(five$Pos==i)]/five$Tot[(five$Pos==i)],na.rm=T)) 
+  n<-c(n,mean(five$C[(five$Pos==i)]/five$Total[(five$Pos==i)],na.rm=T)) 
 }
 points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="green",type="b")
 # for letter C, read - after
 n<-numeric
-plot(three$Pos,three$C/three$Tot,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="green",main="C",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+plot(three$Pos,three$C/three$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="green",main="C",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=4,labels=TRUE,line=0,las=2,cex.axis=0.8)
 axis(side=1,labels=FALSE)
 rect(-around-0.5,0,-0.5,0.5,border="darkgrey")
 segments(-around-0.5,0,-around-0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(three$C[(three$Pos==i)]/three$Tot[(three$Pos==i)],na.rm=T)) 
+  n<-c(n,mean(three$C[(three$Pos==i)]/three$Total[(three$Pos==i)],na.rm=T)) 
 }
 points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="green",type="b")							 
 
 # for letter G, before - read
 n<-numeric
-plot(five$Pos,five$G/five$Tot,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="black",main="G",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+plot(five$Pos,five$G/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="black",main="G",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)
 axis(side=1,labels=TRUE, las=2, cex.axis=0.6)
 mtext("Frequency",side=2,line=2.5,cex=0.7)
 rect(0.5,0,around+0.5,0.5,border="darkgrey")
 segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(five$G[(five$Pos==i)]/five$Tot[(five$Pos==i)],na.rm=T)) 
+  n<-c(n,mean(five$G[(five$Pos==i)]/five$Total[(five$Pos==i)],na.rm=T)) 
 }
 points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="black",type="b")
 # for letter G, read - after
 n<-numeric
-plot(three$Pos,three$G/three$Tot,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="black",main="G",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+plot(three$Pos,three$G/three$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="black",main="G",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=4,labels=FALSE,line=0,las=2,cex.axis=0.8)
 axis(side=1,labels=TRUE, las=2, cex.axis=0.6)
 rect(-around-0.5,0,-0.5,0.5,border="darkgrey")
 segments(-around-0.5,0,-around-0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(three$G[(three$Pos==i)]/three$Tot[(three$Pos==i)],na.rm=T)) 
+  n<-c(n,mean(three$G[(three$Pos==i)]/three$Total[(three$Pos==i)],na.rm=T)) 
 }
 points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="black",type="b")
 
 # for letter T, before - read
 n<-numeric
-plot(five$Pos,five$T/five$Tot,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="red",main="T",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+plot(five$Pos,five$T/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="red",main="T",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=2,labels=FALSE,line=0,las=2,cex.axis=0.8)
 axis(side=1,labels=TRUE, las=2, cex.axis=0.6)
 rect(0.5,0,around+0.5,0.5,border="darkgrey")
 segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(five$T[(five$Pos==i)]/five$Tot[(five$Pos==i)],na.rm=T)) 
+  n<-c(n,mean(five$T[(five$Pos==i)]/five$Total[(five$Pos==i)],na.rm=T)) 
 }
 points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="red",type="b")
 # for letter T, read - after
 n<-numeric
-plot(three$Pos,three$T/three$Tot,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="red",main="T",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
+plot(three$Pos,three$T/three$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="red",main="T",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=4,labels=TRUE,line=0,las=2,cex.axis=0.8)
 axis(side=1,labels=TRUE, las=2, cex.axis=0.6)
 rect(-around-0.5,0,-0.5,0.5,border="darkgrey")
 segments(-around-0.5,0,-around-0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(three$T[(three$Pos==i)]/three$Tot[(three$Pos==i)],na.rm=T)) 
+  n<-c(n,mean(three$T[(three$Pos==i)]/three$Total[(three$Pos==i)],na.rm=T)) 
 }
 points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="red",type="b")
 
@@ -139,7 +156,7 @@ for (i in vec)	{
   sumhit[i,15]<-sum(nucl[(nucl$Pos == i), "T>-"])/sum(nucl[(nucl$Pos == i), "T"])
   sumhit[i,16]<-sum(nucl[(nucl$Pos == i), "C>-"])/sum(nucl[(nucl$Pos == i), "C"])
   sumhit[i,17]<-sum(nucl[(nucl$Pos == i), "G>-"])/sum(nucl[(nucl$Pos == i), "G"])
-  sumhit[i,22]<-sum(nucl[(nucl$Pos == i), "S"])/sum(nucl[(nucl$Pos == i), "Tot"])
+  sumhit[i,22]<-sum(nucl[(nucl$Pos == i), "S"])/sum(nucl[(nucl$Pos == i), "Total"])
   NTs <- c("A", "C", "G", "T")
   for (j in seq(NTs)) {
     insertion[j]<-sprintf("->%s", NTs[j])
@@ -196,7 +213,7 @@ for (i in vec)	{
   sumhit[i,15]<-sum(nucl[(nucl$Pos == i), "T>-"])/sum(nucl[(nucl$Pos == i), "T"])
   sumhit[i,16]<-sum(nucl[(nucl$Pos == i), "C>-"])/sum(nucl[(nucl$Pos == i), "C"])
   sumhit[i,17]<-sum(nucl[(nucl$Pos == i), "G>-"])/sum(nucl[(nucl$Pos == i), "G"])
-  sumhit[i,22]<-sum(nucl[(nucl$Pos == i), "S"])/sum(nucl[(nucl$Pos == i), "Tot"])
+  sumhit[i,22]<-sum(nucl[(nucl$Pos == i), "S"])/sum(nucl[(nucl$Pos == i), "Total"])
   NTs <- c("A", "C", "G", "T")
   for (j in seq(NTs)) {
     insertion[j]<-sprintf("->%s", NTs[j])
