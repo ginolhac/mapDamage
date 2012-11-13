@@ -1,5 +1,9 @@
 #Load the libraries
-source(paste(path_to_mapDamage_stats,"checkLibraries.R",sep=""))
+library(inline)
+library(ggplot2)
+library(Rcpp)
+library(gam)
+library(RcppGSL)
 
 #Miscellaneous functions 
 source(paste(path_to_mapDamage_stats,"function.R",sep=""))

@@ -186,7 +186,7 @@ def options(args):
   
   if checkRLib():
     #Check for R libraries
-    print("Warning, at least one of the following R libraries is not present: inline, ggplot2 and gam.\nThe Bayesian estimation is then disabled\n")
+    print("The Bayesian estimation is then disabled\n")
     options.nos = True
 
     

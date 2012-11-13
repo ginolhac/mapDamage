@@ -41,18 +41,42 @@ def plot(op):
     print("Error: plotting with R failed")
     return 1
 
-def checkRLib():
+def checkROneLib(name):
     """
-    Checks if the necessary R libraries are here, terminate 
-    the program otherwise
+    Checks if a necessary R library is here
     """
     try:
       rpa=constructRPath("stats/checkLibraries.R")
-      s=check_call(["Rscript",rpa],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+      s=check_call(["Rscript",rpa,"--args",name],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
       return 0
     except CalledProcessError:
-      #Can't find the script or missing the libraries
       return 1
+    
+
+def checkRLib():
+    """
+    Checks if the necessary R libraries are here, signal 
+    otherwise
+    """
+    libs = ["inline","ggplot2","gam","Rcpp","RcppGSL"]
+    missing_lib = []
+    for lib in libs:
+        #Check the libraries
+        if checkROneLib(lib):
+            #found a missing library
+            missing_lib.append(lib)
+    if (len(missing_lib)>1):
+        #Grammar Nazi has arrived
+        last_ele = missing_lib.pop()
+        print ("Missing the following R libraries "+", ".join(missing_lib)+" and "+last_ele)
+        return 1
+    elif (len(missing_lib)==1):
+        print ("Missing the following R library "+missing_lib[0])
+        return 1
+    else :
+        #No missing libraries
+        return 0
+
 
 def runStats(o):
     """
