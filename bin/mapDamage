@@ -28,7 +28,7 @@ import mapdamage
 plot damage patterns from a SAM/BAM file
 
 :Author: Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson
-:Contact: aginolhac@snm.ku.dk, MSchubert@snm.ku.dk, h??@snm.ku.dk
+:Contact: aginolhac@snm.ku.dk, MSchubert@snm.ku.dk, jonsson.hakon@gmail.com
 :Date: November 2012
 :Type: tool
 :Input: SAM/BAM
@@ -51,6 +51,15 @@ def main(argv):
     mapdamage.rscript.plot(options)
     return 0
 
+  #Run the Bayesian estimation if the matrix construction is done
+  if options.stats_only:
+    if options.nos:
+        print("Cannot use the Bayesian estimation if missing libraries, terminating the program")
+        raise SystemExit
+    else:
+        mapdamage.rscript.runStats(options)
+        return 0
+  
   # open mapped reads and corresponding reference
   in_bam = pysam.Samfile(options.filename)
   ref = pysam.Fastafile(options.ref)
@@ -170,6 +179,12 @@ def main(argv):
   # plot using R
   if not options.nor:
     mapdamage.rscript.plot(options)
+
+  #Run the Bayesian estimation
+  if not options.nos:
+    mapdamage.rscript.runStats(options)
+
+  
 
   return 0
 

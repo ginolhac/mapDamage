@@ -8,7 +8,7 @@ setup(
     author='Aurelien Ginolhac',
     author_email='aginolhac@snm.ku.dk',
     packages=['mapdamage'],
-    package_data={'mapdamage': ['Rscripts/*.R']},
+    package_data={'mapdamage': ['Rscripts/*.R','Rscripts/stats/*.R']},
     scripts=['bin/mapDamage'],
     url='http://',
     license='LICENSE.txt',
