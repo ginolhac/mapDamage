@@ -7,6 +7,7 @@ import sys
 
 import mapdamage
 from mapdamage.version import __version__
+from mapdamage.rscript import checkRLib
 
 def fileExist(filename):
 
@@ -55,15 +56,17 @@ def checkPyVersion():
 
 def options(args):
 
-  parser = OptionParser("%prog [options] -i BAMfile -r reference.fasta", version=__version__, \
+  parser = OptionParser("%prog [options] -i BAMfile -r reference.fasta\n\nUse option -h or --help for help", version=__version__, \
           epilog="report bugs to aginolhac@snm.ku.dk")
-  args = OptionGroup(parser, "Mandatory arguments")
+
+  args = OptionGroup(parser, "Input files")
   args.add_option("-r", "--reference", help="Reference file in FASTA format",\
         action="store", dest="ref")
   args.add_option("-i", "--input", help="SAM/BAM file, must contain a valid header", \
         action="store", type="string", dest="filename")
+  
   parser.add_option_group(args)
-  group = OptionGroup(parser, "Options")
+  group = OptionGroup(parser, "General options")
   group.add_option("-l","--length",dest="length",help="read length, in nucleotides to consider [%default]",\
           type = int, default=70,action="store")
   group.add_option("-a","--around",dest="around",help="nucleotides to retrieve before/after reads [%default]",\
@@ -81,9 +84,10 @@ def options(args):
   group.add_option("-v","--verbose",dest="verbose",help="Display progression information during parsing",\
         default=False,action="store_true")
   group.add_option("--noplot",dest="nor",help=SUPPRESS_HELP, default=False, action="store_true")
-
   parser.add_option_group(group)
-  group2 = OptionGroup(parser, "Option graphics")
+
+
+  group2 = OptionGroup(parser, "Options for graphics")
   group2.add_option("-y","--ymax",dest="ymax",\
           help="graphical y-axis limit for nucleotide misincorporation frequencies [%default]", type = float, default=0.3,action="store")
   group2.add_option("-m","--readplot",dest="readplot",\
@@ -95,10 +99,39 @@ def options(args):
   group2.add_option("-t","--title",dest="title",\
           help="title used for both graph and filename [%default]",\
           type = "string", default="plot",action="store")
-
   parser.add_option_group(group2)
-  (options, args) = parser.parse_args()
 
+  #Then the plethora of optional options for the statistical estimation ..
+  group3 = OptionGroup(parser,"Options for the statistical estimation")
+  group3.add_option("","--rand",dest="rand",\
+          help="Number of random starting points for the likelihood optimization  [%default]", type = int, default=30,action="store")
+  group3.add_option("","--burn",dest="burn",\
+          help="Number of burnin iterations  [%default]", type = int, default=10000,action="store")
+  group3.add_option("","--adjust",dest="adjust",\
+          help="Number of adjust proposal variance parameters iterations  [%default]", type = int, default=10,action="store")
+  group3.add_option("","--iter",dest="iter",\
+          help="Number of final MCMC iterations  [%default]", type = int, default=50000,action="store")
+  group3.add_option("","--forward",dest="forward",\
+          help="Using only the 5' end of the seqs  [%default]", type = int, default=0,action="store")
+  group3.add_option("","--fix_disp",dest="fix_disp",\
+          help="Fix dispersion in the overhangs  [%default]", type = int, default=1,action="store")
+  group3.add_option("","--same_hangs",dest="same_hangs",\
+          help="The overhangs are the same on both sides  [%default]", type = int, default=1,action="store")
+  group3.add_option("","--fix_nicks",dest="fix_nicks",\
+          help="Fix the nick frequency vector nu else estimate it with GAM  [%default]", type = int, default=0,action="store")
+  group3.add_option("","--double_stranded",dest="double_stranded",\
+          help="Double stranded protocol [%default]", type = int, default=1,action="store")
+  group3.add_option("","--seq_length",dest="seq_length",\
+          help="How long sequence to use from each side [%default]", type = int, default=12,action="store")
+  group3.add_option("--stats_only",dest="stats_only",help="Run only statistical estimation from a valid result folder",\
+        default=False,action="store_true")
+  group3.add_option("--nostats",dest="nos",help=SUPPRESS_HELP, default=False, action="store_true")
+
+  parser.add_option_group(group3)
+
+  #Parse the arguments
+  (options, args) = parser.parse_args()
+  
   # check python version
   if not checkPyVersion():
     return None
@@ -150,6 +183,13 @@ def options(args):
   if not whereis('Rscript'):
     print("Warning, Rscript is not in your PATH, plotting is disabled")
     options.nor = True
+  
+  if checkRLib():
+    #Check for R libraries
+    print("Warning, at least one of the following R libraries is not present: inline, ggplot2 and gam.\nThe Bayesian estimation is then disabled\n")
+    options.nos = True
+
+    
 
   return options
 
