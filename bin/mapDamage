@@ -47,15 +47,19 @@ def main(argv):
     return 1
   
   # plot using R if results folder already done
-  if options.plotonly:
-    mapdamage.rscript.plot(options)
-    return 0
+  if options.plotonly: 
+    if options.nos:
+      print("Cannot use plot damage patterns if R is missing, terminating the program")
+      raise SystemExit
+    else:
+      mapdamage.rscript.plot(options)
+      return 0
 
-  #Run the Bayesian estimation if the matrix construction is done
+  # Run the Bayesian estimation if the matrix construction is done
   if options.stats_only:
     if options.nos:
-        print("Cannot use the Bayesian estimation if missing libraries, terminating the program")
-        raise SystemExit
+      print("Cannot use the Bayesian estimation if missing libraries, terminating the program")
+      raise SystemExit
     else:
         mapdamage.rscript.runStats(options)
         return 0
@@ -66,6 +70,9 @@ def main(argv):
   # fetch all references and associated lengths in nucleotides
   reflengths = dict(zip(in_bam.references, in_bam.lengths))
 
+  failengths = mapdamage.seq.fastaIndex(options.ref+".fai")
+
+  raise SystemExit
 
   # for misincorporation patterns, record mismaches
   misincorp = {}
@@ -161,26 +168,20 @@ def main(argv):
   if options.fasta:
     ff.close()
 
-  # open file handlers to output results
-  fmut = open(options.folder+"/"+"misincorporation.txt", 'w')
-  fcomp = open(options.folder+"/"+"dnacomp.txt", 'w')
-  flg = open(options.folder+"/"+"lgdistribution.txt", 'w')
+  # output results, write summary tables to disk
+  with open(options.folder+"/"+"misincorporation.txt", 'w') as fmut:
+    mapdamage.tables.printMut(misincorp, options, fmut)
+  with open(options.folder+"/"+"dnacomp.txt", 'w') as fcomp:
+    mapdamage.tables.printComp(dnacomp, options, fcomp)
+  with open(options.folder+"/"+"lgdistribution.txt", 'w') as flg:
+     mapdamage.tables.printLg(lgdistrib, options, flg)
 
-  # write summary tables to disk
-  mapdamage.tables.printMut(misincorp, options, fmut)
-  mapdamage.tables.printComp(dnacomp, options, fcomp)
-  mapdamage.tables.printLg(lgdistrib, options, flg)
-
-  # close file handlers
-  fmut.close()
-  fcomp.close()
-  flg.close()
 
   # plot using R
   if not options.nor:
     mapdamage.rscript.plot(options)
 
-  #Run the Bayesian estimation
+  # Run the Bayesian estimation
   if not options.nos:
     mapdamage.rscript.runStats(options)
 

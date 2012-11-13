@@ -28,10 +28,31 @@ def revcomp(seq):
 
 def recordLg(read, coordinate, tab):
 
+  """ record global length distribution
+  don't record paired reads as they are normally not used for aDNA """
+
   std = '-' if read.is_reverse else '+'
   lg = (max(coordinate) - min(coordinate))
   if not read.is_paired:
     tab[std][lg] = tab[std][lg] + 1
     
   return(tab)
+
+
+def fastaIndex(f):
+
+  """ from a fasta index file, fai, return dictionary of references:lengths """
+  
+  fai = {}
+  with open(f, 'r') as fh:
+    for line in f:
+      ref = line.strip().split('\t')
+      try:
+        print(ref)
+      except IndexError:
+        sys.stderr.write("Error: fai file is not correct %s\n" % f)
+
+
+  return 0
+
 

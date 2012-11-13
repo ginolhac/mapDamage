@@ -44,7 +44,7 @@ def whereis(program):
   return None
 
 def checkPyVersion():
-  req_version = (2,5)
+  req_version = (2,6)
   cur_version = sys.version_info
 
   if cur_version >= req_version:
@@ -57,7 +57,7 @@ def checkPyVersion():
 def options(args):
 
   parser = OptionParser("%prog [options] -i BAMfile -r reference.fasta\n\nUse option -h or --help for help", version=__version__, \
-          epilog="report bugs to aginolhac@snm.ku.dk")
+          epilog="report bugs to aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com")
 
   args = OptionGroup(parser, "Input files")
   args.add_option("-r", "--reference", help="Reference file in FASTA format",\
