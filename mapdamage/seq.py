@@ -45,14 +45,22 @@ def fastaIndex(f):
   
   fai = {}
   with open(f, 'r') as fh:
-    for line in f:
+    for line in fh:
       ref = line.strip().split('\t')
       try:
-        print(ref)
-      except IndexError:
+        fai[ref[0]] = ref[1]
+      except:
         sys.stderr.write("Error: fai file is not correct %s\n" % f)
+  return fai
 
+def checkRef(failengths, reflengths):
 
-  return 0
+  """ check if all references in BAM/SAM are present in the fasta reference with same length """
+  for ref in reflengths:
+    lg = int(failengths.get(ref, 0))
+    if lg != reflengths[ref]:
+      print("\nreference %s is not correct in the fasta file" % ref)
+      return None
 
+  return True
 

@@ -49,8 +49,8 @@ def main(argv):
   # plot using R if results folder already done
   if options.plotonly: 
     if options.nos:
-      print("Cannot use plot damage patterns if R is missing, terminating the program")
-      raise SystemExit
+      sysstderr.write("Cannot use plot damage patterns if R is missing, terminating the program\n")
+      return 1
     else:
       mapdamage.rscript.plot(options)
       return 0
@@ -58,21 +58,23 @@ def main(argv):
   # Run the Bayesian estimation if the matrix construction is done
   if options.stats_only:
     if options.nos:
-      print("Cannot use the Bayesian estimation if missing libraries, terminating the program")
-      raise SystemExit
+      sysstderr.write("Cannot use the Bayesian estimation if missing libraries, terminating the program\n")
+      return 1
     else:
-        mapdamage.rscript.runStats(options)
-        return 0
+      mapdamage.rscript.runStats(options)
+      return 0
   
   # open mapped reads and corresponding reference
   in_bam = pysam.Samfile(options.filename)
-  ref = pysam.Fastafile(options.ref)
+
   # fetch all references and associated lengths in nucleotides
+  ref = pysam.Fastafile(options.ref)
   reflengths = dict(zip(in_bam.references, in_bam.lengths))
-
+  # check if references in SAM/BAM are the same in the fasta reference file
   failengths = mapdamage.seq.fastaIndex(options.ref+".fai")
-
-  raise SystemExit
+  if not mapdamage.seq.checkRef(failengths, reflengths):
+    sys.stderr.write("References in input files are not identical, terminating the program\n")
+    return 1
 
   # for misincorporation patterns, record mismaches
   misincorp = {}
