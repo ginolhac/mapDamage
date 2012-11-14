@@ -67,8 +67,8 @@ def main(argv):
   
   # plot using R if results folder already done
   if options.plotonly: 
-    if options.nos:
-      sysstderr.write("Cannot use plot damage patterns if R is missing, terminating the program\n")
+    if options.nor:
+      sys.stderr.write("Cannot use plot damage patterns if R is missing, terminating the program\n")
       return 1
     else:
       mapdamage.rscript.plot(options)

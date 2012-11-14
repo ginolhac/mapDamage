@@ -90,7 +90,7 @@ points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="green",type="b")
 n<-numeric
 plot(five$Pos,five$G/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="black",main="G",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=TRUE, las=2, cex.axis=0.6)
+axis(side=1,labels=seq(-around,around,1),at=seq(-around,around,1),las=2, cex.axis=0.6)
 mtext("Frequency",side=2,line=2.5,cex=0.7)
 rect(0.5,0,around+0.5,0.5,border="darkgrey")
 segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
@@ -102,7 +102,7 @@ points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="black",type="b")
 n<-numeric
 plot(three$Pos,three$G/three$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="black",main="G",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=4,labels=FALSE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=TRUE, las=2, cex.axis=0.6)
+axis(side=1,labels=seq(-around,around,1),at=seq(-around,around,1),las=2, cex.axis=0.6)
 rect(-around-0.5,0,-0.5,0.5,border="darkgrey")
 segments(-around-0.5,0,-around-0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
@@ -114,7 +114,7 @@ points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="black",type="b")
 n<-numeric
 plot(five$Pos,five$T/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="red",main="T",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=2,labels=FALSE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=TRUE, las=2, cex.axis=0.6)
+axis(side=1,labels=seq(-around,around,1),at=seq(-around,around,1),las=2, cex.axis=0.6)
 rect(0.5,0,around+0.5,0.5,border="darkgrey")
 segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
@@ -125,7 +125,7 @@ points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="red",type="b")
 n<-numeric
 plot(three$Pos,three$T/three$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="red",main="T",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
 axis(side=4,labels=TRUE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=TRUE, las=2, cex.axis=0.6)
+axis(side=1,labels=seq(-around,around,1),at=seq(-around,around,1),las=2, cex.axis=0.6)
 rect(-around-0.5,0,-0.5,0.5,border="darkgrey")
 segments(-around-0.5,0,-around-0.5,0.5,col="white",lwd=2)
 for (i in c(-around:-1, 1:around)) { 
@@ -166,8 +166,8 @@ for (i in vec)	{
 }
 # write a table for C>T frequencies
 write.table(sumhit[,3], file=paste(folder,"/5pCtoT_freq.txt",sep=""), sep="\t", quote=FALSE, col.names=c("pos\t5pC>T"))
-plot(sumhit$vec,sumhit$V4,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1,type="l",xlab="",ylab="",cex.lab=0.8,cex.axis=0.6,las=2,lab=c(lg,11,0.1),axes=FALSE)
-axis(side=1,labels=TRUE,las=2,cex.axis=0.8)
+plot(sumhit$vec,sumhit$V4,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1,type="l",xlab="",ylab="",axes=FALSE)
+axis(side=1,labels=seq(1,lg,1),at=seq(1,lg,1),las=2,cex.axis=0.8)
 axis(side=2,labels=TRUE,las=2,cex.axis=0.8)
 rect(0.5,-0.01,lg+0.5,ymax,border="darkgrey")
 segments(lg+0.5,-0.01,lg+0.5,ymax,col="white",lwd=2)
@@ -185,7 +185,7 @@ lines(sumhit$vec,sumhit$V13,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1)
 lines(sumhit$vec,sumhit$V22,xlim=c(1,lg),ylim=c(0,ymax),col="orange",lwd=1)
 # deletio in green
 lines(sumhit$vec,(sumhit$V14+sumhit$V15+sumhit$V16+sumhit$V17),xlim=c(1,lg),ylim=c(0,ymax),col="green",lwd=1)
-# insertions in pruple
+# insertions in purple
 lines(sumhit$vec,(sumhit$V18+sumhit$V19+sumhit$V20+sumhit$V21),xlim=c(1,lg),ylim=c(0,ymax),col="purple",lwd=1)
 # G>A in blue
 lines(sumhit$vec,sumhit$V2,xlim=c(1,lg),ylim=c(0,ymax),col="blue",lwd=2)
@@ -223,8 +223,8 @@ for (i in vec)	{
 }
 #  write a table for G>A frequencies
 write.table(sumhit[,2], file=paste(folder,"/5pGtoA_freq.txt",sep=""), sep="\t", quote=FALSE, col.names=c("pos\t5pG>A"))
-plot(-sumhit$vec,sumhit$V4,xlim=c(-lg, -1),ylim=c(0,ymax),col="grey",lwd=1,type="l",xlab="",ylab="",cex.lab=0.8,cex.axis=0.6,las=2,lab=c(lg,11,0.1),axes=FALSE)
-axis(side=1,labels=TRUE,las=2,cex.axis=0.8)
+plot(-sumhit$vec,sumhit$V4,xlim=c(-lg, -1),ylim=c(0,ymax),col="grey",lwd=1,type="l",xlab="",ylab="",axes=FALSE)
+axis(side=1,labels=seq(-lg,-1,1),at=seq(-lg,-1,1),las=2,cex.axis=0.8)
 axis(side=4,labels=TRUE,las=2,cex.axis=0.8)
 rect(-lg-0.5,-0.01,-0.5,ymax,border="darkgrey")
 segments(-lg-0.5,-0.01,-lg-0.5,ymax,col="white",lwd=2)

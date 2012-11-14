@@ -11,9 +11,7 @@ class recursivedefaultdict(collections.defaultdict):
     self.default_factory = type(self) 
 
 
-
-def initializeMut(tab, ref, lg):
-    
+def initializeMut(tab, ref, lg):  
   tab = recursivedefaultdict() 
   for contig in ref:
     for end in ('5p','3p'):
@@ -21,17 +19,17 @@ def initializeMut(tab, ref, lg):
         for mut in mapdamage.seq.header:
           tab[contig][end][std][mut] = collections.defaultdict(int)
   
-  return(tab)
+  return tab
+
 
 def printMut(mut, op, out):
-  # print header
   out.write("# table produced by mapDamage version %s\n" % __version__)
   out.write("# using mapped file %s and %s as reference file\n" % (op.filename, op.ref))
   out.write("# Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads\n")
   out.write("Chr\tEnd\tStd\tPos\t%s\t%s\n" % ("\t".join(mapdamage.seq.letters),"\t".join(mapdamage.seq.mutations)))
   for ref in sorted(mut):
-    for end in mut[ref].keys():
-      for std in mut[ref][end].keys():
+    for end in mut[ref]:
+      for std in mut[ref][end]:
         for i in range(op.length):
           out.write("%s\t%s\t%s\t%d" % (ref, end, std, i+1))
           for mis in mapdamage.seq.header:
@@ -39,8 +37,7 @@ def printMut(mut, op, out):
           out.write("\n")
 
 
-def initializeComp(tab, ref, around,lg):
-    
+def initializeComp(tab, ref, around,lg): 
   tab = recursivedefaultdict() 
   for contig in ref:
     for end in ('5p','3p'):
@@ -48,11 +45,10 @@ def initializeComp(tab, ref, around,lg):
         for letters in mapdamage.seq.letters:
           tab[contig][end][std][letters] = collections.defaultdict(int)
 
-  return(tab)
+  return tab
 
 
 def printComp(comp, op, out):
-
   out.write("# table produced by mapDamage version %s\n" % __version__)
   out.write("# using mapped file %s and %s as reference file\n" % (op.filename, op.ref))
   out.write("# Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads\n")
@@ -77,16 +73,16 @@ def printComp(comp, op, out):
               out.write("\t%d" % comp[ref][end][std][base][i])
             out.write("\n")
 
+
 def initializeLg(tab):
-  
   tab = recursivedefaultdict() 
   for std in ('+','-'):
     tab[std] = collections.defaultdict(int)
 
-  return(tab)
+  return tab 
+
 
 def printLg(tab, op, out):
-
   out.write("# table produced by mapDamage version %s\n" % __version__)
   out.write("# using mapped file %s and %s as reference file\n" % (op.filename, op.ref))
   out.write("# Std: strand of reads\n")

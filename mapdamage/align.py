@@ -24,7 +24,7 @@ def getCoordinates(read):
   fivep = read.aend if read.is_reverse else read.pos
   threep = read.pos if read.is_reverse else read.aend
   
-  return(fivep, threep)
+  return fivep, threep
 
 
 def getAround(coord, chrom, reflengths, lg, ref):
@@ -43,7 +43,7 @@ def getAround(coord, chrom, reflengths, lg, ref):
   before = ref.fetch(chrom, i, min(coord))
   after = ref.fetch(chrom, max(coord), j)
   
-  return(before, after)
+  return before, after
 
 
 def align(cigarlist, seq, ref):
@@ -62,7 +62,7 @@ def align(cigarlist, seq, ref):
     lread[idx:idx] = ["-"]*nb 
   seq = "".join(lread)
 
-  return(seq, ref)
+  return seq, ref
 
 
 def getMis(read, seq, refseq, ref, length, tab, end):
@@ -74,7 +74,7 @@ def getMis(read, seq, refseq, ref, length, tab, end):
   for (i, nt) in enumerate(zip(seq, refseq)):
     if i > length-1:
       continue
-    # print("pos %d compare %s and %s" % (i, nt[0], nt[1]))
+    #print("pos %d compare %s and %s" % (i, nt[0], nt[1]))
     mut = nt[1]+">"+nt[0] # mutation such as ref>read
     if nt[1] in mapdamage.seq.letters:
       # record base composition in the reference, only A, C, G, T

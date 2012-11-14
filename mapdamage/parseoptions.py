@@ -10,7 +10,6 @@ from mapdamage.version import __version__
 from mapdamage.rscript import checkRLib
 
 def fileExist(filename):
-
   if os.path.exists(filename) and not os.path.isdir(filename):
     return True
   elif filename == "-":
@@ -21,7 +20,6 @@ def fileExist(filename):
 
 
 def checkModule(mod):
-
   module = mod.keys()
   url = mod[module[0]]
   try:
@@ -37,13 +35,13 @@ def checkModule(mod):
   return True
 
 
-
 def whereis(program):
   for path in os.environ.get('PATH', '').split(':'):
     if os.path.exists(os.path.join(path, program)) and \
         not os.path.isdir(os.path.join(path, program)):
       return os.path.join(path, program)
   return None
+
 
 def checkPyVersion():
   req_version = (2,6)
@@ -52,12 +50,12 @@ def checkPyVersion():
   if cur_version >= req_version:
    return True
   else:
-   sys.stderr.write("Your Python interpreter is too old. Please consider upgrading to at least %d.%d\n" % (req_version[0], req_version[1]))
+   sys.stderr.write("Your Python interpreter is too old."\
+       "Please consider upgrading to at least %d.%d\n" % (req_version[0], req_version[1]))
    return None
     
 
 def options(args):
-
   parser = OptionParser("%prog [options] -i BAMfile -r reference.fasta\n\nUse option -h or --help for help", version=__version__, \
           epilog="report bugs to aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com")
 
@@ -139,18 +137,20 @@ def options(args):
   if not checkPyVersion():
     return None
 
-  # check mandatory arguments
-  if not options.plotonly and not options.filename:   # if filename is not given
+  # check general arguments
+  if not (options.plotonly or options.stats_only) and not options.filename: 
     parser.error('SAM/BAM file not given')
-  if not options.plotonly and not options.ref:   # if filename is not given
+  if not (options.plotonly or options.stats_only) and not options.ref:
     parser.error('Reference file not given')
-  if not options.plotonly:
+  if not options.plotonly and not options.stats_only:
     if not fileExist(options.filename) or not fileExist(options.ref):
       return None
  
 
   if options.plotonly and not options.folder:
     parser.error('Folder not provided, required with --plotonly')
+  if options.stats_only and not options.folder:
+    parser.error('Folder not provided, required with --stats_only')
 
   # check options 
   if options.length < 0:
@@ -163,7 +163,7 @@ def options(args):
     parser.error('readplot (-m) must be a positive integrer')
   if options.refplot < 0:
     parser.error('refplot (-b) must be a positive integrer')
-  if options.refplot > options.around:
+  if options.refplot > options.around and not options.plotonly:
     parser.error('refplot (-b) must be inferior to around (-a)')
   if options.readplot > options.length:
     parser.error('readplot (-m) must be inferior to length (-l)')
@@ -179,8 +179,8 @@ def options(args):
         parser.error('folder %s is not a valid result folder' % options.folder)
   else:
     os.makedirs(options.folder, mode = 0700)
-    if options.plotonly:
-      sys.stderr.write("Error, %s does not exist while plot only was used\n" % options.folder)
+    if options.plotonly or options.stats_only:
+      sys.stderr.write("Error, %s does not exist while plot/stats only was used\n" % options.folder)
       return None
 
 
@@ -193,8 +193,6 @@ def options(args):
     #Check for R libraries
     print("The Bayesian estimation is then disabled\n")
     options.nos = True
-
-    
 
   return options
 

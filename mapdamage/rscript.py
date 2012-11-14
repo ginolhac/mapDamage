@@ -32,8 +32,8 @@ def plot(op):
   script = constructRPath("mapDamage.R") 
   call = ["Rscript", script, fcomp, title, op.refplot, fmut, op.readplot, op.ymax, op.folder, op.title, __version__]
   code = subprocess.call(map(str, call))
-  #print " ".join(map(str, call))
 
+  #print " ".join(map(str, call))
   if code == 0:
     print("pdf %s generated using R" % title)
     return 0
