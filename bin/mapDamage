@@ -7,7 +7,7 @@ import sys
 import os
 
 """
-Copyright (c) 2012  Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson, Ludovic Orlando
+Copyright (c) 2012  Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson and Ludovic Orlando
 
 Permission is hereby granted, free of charge, to any person obtaining a copy 
 of this software and associated documentation files (the "Software"), 
@@ -90,7 +90,14 @@ def main(argv):
     in_bam = pysam.Samfile(options.filename)
 
   # fetch all references and associated lengths in nucleotides
-  ref = pysam.Fastafile(options.ref)
+  try:
+      ref = pysam.Fastafile(options.ref)
+  except IOError:
+      # Couldn't open the reference file
+      sys.stderr.write("Couldn't open the reference file "+options.ref+" or there are permission problems writing the "+options.ref+".fai file\n")
+      return 1
+
+     
   reflengths = dict(zip(in_bam.references, in_bam.lengths))
   # check if references in SAM/BAM are the same in the fasta reference file
   failengths = mapdamage.seq.fastaIndex(options.ref+".fai")
