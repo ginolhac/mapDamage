@@ -1,1 +1,2 @@
 include mapdamage/Rscripts/mapDamage.R
+include mapdamage/Rscripts/stats/*R

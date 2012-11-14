@@ -13,6 +13,8 @@ def fileExist(filename):
 
   if os.path.exists(filename) and not os.path.isdir(filename):
     return True
+  elif filename == "-":
+    return True
   else:
     sys.stderr.write("Error: '%s' is not a valid file\n" % (filename))
     return None
@@ -60,17 +62,19 @@ def options(args):
           epilog="report bugs to aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com")
 
   args = OptionGroup(parser, "Input files")
+  args.add_option("-i", "--input", help="SAM/BAM file, must contain a valid header, use '-' for reading a BAM from stdin", \
+        action="store", type="string", dest="filename")
   args.add_option("-r", "--reference", help="Reference file in FASTA format",\
         action="store", dest="ref")
-  args.add_option("-i", "--input", help="SAM/BAM file, must contain a valid header", \
-        action="store", type="string", dest="filename")
-  
+ 
   parser.add_option_group(args)
   group = OptionGroup(parser, "General options")
   group.add_option("-l","--length",dest="length",help="read length, in nucleotides to consider [%default]",\
           type = int, default=70,action="store")
   group.add_option("-a","--around",dest="around",help="nucleotides to retrieve before/after reads [%default]",\
           type = int, default=10,action="store")
+  group.add_option("-Q","--minbasequal",dest="minqual",help="minimun base quality Phred score considered [%default]",\
+          type = int, default=0,action="store")
   #group.add_option("-p","--pipe",dest="pipe",help="Read BAM from a pipe, ie. the standard input",\
   #      default=False,action="store_true")
   group.add_option("-d", "--folder", help="folder name to store results [results_FILENAME]", \
@@ -85,8 +89,7 @@ def options(args):
         default=False,action="store_true")
   group.add_option("--noplot",dest="nor",help=SUPPRESS_HELP, default=False, action="store_true")
   parser.add_option_group(group)
-
-
+  # options for plotting damage patterns
   group2 = OptionGroup(parser, "Options for graphics")
   group2.add_option("-y","--ymax",dest="ymax",\
           help="graphical y-axis limit for nucleotide misincorporation frequencies [%default]", type = float, default=0.3,action="store")
@@ -98,10 +101,10 @@ def options(args):
           type= int, default=10,action="store")
   group2.add_option("-t","--title",dest="title",\
           help="title used for both graph and filename [%default]",\
-          type = "string", default="plot",action="store")
+          type="string", default="plot",action="store")
   parser.add_option_group(group2)
 
-  #Then the plethora of optional options for the statistical estimation ..
+  # Then the plethora of optional options for the statistical estimation ..
   group3 = OptionGroup(parser,"Options for the statistical estimation")
   group3.add_option("","--rand",dest="rand",\
           help="Number of random starting points for the likelihood optimization  [%default]", type = int, default=30,action="store")
@@ -141,8 +144,10 @@ def options(args):
     parser.error('SAM/BAM file not given')
   if not options.plotonly and not options.ref:   # if filename is not given
     parser.error('Reference file not given')
-  if not options.plotonly and (not fileExist(options.filename) or not fileExist(options.ref)):
-    return None
+  if not options.plotonly:
+    if not fileExist(options.filename) or not fileExist(options.ref):
+      return None
+ 
 
   if options.plotonly and not options.folder:
     parser.error('Folder not provided, required with --plotonly')

@@ -1,9 +1,44 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from __future__ import print_function
 
 import sys
 import os
+
+"""
+Copyright (c) 2012  Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson, Ludovic Orlando
+
+Permission is hereby granted, free of charge, to any person obtaining a copy 
+of this software and associated documentation files (the "Software"), 
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+and/or sell copies of the Software, and to permit persons to whom 
+the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included 
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+
+"""
+plot and quantify damage patterns from a SAM/BAM file
+
+:Authors: Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson, Ludovic Orlando
+:Contact: aginolhac@snm.ku.dk, MSchubert@snm.ku.dk, jonsson.hakon@gmail.com
+:Date: November 2012
+:Type: tool
+:Input: SAM/BAM
+:Output: tabulated tables, pdf
+
+"""
 
 # check if pysam if available
 module = "pysam"
@@ -19,23 +54,7 @@ except ImportError, e:
   sys.exit(1)
 
 import pysam
-
 import mapdamage
-
-
-"""
-
-plot damage patterns from a SAM/BAM file
-
-:Author: Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson
-:Contact: aginolhac@snm.ku.dk, MSchubert@snm.ku.dk, jonsson.hakon@gmail.com
-:Date: November 2012
-:Type: tool
-:Input: SAM/BAM
-:Output: tabulated tables, pdf
-
-"""
-
 
 
 """ main """
@@ -64,8 +83,11 @@ def main(argv):
       mapdamage.rscript.runStats(options)
       return 0
   
-  # open mapped reads and corresponding reference
-  in_bam = pysam.Samfile(options.filename)
+  # open SAM/BAM file
+  if options.filename == "-":
+    in_bam = pysam.Samfile("-", 'rb')
+  else:
+    in_bam = pysam.Samfile(options.filename)
 
   # fetch all references and associated lengths in nucleotides
   ref = pysam.Fastafile(options.ref)

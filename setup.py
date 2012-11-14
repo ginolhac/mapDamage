@@ -1,12 +1,13 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from distutils.core import setup
 
 setup(
     name='mapdamage',
     version='0.3.7',
-    author='Aurelien Ginolhac',
-    author_email='aginolhac@snm.ku.dk',
+    author='Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson',
+    author_email='aginolhac@snm.ku.dk, MSchubert@snm.ku.dk, jonsson.hakon@gmail.com',
     packages=['mapdamage'],
     package_data={'mapdamage': ['Rscripts/*.R','Rscripts/stats/*.R']},
     scripts=['bin/mapDamage'],
