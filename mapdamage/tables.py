@@ -92,3 +92,35 @@ def printLg(tab, op, out):
       # write Length in 1-base offset
       out.write("%s\t%d\t%d\n" % (std, i+1, tab[std][i]))
 
+def checkDamFreq(folder):
+  """ Bayesian estimation of DNA damages does not work
+  when damage frequencies are too low, i.e < 1% at first position
+  """
+  total = 0.0
+  f = folder+"/5pCtoT_freq.txt"
+  total = sumFreq(f, total)
+  f = folder+"/5pGtoA_freq.txt"
+  total = sumFreq(f, total)
+
+  if total < 0.01:
+    print("Warning: DNA damage levels are too low, bayesian computation is then disabled (%f)\n" % total)
+    return None
+  else:
+
+    return 0
+
+def sumFreq(f, total):
+  try:
+    with open(f, 'r') as fh:
+      for line in fh:
+        freq = line.strip().split('\t')
+        if freq[0] == "1":
+          total += float(freq[1])
+          break
+  except IOError:
+    sys.stderr.write("Error: not a valid result directory\n")
+    raise SystemError
+
+  return total
+
+
