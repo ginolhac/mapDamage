@@ -67,6 +67,9 @@ def options(args):
  
   parser.add_option_group(args)
   group = OptionGroup(parser, "General options")
+  group.add_option("-n", "--downsample", help = "Downsample to a randomly selected fraction of the reads (if 0 < DOWNSAMPLE < 1), or " \
+                   "a fixed number of randomly selected reads (if DOWNSAMPLE >= 1). By default, no downsampling is performed.",
+                   type = float, default = None)
   group.add_option("-l","--length",dest="length",help="read length, in nucleotides to consider [%default]",\
           type = int, default=70,action="store")
   group.add_option("-a","--around",dest="around",help="nucleotides to retrieve before/after reads [%default]",\
@@ -87,6 +90,7 @@ def options(args):
         default=False,action="store_true")
   group.add_option("--noplot",dest="nor",help=SUPPRESS_HELP, default=False, action="store_true")
   parser.add_option_group(group)
+
   # options for plotting damage patterns
   group2 = OptionGroup(parser, "Options for graphics")
   group2.add_option("-y","--ymax",dest="ymax",\
@@ -145,8 +149,12 @@ def options(args):
   if not options.plotonly and not options.stats_only:
     if not fileExist(options.filename) or not fileExist(options.ref):
       return None
- 
-
+  if options.downsample is not None:
+    if options.downsample <= 0:
+      parser.error("-n/--downsample must be a positive value")
+    elif options.downsample >= 1:
+      options.downsample = int(options.downsample)
+  
   if options.plotonly and not options.folder:
     parser.error('Folder not provided, required with --plotonly')
   if options.stats_only and not options.folder:

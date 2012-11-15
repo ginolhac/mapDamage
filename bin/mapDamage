@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import random
 import sys
 import os
 
@@ -45,7 +46,6 @@ module = "pysam"
 url = "http://code.google.com/p/pysam/"
 try:
   __import__(module)
-
 except ImportError, e:
   sys.stderr.write("Error: Could not import required module '%s':\n\t- %s\n" % (module,e))
   sys.stderr.write("       If module is not installed, please download from '%s'.\n" % (url,))
@@ -57,10 +57,25 @@ import pysam
 import mapdamage
 
 
-""" main """
+def downsample_reads(bamfile, downsample_to):
+  if downsample_to is None:
+    return bamfile
+  elif downsample_to < 1:
+    assert downsample_to > 0, "Downsample fraction must be positive, not %s" % downsample_to
+    return (record for record in bamfile if random.random() < downsample_to)
+  else:
+    sample = [None] * downsample_to
+    for (index, record) in enumerate(bamfile):
+      if index >= downsample_to:
+        index = random.randint(0, index)
+        if index >= downsample_to:
+          continue
+      sample[index] = record
+
+    return filter(None, sample)
+
 
 def main(argv):
-
   options = mapdamage.parseoptions.options(argv)
   if not options:
     return 1
@@ -141,7 +156,7 @@ def main(argv):
   counter = filtered = 0
 
   # main loop
-  for read in in_bam:
+  for read in downsample_reads(in_bam, options.downsample):
     counter += 1
     
     if read.is_unmapped: 
