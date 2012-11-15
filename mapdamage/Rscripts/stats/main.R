@@ -133,19 +133,27 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
     #This is for a non linear nick frequency, assumes the G>T and G>A are 
     #mostly due to dna damage patterns do not use for low damage datasets
     te<-(dat[,"C.T"]/dat[,"C"])/(dat[,"G.A"]/dat[,"G"]+dat[,"C.T"]/dat[,"C"])
-    if (cu_pa$forward_only){
-        cu_pa$nuVec  <- predict(gam(te[1:(cu_pa$m)]~s(1:(cu_pa$m))))
-    }else {
-        cu_pa$nuVec  <- c(predict(gam(te[1:(cu_pa$m/2)]~s(1:(cu_pa$m/2)))),
-                          predict(gam(te[(cu_pa$m/2+1):cu_pa$m]~s(1:(cu_pa$m/2)))))
+    if (sum(is.na(te) | te==0 | te==1)!=0 ){
+        write("Warning, To few substitutions to assess the nick frequency, using constant nick frequency instead", stderr())
+        if (cu_pa$forward_only){
+            cu_pa$nuVec <- rep(1,nrow(dat))
+        }else {
+            cu_pa$nuVec <- c(rep(1,nrow(dat)/2),rep(0,nrow(dat)/2))
+        }
+    } else {
+        #The substitutes seem to be okay estimate the nick frequency using GAM 
+        if (cu_pa$forward_only){
+            cu_pa$nuVec  <- predict(gam(te[1:(cu_pa$m)]~s(1:(cu_pa$m))))
+        }else {
+            cu_pa$nuVec  <- c(predict(gam(te[1:(cu_pa$m/2)]~s(1:(cu_pa$m/2)))),
+                              predict(gam(te[(cu_pa$m/2+1):cu_pa$m]~s(1:(cu_pa$m/2)))))
+        }
+        cu_pa$nuVec[cu_pa$nuVec>1] <- 1
+        cu_pa$nuVec[cu_pa$nuVec<0] <- 0
+    
     }
-    cu_pa$nuVec[cu_pa$nuVec>1] <- 1
-    cu_pa$nuVec[cu_pa$nuVec<0] <- 0
     rm(te)
-
 }
-
-
 #######################################################
 #
 #          Finding an "optimal" starting place 
