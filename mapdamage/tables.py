@@ -101,13 +101,12 @@ def checkDamFreq(folder):
   total = sumFreq(f, total)
   f = folder+"/5pGtoA_freq.txt"
   total = sumFreq(f, total)
-
   if total < 0.01:
     print("Warning: DNA damage levels are too low, bayesian computation is then disabled (%f)\n" % total)
     return None
   else:
 
-    return 0
+    return True
 
 def sumFreq(f, total):
   try:

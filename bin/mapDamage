@@ -81,7 +81,7 @@ def main(argv):
     return 1
   
   # plot using R if results folder already done
-  if options.plotonly: 
+  if options.plot_only: 
     if options.nor:
       sys.stderr.write("Cannot use plot damage patterns if R is missing, terminating the program\n")
       return 1

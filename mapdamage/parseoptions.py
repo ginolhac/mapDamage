@@ -74,21 +74,19 @@ def options(args):
           type = int, default=70,action="store")
   group.add_option("-a","--around",dest="around",help="nucleotides to retrieve before/after reads [%default]",\
           type = int, default=10,action="store")
-  group.add_option("-Q","--minbasequal",dest="minqual",help="minimun base quality Phred score considered [%default]",\
+  group.add_option("-Q","--min-basequal",dest="minqual",help="minimun base quality Phred score considered [%default]",\
           type = int, default=0,action="store")
-  #group.add_option("-p","--pipe",dest="pipe",help="Read BAM from a pipe, ie. the standard input",\
-  #      default=False,action="store_true")
   group.add_option("-d", "--folder", help="folder name to store results [results_FILENAME]", \
         action="store", type="string", dest="folder")
   group.add_option("-f","--fasta",dest="fasta",help="Write alignments in a FASTA file",\
         default=False,action="store_true")
-  group.add_option("--plotonly",dest="plotonly",help="Run only plotting from a valid result folder",\
+  group.add_option("--plot-only",dest="plot_only",help="Run only plotting from a valid result folder",\
         default=False,action="store_true")
   group.add_option("-q","--quiet",dest="quiet",help="Disable any output to stdout",\
         default=False,action="store_true")
   group.add_option("-v","--verbose",dest="verbose",help="Display progression information during parsing",\
         default=False,action="store_true")
-  group.add_option("--noplot",dest="nor",help=SUPPRESS_HELP, default=False, action="store_true")
+  group.add_option("--no-plot",dest="nor",help=SUPPRESS_HELP, default=False, action="store_true")
   parser.add_option_group(group)
 
   # options for plotting damage patterns
@@ -118,19 +116,19 @@ def options(args):
           help="Number of final MCMC iterations  [%default]", type = int, default=50000,action="store")
   group3.add_option("","--forward",dest="forward",\
           help="Using only the 5' end of the seqs  [%default]", type = int, default=0,action="store")
-  group3.add_option("","--fix_disp",dest="fix_disp",\
+  group3.add_option("","--fix-disp",dest="fix_disp",\
           help="Fix dispersion in the overhangs  [%default]", type = int, default=1,action="store")
-  group3.add_option("","--same_hangs",dest="same_hangs",\
+  group3.add_option("","--same-hangs",dest="same_hangs",\
           help="The overhangs are the same on both sides  [%default]", type = int, default=1,action="store")
-  group3.add_option("","--fix_nicks",dest="fix_nicks",\
+  group3.add_option("","--fix-nicks",dest="fix_nicks",\
           help="Fix the nick frequency vector nu else estimate it with GAM  [%default]", type = int, default=0,action="store")
   group3.add_option("","--double_stranded",dest="double_stranded",\
           help="Double stranded protocol [%default]", type = int, default=1,action="store")
-  group3.add_option("","--seq_length",dest="seq_length",\
+  group3.add_option("","--seq-length",dest="seq_length",\
           help="How long sequence to use from each side [%default]", type = int, default=12,action="store")
-  group3.add_option("--stats_only",dest="stats_only",help="Run only statistical estimation from a valid result folder",\
+  group3.add_option("--stats-only",dest="stats_only",help="Run only statistical estimation from a valid result folder",\
         default=False,action="store_true")
-  group3.add_option("--nostats",dest="nos",help=SUPPRESS_HELP, default=False, action="store_true")
+  group3.add_option("--no-stats",dest="nos",help=SUPPRESS_HELP, default=False, action="store_true")
 
   parser.add_option_group(group3)
 
@@ -142,11 +140,11 @@ def options(args):
     return None
 
   # check general arguments
-  if not (options.plotonly or options.stats_only) and not options.filename: 
+  if not (options.plot_only or options.stats_only) and not options.filename: 
     parser.error('SAM/BAM file not given')
-  if not (options.plotonly or options.stats_only) and not options.ref:
+  if not (options.plot_only or options.stats_only) and not options.ref:
     parser.error('Reference file not given')
-  if not options.plotonly and not options.stats_only:
+  if not options.plot_only and not options.stats_only:
     if not fileExist(options.filename) or not fileExist(options.ref):
       return None
   if options.downsample is not None:
@@ -155,10 +153,10 @@ def options(args):
     elif options.downsample >= 1:
       options.downsample = int(options.downsample)
   
-  if options.plotonly and not options.folder:
-    parser.error('Folder not provided, required with --plotonly')
+  if options.plot_only and not options.folder:
+    parser.error('Folder not provided, required with --plot-only')
   if options.stats_only and not options.folder:
-    parser.error('Folder not provided, required with --stats_only')
+    parser.error('Folder not provided, required with --stats-only')
 
   # check options 
   if options.length < 0:
@@ -171,7 +169,7 @@ def options(args):
     parser.error('readplot (-m) must be a positive integrer')
   if options.refplot < 0:
     parser.error('refplot (-b) must be a positive integrer')
-  if options.refplot > options.around and not options.plotonly:
+  if options.refplot > options.around and not options.plot_only:
     parser.error('refplot (-b) must be inferior to around (-a)')
   if options.readplot > options.length:
     parser.error('readplot (-m) must be inferior to length (-l)')
@@ -180,14 +178,14 @@ def options(args):
   if not options.folder and options.filename:
     options.folder = "results_"+os.path.splitext(os.path.basename(options.filename))[0]
   if os.path.isdir(options.folder):
-    if not options.quiet and not options.plotonly:
+    if not options.quiet and not options.plot_only:
       print("Warning, %s already exists" % options.folder)
-    if options.plotonly:
+    if options.plot_only:
       if not fileExist(options.folder+"/dnacomp.txt") or not fileExist(options.folder+"/misincorporation.txt"):
         parser.error('folder %s is not a valid result folder' % options.folder)
   else:
     os.makedirs(options.folder, mode = 0700)
-    if options.plotonly or options.stats_only:
+    if options.plot_only or options.stats_only:
       sys.stderr.write("Error, %s does not exist while plot/stats only was used\n" % options.folder)
       return None
 
