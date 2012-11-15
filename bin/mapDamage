@@ -124,19 +124,11 @@ def main(argv):
     return 1
 
   # for misincorporation patterns, record mismaches
-  misincorp = {}
-  # initialize table of misincorporations
-  misincorp = mapdamage.tables.initializeMut(misincorp, reflengths, options.length)
-
+  misincorp = mapdamage.tables.initializeMut(reflengths, options.length)
   # for fragmentation patterns, record base compositions
-  dnacomp = {}
-  # initialize base composition table
-  dnacomp =  mapdamage.tables.initializeComp(dnacomp, reflengths, options.around, options.length)
-
+  dnacomp =  mapdamage.tables.initializeComp(reflengths, options.around, options.length)
   # for length distributions
-  lgdistrib = {}
-  # initialize lg distribution table
-  lgdistrib =  mapdamage.tables.initializeLg(lgdistrib)
+  lgdistrib =  mapdamage.tables.initializeLg()
 
   if not options.quiet:
     print("\tReading from '%s'" % options.filename)

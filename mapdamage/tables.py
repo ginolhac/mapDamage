@@ -11,7 +11,7 @@ class recursivedefaultdict(collections.defaultdict):
     self.default_factory = type(self) 
 
 
-def initializeMut(tab, ref, lg):  
+def initializeMut(ref, lg):  
   tab = recursivedefaultdict() 
   for contig in ref:
     for end in ('5p','3p'):
@@ -37,7 +37,7 @@ def printMut(mut, op, out):
           out.write("\n")
 
 
-def initializeComp(tab, ref, around,lg): 
+def initializeComp(ref, around,lg): 
   tab = recursivedefaultdict() 
   for contig in ref:
     for end in ('5p','3p'):
@@ -74,7 +74,7 @@ def printComp(comp, op, out):
             out.write("\n")
 
 
-def initializeLg(tab):
+def initializeLg():
   tab = recursivedefaultdict() 
   for std in ('+','-'):
     tab[std] = collections.defaultdict(int)
