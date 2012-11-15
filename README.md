@@ -5,16 +5,15 @@ mapDamage2 is Python/R scripts that tracks and quantify DNA damage patterns amon
 
 ### Requirements
 
-* R is mandatory (version >= 2.15.1) and must be present in your $PATH.
-* Python version >= 2.6
+* Python (version >= 2.6)
+* R (version >= 2.15.1) must be present in your $PATH. Otherwise, only tables will be produced.
 * pysam, python package, an interface for reading/writing SAM/BAM files
-
 * R libraries:
-  -inline
-  -gam
-  -Rccp
-  -RcppGSL
-  -ggplot2 (>=0.9.2)
+- inline
+- gam
+- Rccp
+- RcppGSL
+- ggplot2 (>=0.9.2)
 
 ### Installation
 

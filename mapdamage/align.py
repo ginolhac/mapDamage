@@ -2,7 +2,7 @@
 
 import mapdamage
 import sys 
-
+import string
 
 # from Martin Kircher, description of CIGAR operations
 #O BAM Description
@@ -52,12 +52,12 @@ def align(cigarlist, seq, ref):
   deletion: gaps to be inserted into read sequences, 
   insertions: gaps to be inserted into reference sequence """  
   ins = parseCigar(cigarlist, 1)
-  lref=list(ref)
+  lref=list(ref.upper()) # to be sure that we don't compare A,C,G,T and a,c,g,t
   for nb,idx in ins:
     lref[idx:idx] = ["-"]*nb 
   ref = "".join(lref)
   delet = parseCigar(cigarlist, 2)
-  lread = list(seq)
+  lread = list(seq.upper())
   for nb,idx in delet:
     lread[idx:idx] = ["-"]*nb 
   seq = "".join(lread)
