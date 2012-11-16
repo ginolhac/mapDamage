@@ -1,45 +1,28 @@
 #!/usr/bin/env python
 
 import mapdamage
+import itertools
 
 
 def countRefComp(read, chrom, before, after, comp):
   std = '-' if read.is_reverse else '+'
 
-  for (i, nt) in enumerate(before.upper()):
-    if nt in mapdamage.seq.letters:
-      # record base composition in the reference
-      j = i - len(before)
-      comp[chrom]['5p'][std]['Total'][j] += 1
-      comp[chrom]['5p'][std][nt][j] += 1
-
-  for (i, nt) in enumerate(after.upper()):
-    if nt in mapdamage.seq.letters:
-      comp[chrom]['3p'][std]['Total'][i+1] += 1
-      comp[chrom]['3p'][std][nt][i+1] += 1
+  before, after = before.upper(), after.upper()
+  _update_table(comp[chrom]['5p'][std], before, xrange(-len(before), 0))
+  _update_table(comp[chrom]['3p'][std], after,  xrange(1, len(after) + 1))
 
 
 def countReadComp(read, chrom, lg, comp):
-  seq = read.query
-  std = '+'
+  std, seq = '+', read.query
   if read.is_reverse:
-    std = '-'
-    seq = mapdamage.seq.revcomp(seq)
+    std, seq = '-', mapdamage.seq.revcomp(seq)
 
-  # compute base composition for base aligned only
-  for (i, nt) in enumerate(seq.upper()):
-    if nt in mapdamage.seq.letters and i < lg:
-      comp[chrom]['5p'][std]['Total'][i+1] += 1
-      comp[chrom]['5p'][std][nt][i+1] += 1
-
-  rev = seq[::-1]
-  for (i, nt) in enumerate(rev.upper()):
-    if nt in mapdamage.seq.letters and i < lg:
-      j = (i * -1)
-      j -= 1
-      # record base composition
-      comp[chrom]['3p'][std]['Total'][j] += 1
-      comp[chrom]['3p'][std][nt][j] += 1
+  _update_table(comp[chrom]['5p'][std], seq,           xrange(1, lg + 1))
+  _update_table(comp[chrom]['3p'][std], reversed(seq), xrange(-1, - lg - 1, -1))
 
 
-
+def _update_table(table, sequence, indices):
+  for (index, nt) in itertools.izip(indices, sequence):
+    if nt in table:
+      table['Total'][index] += 1
+      table[nt][index]      += 1
