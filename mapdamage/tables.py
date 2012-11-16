@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-import mapdamage
+import os
 import sys
 import collections
+
+import mapdamage
 from mapdamage.version import __version__
 
 
@@ -87,33 +89,25 @@ def printLg(tab, op, out):
       out.write("%s\t%d\t%d\n" % (std, i+1, tab[std][i]))
 
 
-def checkDamFreq(folder):
-  """ Bayesian estimation of DNA damages does not work
-  when damage frequencies are too low, i.e < 1% at first position
+def dmgFreqIsLow(folder):
+  """ Returns true if the damage frequencies are too low to allow
+  Bayesian estimation of DNA damages, i.e < 1% at first position.
   """
   total = 0.0
-  f = folder+"/5pCtoT_freq.txt"
-  total = sumFreq(f, total)
-  f = folder+"/5pGtoA_freq.txt"
-  total = sumFreq(f, total)
-  if total < 0.01:
-    print("Warning: DNA damage levels are too low, bayesian computation is then disabled (%f)\n" % total)
-    return None
-  else:
-
-    return True
-
-
-def sumFreq(f, total):
-  try:
-    with open(f, 'r') as fh:
-      for line in fh:
+  for filename in ("5pCtoT_freq.txt", "5pGtoA_freq.txt"):
+    with open(os.path.join(folder, filename)) as handle:
+      for line in handle:
         freq = line.strip().split('\t')
         if freq[0] == "1":
           total += float(freq[1])
           break
-  except IOError:
-    sys.stderr.write("Error: not a valid result directory\n")
-    raise SystemError
+      else:
+        print("Error: Could not find pos = 1 in table '%s', bayesian computation cannot be performed" \
+              % filename)
+        return True
 
-  return total
+  if total < 0.01:
+    print("Warning: DNA damage levels are too low, bayesian computation cannot be performed (%f < 0.01)\n" % total)
+    return True
+
+  return False

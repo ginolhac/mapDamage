@@ -92,9 +92,10 @@ def main(argv):
   # Run the Bayesian estimation if the matrix construction is done
   if options.stats_only:
     # does not work for very low damage levels
-    if not mapdamage.tables.checkDamFreq(options.folder):
-      options.nos = True
-    if options.nos:
+    if mapdamage.tables.dmgFreqIsLow(options.folder):
+      options.no_stats = True
+
+    if options.no_stats:
       sys.stderr.write("Cannot use the Bayesian estimation, terminating the program\n")
       return 1
     else:
@@ -223,11 +224,11 @@ def main(argv):
     mapdamage.rscript.plot(options)
 
   # does not work for very low damage levels
-  if not mapdamage.tables.checkDamFreq(options.folder):
-    options.nos = True
+  if mapdamage.tables.dmgFreqIsLow(options.folder):
+    options.no_stats = True
 
   # Run the Bayesian estimation
-  if not options.nos:
+  if not options.no_stats:
     mapdamage.rscript.runStats(options)
 
   

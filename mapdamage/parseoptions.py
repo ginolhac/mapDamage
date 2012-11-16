@@ -128,7 +128,7 @@ def options(args):
           help="How long sequence to use from each side [%default]", type = int, default=12,action="store")
   group3.add_option("--stats-only",dest="stats_only",help="Run only statistical estimation from a valid result folder",\
         default=False,action="store_true")
-  group3.add_option("--no-stats",dest="nos",help=SUPPRESS_HELP, default=False, action="store_true")
+  group3.add_option("--no-stats",help=SUPPRESS_HELP, default=False, action="store_true")
 
   parser.add_option_group(group3)
 
@@ -197,8 +197,8 @@ def options(args):
   
   if checkRLib():
     #Check for R libraries
-    print("The Bayesian estimation is then disabled\n")
-    options.nos = True
+    print("The Bayesian estimation has been disabled\n")
+    options.no_stats = True
 
   return options
 
