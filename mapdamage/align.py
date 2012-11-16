@@ -28,21 +28,18 @@ def getCoordinates(read):
 
 
 def getAround(coord, chrom, reflengths, lg, ref):
-  
   """ return reference sequences before and after the read
-  check for extremities and return what available """
-  i = j = 0
-  before = after = ""
-  if min(coord) - lg > 0:
-    i = min(coord) - lg
-  if max(coord) + lg > reflengths[chrom]:
-    j = reflengths[chrom]
-  else:
-    j = max(coord) + lg 
+  check for extremities and return what is available """
+  coord_min = min(coord)
+  coord_max = max(coord)
 
-  before = ref.fetch(chrom, i, min(coord))
-  after = ref.fetch(chrom, max(coord), j)
-  
+  pos_before = max(0, coord_min - lg)
+  pos_after  = min(reflengths[chrom], coord_max + lg)
+
+  # Uppercased, to be sure that we don't compare A,C,G,T and a,c,g,t
+  before = ref.fetch(chrom, pos_before, coord_min).upper()
+  after = ref.fetch(chrom, coord_max, pos_after).upper()
+
   return before, after
 
 
@@ -52,12 +49,12 @@ def align(cigarlist, seq, ref):
   deletion: gaps to be inserted into read sequences, 
   insertions: gaps to be inserted into reference sequence """  
   ins = parseCigar(cigarlist, 1)
-  lref=list(ref.upper()) # to be sure that we don't compare A,C,G,T and a,c,g,t
+  lref=list(ref) # to be sure that we don't compare A,C,G,T and a,c,g,t
   for nb,idx in ins:
     lref[idx:idx] = ["-"]*nb 
   ref = "".join(lref)
   delet = parseCigar(cigarlist, 2)
-  lread = list(seq.upper())
+  lread = list(seq)
   for nb,idx in delet:
     lread[idx:idx] = ["-"]*nb 
   seq = "".join(lread)

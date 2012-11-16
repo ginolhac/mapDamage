@@ -7,7 +7,6 @@ import itertools
 def countRefComp(read, chrom, before, after, comp):
   std = '-' if read.is_reverse else '+'
 
-  before, after = before.upper(), after.upper()
   _update_table(comp[chrom]['5p'][std], before, xrange(-len(before), 0))
   _update_table(comp[chrom]['3p'][std], after,  xrange(1, len(after) + 1))
 
