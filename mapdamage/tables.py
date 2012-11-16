@@ -55,22 +55,16 @@ def printComp(comp, op, out):
   out.write("Chr\tEnd\tStd\tPos\t%s\n" % ("\t".join(mapdamage.seq.letters)))
   for ref in sorted(comp):
     for end in comp[ref]:
+      start_i, end_i = op.around, op.length
+      if end == '3p':
+        start_i, end_i = end_i, start_i
+        
       for std in comp[ref][end]:
-        if end == '5p':
-          for i in range((-1*op.around), (op.length+1)):
-            if i == 0:
-              continue
-            out.write("%s\t%s\t%s\t%d" % (ref, end, std, i))
+        for current_i in range(-1 * start_i, end_i + 1):
+          if current_i:
+            out.write("%s\t%s\t%s\t%d" % (ref, end, std, current_i))
             for base in mapdamage.seq.letters:
-              out.write("\t%d" % comp[ref][end][std][base][i])
-            out.write("\n")
-        else:
-          for i in range((-1*op.length), (op.around+1)):
-            if i == 0:
-              continue
-            out.write("%s\t%s\t%s\t%d" % (ref, end, std, i))
-            for base in mapdamage.seq.letters:
-              out.write("\t%d" % comp[ref][end][std][base][i])
+              out.write("\t%d" % comp[ref][end][std][base][current_i])
             out.write("\n")
 
 
