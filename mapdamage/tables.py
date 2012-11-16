@@ -8,18 +8,16 @@ import mapdamage
 from mapdamage.version import __version__
 
 
-class recursivedefaultdict(collections.defaultdict):
-  def __init__(self):
-    self.default_factory = type(self) 
-
-
 def initializeMut(ref, lg):  
-  tab = recursivedefaultdict() 
+  tab = {}
   for contig in ref:
+    tab_contig = tab[contig] = {}
     for end in ('5p','3p'):
+      tab_end = tab_contig[end] = {}
       for std in ('+','-'):
+        tab_std = tab_end[std] = {}
         for mut in mapdamage.seq.header:
-          tab[contig][end][std][mut] = collections.defaultdict(int)
+          tab_std[mut] = collections.defaultdict(int)
   
   return tab
 
@@ -40,12 +38,15 @@ def printMut(mut, op, out):
 
 
 def initializeComp(ref, around,lg): 
-  tab = recursivedefaultdict() 
+  tab = {}
   for contig in ref:
+    tab_contig = tab[contig] = {}
     for end in ('5p','3p'):
+      tab_end = tab_contig[end] = {}
       for std in ('+','-'):
+        tab_std = tab_end[std] = {}
         for letters in mapdamage.seq.letters:
-          tab[contig][end][std][letters] = collections.defaultdict(int)
+          tab_std[letters] = collections.defaultdict(int)
 
   return tab
 
@@ -71,7 +72,7 @@ def printComp(comp, op, out):
 
 
 def initializeLg():
-  tab = recursivedefaultdict() 
+  tab = {}
   for std in ('+','-'):
     tab[std] = collections.defaultdict(int)
 
