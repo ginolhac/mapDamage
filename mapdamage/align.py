@@ -3,6 +3,7 @@
 import mapdamage
 import sys 
 import string
+import itertools
 
 # from Martin Kircher, description of CIGAR operations
 #O BAM Description
@@ -63,25 +64,22 @@ def align(cigarlist, seq, ref):
 
 
 def getMis(read, seq, refseq, ref, length, tab, end):
-
   """ count mismatches using aligned reference and read,
   must be redone since N in reference were randomly replaced by any bases """
   std = '-' if read.is_reverse else '+'
-  
-  for (i, nt) in enumerate(zip(seq, refseq)):
-    if i > length-1:
-      continue
-    #print("pos %d compare %s and %s" % (i, nt[0], nt[1]))
-    mut = nt[1]+">"+nt[0] # mutation such as ref>read
-    if nt[1] in mapdamage.seq.letters:
+  subtable = tab[ref][end][std]
+
+  for (i, nt_seq, nt_ref) in itertools.izip(xrange(length), seq, refseq):
+    if nt_ref in subtable:
       # record base composition in the reference, only A, C, G, T
-      tab[ref][end][std]['Total'][i] += 1
-      tab[ref][end][std][nt[1]][i] += 1
-    try:
-      # discard identities
-      tab[ref][end][std][mut][i] += 1
-    except:
-      continue
+      subtable['Total'][i] += 1
+      subtable[nt_ref][i] += 1
+
+    # Most ref/seq pairs will be identical
+    if (nt_ref != nt_seq):
+      mut = "%s>%s" % (nt_ref, nt_seq)
+      if mut in subtable:
+        subtable[mut][i] += 1
 
 
 def parseCigar(cigarlist, op):
