@@ -86,6 +86,7 @@ def printLg(tab, op, out):
       # write Length in 1-base offset
       out.write("%s\t%d\t%d\n" % (std, i+1, tab[std][i]))
 
+
 def checkDamFreq(folder):
   """ Bayesian estimation of DNA damages does not work
   when damage frequencies are too low, i.e < 1% at first position
@@ -102,6 +103,7 @@ def checkDamFreq(folder):
 
     return True
 
+
 def sumFreq(f, total):
   try:
     with open(f, 'r') as fh:
@@ -115,5 +117,3 @@ def sumFreq(f, total):
     raise SystemError
 
   return total
-
-
