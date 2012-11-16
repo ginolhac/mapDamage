@@ -45,22 +45,18 @@ def getAround(coord, chrom, reflengths, lg, ref):
 
 
 def align(cigarlist, seq, ref):
-
   """ insert gaps according to the cigar string 
   deletion: gaps to be inserted into read sequences, 
   insertions: gaps to be inserted into reference sequence """  
-  ins = parseCigar(cigarlist, 1)
-  lref=list(ref) # to be sure that we don't compare A,C,G,T and a,c,g,t
-  for nb,idx in ins:
-    lref[idx:idx] = ["-"]*nb 
-  ref = "".join(lref)
-  delet = parseCigar(cigarlist, 2)
-  lread = list(seq)
-  for nb,idx in delet:
-    lread[idx:idx] = ["-"]*nb 
-  seq = "".join(lread)
+  lref = list(ref)
+  for nb, idx in parseCigar(cigarlist, 1):
+    lref[idx:idx] = ["-"] * nb
 
-  return seq, ref
+  lread = list(seq)
+  for nb, idx in parseCigar(cigarlist, 2):
+    lread[idx:idx] = ["-"] * nb
+
+  return "".join(lread), "".join(lref)
 
 
 def getMis(read, seq, refseq, ref, length, tab, end):
