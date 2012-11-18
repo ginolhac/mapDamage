@@ -68,7 +68,6 @@ def getMis(read, seq, refseq, ref, length, tab, end):
   for (i, nt_seq, nt_ref) in itertools.izip(xrange(length), seq, refseq):
     if nt_ref in subtable:
       # record base composition in the reference, only A, C, G, T
-      subtable['Total'][i] += 1
       subtable[nt_ref][i] += 1
 
     # Most ref/seq pairs will be identical

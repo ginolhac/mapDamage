@@ -23,5 +23,4 @@ def countReadComp(read, chrom, lg, comp):
 def _update_table(table, sequence, indices):
   for (index, nt) in itertools.izip(indices, sequence):
     if nt in table:
-      table['Total'][index] += 1
       table[nt][index]      += 1

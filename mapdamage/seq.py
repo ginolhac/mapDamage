@@ -5,10 +5,11 @@ import string
 # from Martin Kircher, to complement DNA
 table = string.maketrans('TGCAMRWSYKVHDBtgcamrwsykvhdb','ACGTKYWSRMBDHVacgtkywsrmbdhv')
 
-letters = ('A','C','G','T','Total')
-mutations = ('G>A','C>T','A>G','T>C','A>C','A>T','C>G','C>A','T>G',\
-        'T>A','G>C','G>T','A>-','T>-','C>-','G>-','->A','->T','->C','->G','S') 
-header=letters+mutations
+letters = ("A", "C", "G", "T")
+mutations = ('G>A', 'C>T', 'A>G', 'T>C', 'A>C', 'A>T', 'C>G', 'C>A', 'T>G',
+             'T>A', 'G>C', 'G>T', 'A>-', 'T>-', 'C>-', 'G>-', '->A', '->T', '->C', '->G', 'S')
+header = letters + ("Total", ) + mutations
+
 
 def writeFasta(read, ref, seq, refseq, start, end, before, after, fout):
   std = '-' if read.is_reverse else '+'

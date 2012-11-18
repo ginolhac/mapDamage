@@ -23,19 +23,7 @@ def initializeMut(ref, lg):
 
 
 def printMut(mut, op, out):
-  out.write("# table produced by mapDamage version %s\n" % __version__)
-  out.write("# using mapped file %s and %s as reference file\n" % (op.filename, op.ref))
-  out.write("# Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads\n")
-  out.write("Chr\tEnd\tStd\tPos\t%s\t%s\n" % ("\t".join(mapdamage.seq.letters),"\t".join(mapdamage.seq.mutations)))
-  for ref in sorted(mut):
-    for end in mut[ref]:
-      for std in mut[ref][end]:
-        for i in range(op.length):
-          out.write("%s\t%s\t%s\t%d" % (ref, end, std, i+1))
-          for mis in mapdamage.seq.header:
-            out.write("\t%d" % mut[ref][end][std][mis][i])
-          out.write("\n")
-
+  _print_freq_table(mut, mapdamage.seq.header, op, out, offset = 1)
 
 def initializeComp(ref, around,lg): 
   tab = {}
@@ -52,23 +40,8 @@ def initializeComp(ref, around,lg):
 
 
 def printComp(comp, op, out):
-  out.write("# table produced by mapDamage version %s\n" % __version__)
-  out.write("# using mapped file %s and %s as reference file\n" % (op.filename, op.ref))
-  out.write("# Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads\n")
-  out.write("Chr\tEnd\tStd\tPos\t%s\n" % ("\t".join(mapdamage.seq.letters)))
-  for ref in sorted(comp):
-    for end in comp[ref]:
-      start_i, end_i = op.around, op.length
-      if end == '3p':
-        start_i, end_i = end_i, start_i
-        
-      for std in comp[ref][end]:
-        for current_i in range(-1 * start_i, end_i + 1):
-          if current_i:
-            out.write("%s\t%s\t%s\t%d" % (ref, end, std, current_i))
-            for base in mapdamage.seq.letters:
-              out.write("\t%d" % comp[ref][end][std][base][current_i])
-            out.write("\n")
+  columns = mapdamage.seq.letters + ("Total",)
+  _print_freq_table(comp, columns, op, out)
 
 
 def initializeLg():
@@ -112,3 +85,22 @@ def dmgFreqIsLow(folder):
     return True
 
   return False
+
+
+def _print_freq_table(table, columns, op, out, offset = 0):
+  out.write("# table produced by mapDamage version %s\n" % __version__)
+  out.write("# using mapped file %s and %s as reference file\n" % (op.filename, op.ref))
+  out.write("# Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads\n")
+  out.write("Chr\tEnd\tStd\tPos\t%s\n" % ("\t".join(columns)))
+
+  for (reference, ends) in sorted(table.iteritems()):
+    for (end, strands) in sorted(ends.iteritems()):
+      for (strand, subtable) in sorted(strands.iteritems()):
+        subtable["Total"] = {}
+        for index in sorted(subtable[columns[0]]):
+          subtable["Total"][index] = sum(subtable[letter][index] for letter in mapdamage.seq.letters)
+
+          out.write("%s\t%s\t%s\t%d" % (reference, end, strand, index + offset))
+          for base in columns:
+            out.write("\t%d" % subtable[base][index])
+          out.write("\n")
