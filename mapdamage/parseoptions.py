@@ -116,6 +116,8 @@ def options(args):
           help="Number of final MCMC iterations  [%default]", type = int, default=50000,action="store")
   group3.add_option("","--forward",dest="forward",\
           help="Using only the 5' end of the seqs  [%default]", type = int, default=0,action="store")
+  group3.add_option("","--reverse",dest="reverse",\
+          help="Using only the 3' end of the seqs  [%default]", type = int, default=0,action="store")
   group3.add_option("","--fix-disp",dest="fix_disp",\
           help="Fix dispersion in the overhangs  [%default]", type = int, default=1,action="store")
   group3.add_option("","--same-hangs",dest="same_hangs",\
@@ -138,6 +140,8 @@ def options(args):
   # check python version
   if not checkPyVersion():
     return None
+  
+
 
   # check general arguments
   if not (options.plot_only or options.stats_only) and not options.filename: 
@@ -160,19 +164,23 @@ def options(args):
 
   # check options 
   if options.length < 0:
-    parser.error('length (-l) must be a positive integrer')
+    parser.error('length (-l) must be a positive integer')
   if options.around < 0:
-    parser.error('around (-a) must be a positive integrer')
+    parser.error('around (-a) must be a positive integer')
   if options.ymax <= 0 or options.ymax > 1:
-    parser.error('ymax (-b) must be an integrer beetween 0 and 1')
+    parser.error('ymax (-b) must be an integer between 0 and 1')
   if options.readplot < 0:
-    parser.error('readplot (-m) must be a positive integrer')
+    parser.error('readplot (-m) must be a positive integer')
   if options.refplot < 0:
-    parser.error('refplot (-b) must be a positive integrer')
+    parser.error('refplot (-b) must be a positive integer')
   if options.refplot > options.around and not options.plot_only:
     parser.error('refplot (-b) must be inferior to around (-a)')
   if options.readplot > options.length:
     parser.error('readplot (-m) must be inferior to length (-l)')
+  
+  # check statistics options
+  if options.forward and options.reverse: 
+    parser.error('Cannot use only forward end and only reverse end for the statistics')
 
   # check folder
   if not options.folder and options.filename:

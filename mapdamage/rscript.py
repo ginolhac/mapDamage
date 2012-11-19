@@ -90,6 +90,7 @@ def runStats(o):
          o.adjust,                       \
          o.iter,                         \
          o.forward,                      \
+         o.reverse,                      \
          o.fix_disp,                     \
          o.same_hangs,                   \
          0,                              \
