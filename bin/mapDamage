@@ -183,8 +183,7 @@ def main(argv):
       before = beforerev
 
     # record soft clippinp when present
-    if len(mapdamage.align.parseCigar(read.cigar, 4)) > 0:
-      mapdamage.align.recordSoftClipping(mapdamage.align.parseCigar(read.cigar, 4), read, misincorp[chrom], options.length)
+    mapdamage.align.recordSoftClipping(read, misincorp[chrom], options.length)
     
     # count misincorparations by comparing read and reference base by base
     mapdamage.align.getMis(read, seq, refseq, chrom, options.length, misincorp, '5p')
