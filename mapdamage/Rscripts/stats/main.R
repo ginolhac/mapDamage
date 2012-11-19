@@ -33,16 +33,23 @@ if (nu_samples!=0){
     start_vals$le  <- floor(weighted.mean(x=start_vals$lengths$Length,w=start_vals$lengths$Occurences))
 }
 
+if (forward_only && reverse_only){
+    cat("Cannot specify using only the 5' end and the 3' end which makes no sense\n")
+    stop()
+}
+
 fow_dat <-readMapDamData(path_to_dat) 
 rev_dat <-readMapDamData(path_to_dat,forward=0)
 if (forward_only){
     #Taking only the forward part
     dat <- fow_dat[1:sub_length,] 
+}else if (reverse_only){
+    #Taking only the reverse part
+    dat <- rev_dat[sub_length:1,] 
 }else {
     #Using both ends
     dat <- joinFowAndRev(fow_dat,rev_dat,sub_length)
 }
-
 
 cu_pa <- list(
               dat=dat,
@@ -65,6 +72,7 @@ cu_pa <- list(
               fix_nu=fix_nu,
               ds_protocol=ds_protocol,
               forward_only=forward_only,
+              reverse_only=reverse_only,
               fix_disp= fix_disp,
               same_overhangs= same_overhangs,
               old_lik=-Inf
@@ -86,15 +94,18 @@ cu_pa$ThetaMat <- getTheta(cu_pa$Theta)
 #
 #######################################################
 
-cu_pa$laVec <- seqProbVecLambda(cu_pa$Lambda,cu_pa$LambdaDisp,nrow(cu_pa$dat),cu_pa$forward_only)
+cu_pa$laVec <- seqProbVecLambda(cu_pa$Lambda,cu_pa$LambdaDisp,nrow(cu_pa$dat),cu_pa$forward_only,cu_pa$reverse_only)
 
 if (!cu_pa$same_overhangs){
     #The overhangs are not the same
     if (cu_pa$forward_only){
-        print("Cannot use different overhangs with only the 5' end")
+        cat("Cannot use different overhangs with only the 5' end\n")
+        stop()
+    } else if (cu_pa$reverse_only){
+        cat("Cannot use different overhangs with only the 3' end\n")
         stop()
     }
-    cu_pa$laVecRight <- seqProbVecLambda(cu_pa$LambdaRight,cu_pa$LambdaDisp,nrow(cu_pa$dat),cu_pa$forward_only)
+    cu_pa$laVecRight <- seqProbVecLambda(cu_pa$LambdaRight,cu_pa$LambdaDisp,nrow(cu_pa$dat),cu_pa$forward_only,cu_pa$reverse_only)
 }
 
 #######################################################
@@ -126,6 +137,8 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
 } else if (fix_nu){
     if (cu_pa$forward_only){
         cu_pa$nuVec <- rep(1,nrow(dat))
+    }else if (cu_pa$reverse_only){
+        cu_pa$nuVec <- rep(0,nrow(dat))
     }else {
         cu_pa$nuVec <- c(rep(1,nrow(dat)/2),rep(0,nrow(dat)/2))
     }
@@ -137,20 +150,22 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
         write("Warning, To few substitutions to assess the nick frequency, using constant nick frequency instead", stderr())
         if (cu_pa$forward_only){
             cu_pa$nuVec <- rep(1,nrow(dat))
+        }else if (cu_pa$reverse_only){
+            cu_pa$nuVec <- rep(0,nrow(dat))
         }else {
             cu_pa$nuVec <- c(rep(1,nrow(dat)/2),rep(0,nrow(dat)/2))
         }
     } else {
         #The substitutes seem to be okay estimate the nick frequency using GAM 
-        if (cu_pa$forward_only){
-            cu_pa$nuVec  <- predict(gam(te[1:(cu_pa$m)]~s(1:(cu_pa$m))))
+        if (cu_pa$forward_only || cu_pa$reverse_only){
+            cu_pa$nuVec  <- predict(gam(te~s(1:(cu_pa$m))))
         }else {
             cu_pa$nuVec  <- c(predict(gam(te[1:(cu_pa$m/2)]~s(1:(cu_pa$m/2)))),
                               predict(gam(te[(cu_pa$m/2+1):cu_pa$m]~s(1:(cu_pa$m/2)))))
         }
+        #This shouldn't happen but for sanity check
         cu_pa$nuVec[cu_pa$nuVec>1] <- 1
         cu_pa$nuVec[cu_pa$nuVec<0] <- 0
-    
     }
     rm(te)
 }
@@ -177,9 +192,7 @@ cu_pa$old_lik <- logLikAll(cu_pa$dat,
                         cu_pa$DeltaS,
                          te_laVec,
                          cu_pa$nuVec,
-                             cu_pa$m,
-                    cu_pa$meanLength,
-                  cu_pa$forward_only
+                             cu_pa$m
                   )
 
 
