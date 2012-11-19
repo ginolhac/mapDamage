@@ -119,9 +119,12 @@ def main(argv):
      
   reflengths = dict(zip(in_bam.references, in_bam.lengths))
   # check if references in SAM/BAM are the same in the fasta reference file
-  failengths = mapdamage.seq.fastaIndex(options.ref+".fai")
-  if not mapdamage.seq.checkRef(failengths, reflengths):
-    sys.stderr.write("References in input files are not identical, terminating the program\n")
+  fai_lengths = mapdamage.seq.read_fasta_index(options.ref + ".fai")
+  if not fai_lengths:
+    return 1
+  elif (fai_lengths != reflengths):
+    sys.stderr.write("Sequence dictionary in FASTA/BAM differs:\n")
+    mapdamage.seq.describe_sequence_dicts(fai_lengths, reflengths)
     return 1
 
   # for misincorporation patterns, record mismaches

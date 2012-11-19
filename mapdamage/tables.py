@@ -17,7 +17,7 @@ def initializeMut(ref, lg):
       for std in ('+','-'):
         tab_std = tab_end[std] = {}
         for mut in mapdamage.seq.header:
-          tab_std[mut] = collections.defaultdict(int)
+          tab_std[mut] = dict.fromkeys(xrange(lg), 0)
   
   return tab
 
@@ -25,7 +25,11 @@ def initializeMut(ref, lg):
 def printMut(mut, op, out):
   _print_freq_table(mut, mapdamage.seq.header, op, out, offset = 1)
 
-def initializeComp(ref, around,lg): 
+
+def initializeComp(ref, around, lg):
+  keys = {"3p" : range(-lg, 0) + range(1, around + 1),
+          "5p" : range(-around, 0) + range(1, lg + 1)}
+
   tab = {}
   for contig in ref:
     tab_contig = tab[contig] = {}
@@ -34,7 +38,7 @@ def initializeComp(ref, around,lg):
       for std in ('+','-'):
         tab_std = tab_end[std] = {}
         for letters in mapdamage.seq.letters:
-          tab_std[letters] = collections.defaultdict(int)
+          tab_std[letters] = dict.fromkeys(keys[end], 0)
 
   return tab
 

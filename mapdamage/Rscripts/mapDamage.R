@@ -1,253 +1,168 @@
 # R script mapdamage
 
+NUCLEOTIDES <- c("A", "C", "G", "T", "Total")
+MISMATCHES  <- c("A>C", "A>G", "A>T", "C>A", "C>G", "C>T", "G>A", "G>C", "G>T", "T>A", "T>C", "T>G")
+INSERTIONS  <- c("->A", "->C", "->G", "->T")
+DELETIONS   <- c("A>-", "C>-", "G>-", "T>-")
+CLIPPING    <- c("S")
+EVERYTHING  <- c(NUCLEOTIDES, MISMATCHES, INSERTIONS, DELETIONS, CLIPPING)
+
 args <- commandArgs(trailingOnly = TRUE)
+OPT.COMP      <- args[1]
+OPT.PDFOUT    <- args[2]
+OPT.AROUND    <- as.numeric(args[3])
+OPT.MISINCORP <- args[4]
+OPT.LENGTH    <- as.numeric(args[5])
+OPT.YMAX      <- as.numeric(args[6])
+OPT.FOLDER    <- args[7]
+OPT.TITLE     <- args[8]
+OPT.VERSION   <- args[9]
 
-#bcompbefore <- function(tab, base, coul, around)
-#{
-#    n<-numeric
-#    plot(tab$Pos,tab$base/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col=coul,main=base, cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
-#    axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)
-#    axis(side=1,labels=FALSE)
-#    mtext("Frequency",side=2,line=2.5,cex=0.7)
-#    rect(0.5,0,around+0.5,0.5,border="darkgrey")
-#    segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
-#    for (i in c(-around:-1, 1:around)) { 
-#	n<-c(n,mean(tab$base[(tab$Pos==i)]/tab$Total[(tab$Pos==i)],na.rm=T)) 
-#    }
-#    points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col=coul,type="b")
- 
-#}
 
-#print(args)
+draw.open.rect <- function(xleft, ybottom, xright, ytop, padding = 0) {
+  if (xleft < 0) {
+    xpoints <- c(xleft, xright + padding, xright + padding, xleft)
+  } else {
+    xpoints <- c(xright, xleft - padding, xleft - padding, xright)
+  }
+    
+  lines(xpoints, c(ytop, ytop, ybottom, ybottom), col = "darkgrey")
+}
 
-comp<-args[1]
-pdfout<-args[2]
-around<-as.numeric(args[3])
-misincorp<-args[4]
-lg<-as.numeric(args[5])
-ymax<-as.numeric(args[6])
-folder<-args[7]
-title<-args[8]
-version<-args[9]
 
-com<-read.table(file=comp,sep="\t", header=TRUE, as.is=TRUE)
-five=subset(com, End=="5p")
-three=subset(com, End=="3p")
-pdf(file=pdfout, title=paste("mapDamage-",version," plot"))
-par(oma=c(4,2,2,2),mar=c(1,2,1,1))
-layout(matrix(c(1,2,3,4,5,6,7,8,9,9,10,10), 3, 4, byrow=TRUE))
-# for letter A, before - read
-base="A"
-#bcompbefore(five, base, "blue", around)
-n<-numeric
-plot(five$Pos,five$A/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A", cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
-axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=FALSE)
-mtext("Frequency",side=2,line=2.5,cex=0.7)
-rect(0.5,0,around+0.5,0.5,border="darkgrey")
-segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
-for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(five$A[(five$Pos==i)]/five$Total[(five$Pos==i)],na.rm=T)) 
-}
-points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="blue",type="b")
-# for letter A, read - after
-n<-numeric
-plot(three$Pos,three$A/three$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="blue",main="A",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
-axis(side=4,labels=FALSE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=FALSE)
-rect(-around-0.5,0,-0.5,0.5,border="darkgrey")
-segments(-around-0.5,0,-around-0.5,0.5,col="white",lwd=2)
-for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(three$A[(three$Pos==i)]/three$Total[(three$Pos==i)],na.rm=T)) 
-}
-points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="blue",type="b")							 
-mtext(title, side=3, line=1.2, cex=0.8)
+plot.base.composition <- function(tbl, base, color, around, ylabels.at = c(), xlabels = FALSE) {
+  xcoords <- c(-around:-1, 1:around)
+  
+  plot.axis <- function(yaxis.at) {
+    axis(side = yaxis.at, labels = (yaxis.at == ylabels.at), line = 0, las = 2, cex.axis = 0.8)
+    if ((yaxis.at == 2) && (yaxis.at == ylabels.at)) {
+      mtext("Frequency", side = 2, line = 2.5, cex = 0.7)
+    }
+  
+    if (xlabels) {
+      axis(side = 1, labels = xcoords, at = xcoords, las = 2, cex.axis = 0.6)
+    } else {
+      axis(side = 1, labels = FALSE,   at = xcoords)
+    }
+  }
 
-# for letter C, before - read
-n<-numeric
-plot(five$Pos,five$C/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="green",main="C",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
-axis(side=2,labels=FALSE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=FALSE)
-rect(0.5,0,around+0.5,0.5,border="darkgrey")
-segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
-for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(five$C[(five$Pos==i)]/five$Total[(five$Pos==i)],na.rm=T)) 
-}
-points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="green",type="b")
-# for letter C, read - after
-n<-numeric
-plot(three$Pos,three$C/three$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="green",main="C",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
-axis(side=4,labels=TRUE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=FALSE)
-rect(-around-0.5,0,-0.5,0.5,border="darkgrey")
-segments(-around-0.5,0,-around-0.5,0.5,col="white",lwd=2)
-for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(three$C[(three$Pos==i)]/three$Total[(three$Pos==i)],na.rm=T)) 
-}
-points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="green",type="b")							 
+  plot.frequencies <- function(end) {
+    subtbl <- subset(tbl, End == end)
+    plot(subtbl$Pos, subtbl[, base] / subtbl$Total, pch = '.',
+       xlim = c(-around, around), ylim = c(0, 0.5),
+       col = color, main = base, cex.axis = 0.8, las = 2,
+       xlab = "", ylab = "", lab = c(2 * around, 6, 0.2),
+       axes = FALSE)
 
-# for letter G, before - read
-n<-numeric
-plot(five$Pos,five$G/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="black",main="G",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
-axis(side=2,labels=TRUE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=seq(-around,around,1),at=seq(-around,around,1),las=2, cex.axis=0.6)
-mtext("Frequency",side=2,line=2.5,cex=0.7)
-rect(0.5,0,around+0.5,0.5,border="darkgrey")
-segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
-for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(five$G[(five$Pos==i)]/five$Total[(five$Pos==i)],na.rm=T)) 
-}
-points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="black",type="b")
-# for letter G, read - after
-n<-numeric
-plot(three$Pos,three$G/three$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="black",main="G",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
-axis(side=4,labels=FALSE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=seq(-around,around,1),at=seq(-around,around,1),las=2, cex.axis=0.6)
-rect(-around-0.5,0,-0.5,0.5,border="darkgrey")
-segments(-around-0.5,0,-around-0.5,0.5,col="white",lwd=2)
-for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(three$G[(three$Pos==i)]/three$Total[(three$Pos==i)],na.rm=T)) 
-}
-points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="black",type="b")
+    ycoords <- NULL
+    for (i in xcoords) {
+      ycoords <- append(ycoords, mean(subtbl[(subtbl$Pos==i), base]/subtbl$Total[(subtbl$Pos==i)],na.rm=T)) 
+    }
+    points(xcoords, ycoords, pch = 20, col = color, type = "b")
+  }
 
-# for letter T, before - read
-n<-numeric
-plot(five$Pos,five$T/five$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="red",main="T",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
-axis(side=2,labels=FALSE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=seq(-around,around,1),at=seq(-around,around,1),las=2, cex.axis=0.6)
-rect(0.5,0,around+0.5,0.5,border="darkgrey")
-segments(around+0.5,0,around+0.5,0.5,col="white",lwd=2)
-for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(five$T[(five$Pos==i)]/five$Total[(five$Pos==i)],na.rm=T)) 
+  # 5p end
+  par(mar = c(1, 2, 1, 0.25))
+  plot.frequencies("5p")
+  plot.axis(2)
+  draw.open.rect(0, 0, around, 0.5)
+
+  # 3p end
+  par(mar = c(1, 0.25, 1, 2))
+  plot.frequencies("3p")
+  plot.axis(4)
+  draw.open.rect(-around, 0, 0, 0.5)
+  
+  par(mar = c(1, 2, 1, 2))
 }
-points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="red",type="b")
-# for letter T, read - after
-n<-numeric
-plot(three$Pos,three$T/three$Total,pch='.',xlim=c(-around,around),ylim=c(0,0.5),col="red",main="T",cex.axis=0.8,las=2,xlab="",ylab="",lab=c(2*around,6,0.2), axes=FALSE)
-axis(side=4,labels=TRUE,line=0,las=2,cex.axis=0.8)
-axis(side=1,labels=seq(-around,around,1),at=seq(-around,around,1),las=2, cex.axis=0.6)
-rect(-around-0.5,0,-0.5,0.5,border="darkgrey")
-segments(-around-0.5,0,-around-0.5,0.5,col="white",lwd=2)
-for (i in c(-around:-1, 1:around)) { 
-  n<-c(n,mean(three$T[(three$Pos==i)]/three$Total[(three$Pos==i)],na.rm=T)) 
+
+
+calculate.mutation.table <- function(filename, length)
+  {
+    tbl <- read.table(file = filename, sep = "\t", header = TRUE, check.names = FALSE)
+    tbl <- aggregate(tbl[, EVERYTHING], tbl[, c("End", "Pos")], sum)
+    for (mismatch in MISMATCHES) {
+      tbl[, mismatch] <- tbl[, mismatch] / tbl[, substr(mismatch, 1, 1)]
+    }
+
+    for (mismatch in c(INSERTIONS, DELETIONS, CLIPPING)) {
+      tbl[, mismatch] <- tbl[, mismatch] / tbl[, "Total"]
+    }
+
+    return(tbl[tbl$Pos <= length, ])
+  }
+
+
+write.mutation.table <- function(tbl, end, mismatch, filename)
+  {
+    columns <- c("pos", sprintf("5p%s", mismatch))    
+    write.table(tbl[tbl$End == end, c("Pos", mismatch)],
+                row.names = FALSE, col.names = columns,
+                sep = "\t", quote = FALSE,
+                file = filename)
+  }
+
+
+plot.mutations <- function(end, axis.at, start.i, end.i, modifier) {
+  do.plot <- function(tbl, end, modifier, mismatches, color) {
+    subtable <- tbl[tbl$End == end, c("Pos", mismatches)]
+    rates    <- rowSums(subtable) - subtable$Pos
+    subtable <- aggregate(list(Rate = rates), list(Pos = subtable$Pos), sum)
+    
+    lines(subtable$Pos * modifier, subtable$Rate,
+          xlim = c(1, OPT.LENGTH), ylim = c(0, OPT.YMAX),
+          col = color, lwd = 1)
+  }
+  
+  plot(NA, xlim = c(start.i, end.i), ylim=c(0, OPT.YMAX), col="grey", lwd = 1, type = "l", xlab = "", ylab = "", axes = FALSE)
+  axis(side = 1, labels = start.i:end.i, at = start.i:end.i, las = 2, cex.axis = 0.8)
+  axis(side = axis.at, labels = TRUE, las = 2, cex.axis = 0.8)
+  draw.open.rect(start.i, OPT.YMAX, end.i, -0.01, padding = 0.5)
+  
+  for (mismatch in MISMATCHES) {
+    do.plot(mut, end, modifier, mismatch, "grey")
+  }
+  
+  do.plot(mut, end, modifier, CLIPPING,   "orange")
+  do.plot(mut, end, modifier, DELETIONS,  "green")
+  do.plot(mut, end, modifier, INSERTIONS, "purple")
+  do.plot(mut, end, modifier, "G>A",      "blue")
+  do.plot(mut, end, modifier, "C>T",      "red")
 }
-points(c(-around:-1,1:around),n[2:((2*around)+1)],pch=20,col="red",type="b")
+
+
+pdf(file = OPT.PDFOUT, title = paste("mapDamage-", OPT.VERSION, " plot"))
+par(oma = c(4,2,2,2), mar = c(1,2,1,2))
+layout(matrix(c(1,1,   1,1,    # Title
+                2,3,   4,5,    # A,  C
+                6,7,   8,9,    # G,  T
+                10,10, 11,11), # Mismatches 5p, 3p
+              4, 4, byrow = TRUE),
+       heights = c(5, 20, 20, 20))
+
+# Plot title
+plot(0, type = "n", xaxt = "n", yaxt = "n", bty = "n", xlab = "", ylab = "")
+mtext(OPT.TITLE, 3, cex = 1.5)
+
+# Base compositions
+com <- read.table(file = OPT.COMP, sep = "\t", header = TRUE, as.is = TRUE)
+plot.base.composition(com, "A", "blue",  OPT.AROUND, xlabels = FALSE, ylabels.at = c(2, 4))
+plot.base.composition(com, "C", "green", OPT.AROUND, xlabels = FALSE, ylabels.at = c(4))
+plot.base.composition(com, "G", "black", OPT.AROUND, xlabels = TRUE,  ylabels.at = c(2, 4))
+plot.base.composition(com, "T", "red",   OPT.AROUND, xlabels = TRUE,  ylabels.at = c(4))
+
 
 # Misincorporation patterns
-# first from 5'-ends
-mut<-read.table(file=misincorp,sep="\t",header=TRUE, check.names = FALSE)
-nucl<-subset(mut, End=="5p")
-vec<-(1:lg)
-sumhit<-data.frame(cbind(vec,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))
-insertion<-0
-for (i in vec)	{
-  sumhit[i,2]<-sum(nucl[(nucl$Pos == i), "G>A"])/sum(nucl[(nucl$Pos == i), "G"])
-  sumhit[i,3]<-sum(nucl[(nucl$Pos == i), "C>T"])/sum(nucl[(nucl$Pos == i), "C"])
-  sumhit[i,4]<-sum(nucl[(nucl$Pos == i), "A>G"])/sum(nucl[(nucl$Pos == i), "A"])
-  sumhit[i,5]<-sum(nucl[(nucl$Pos == i), "T>C"])/sum(nucl[(nucl$Pos == i), "T"])
-  sumhit[i,6]<-sum(nucl[(nucl$Pos == i), "A>C"])/sum(nucl[(nucl$Pos == i), "A"])
-  sumhit[i,7]<-sum(nucl[(nucl$Pos == i), "A>T"])/sum(nucl[(nucl$Pos == i), "A"])
-  sumhit[i,8]<-sum(nucl[(nucl$Pos == i), "C>G"])/sum(nucl[(nucl$Pos == i), "C"])
-  sumhit[i,9]<-sum(nucl[(nucl$Pos == i), "C>A"])/sum(nucl[(nucl$Pos == i), "C"])
-  sumhit[i,10]<-sum(nucl[(nucl$Pos == i), "T>G"])/sum(nucl[(nucl$Pos == i), "T"])
-  sumhit[i,11]<-sum(nucl[(nucl$Pos == i), "T>A"])/sum(nucl[(nucl$Pos == i), "T"])
-  sumhit[i,12]<-sum(nucl[(nucl$Pos == i), "G>C"])/sum(nucl[(nucl$Pos == i), "G"])
-  sumhit[i,13]<-sum(nucl[(nucl$Pos == i), "G>T"])/sum(nucl[(nucl$Pos == i), "G"])
-  sumhit[i,14]<-sum(nucl[(nucl$Pos == i), "A>-"])/sum(nucl[(nucl$Pos == i), "A"])
-  sumhit[i,15]<-sum(nucl[(nucl$Pos == i), "T>-"])/sum(nucl[(nucl$Pos == i), "T"])
-  sumhit[i,16]<-sum(nucl[(nucl$Pos == i), "C>-"])/sum(nucl[(nucl$Pos == i), "C"])
-  sumhit[i,17]<-sum(nucl[(nucl$Pos == i), "G>-"])/sum(nucl[(nucl$Pos == i), "G"])
-  sumhit[i,22]<-sum(nucl[(nucl$Pos == i), "S"])/sum(nucl[(nucl$Pos == i), "Total"])
-  NTs <- c("A", "C", "G", "T")
-  for (j in seq(NTs)) {
-    insertion[j]<-sprintf("->%s", NTs[j])
-    sumhit[i,17 + j] <-sum(nucl[(nucl$Pos == i), insertion[j]]) /sum(nucl[(nucl$Pos == i), NTs])
-  }
-}
-# write a table for C>T frequencies
-write.table(sumhit[,3], file=paste(folder,"/5pCtoT_freq.txt",sep=""), sep="\t", quote=FALSE, col.names=c("pos\t5pC>T"))
-plot(sumhit$vec,sumhit$V4,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1,type="l",xlab="",ylab="",axes=FALSE)
-axis(side=1,labels=seq(1,lg,1),at=seq(1,lg,1),las=2,cex.axis=0.8)
-axis(side=2,labels=TRUE,las=2,cex.axis=0.8)
-rect(0.5,-0.01,lg+0.5,ymax,border="darkgrey")
-segments(lg+0.5,-0.01,lg+0.5,ymax,col="white",lwd=2)
-mtext("Frequency",side=2,line=2.8,cex=0.7)
-lines(sumhit$vec,sumhit$V5,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1)
-lines(sumhit$vec,sumhit$V6,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1)
-lines(sumhit$vec,sumhit$V7,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1)
-lines(sumhit$vec,sumhit$V8,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1)
-lines(sumhit$vec,sumhit$V9,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1)
-lines(sumhit$vec,sumhit$V10,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1)
-lines(sumhit$vec,sumhit$V11,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1)
-lines(sumhit$vec,sumhit$V12,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1)
-lines(sumhit$vec,sumhit$V13,xlim=c(1,lg),ylim=c(0,ymax),col="grey",lwd=1)
-# sofclipping in orange
-lines(sumhit$vec,sumhit$V22,xlim=c(1,lg),ylim=c(0,ymax),col="orange",lwd=1)
-# deletio in green
-lines(sumhit$vec,(sumhit$V14+sumhit$V15+sumhit$V16+sumhit$V17),xlim=c(1,lg),ylim=c(0,ymax),col="green",lwd=1)
-# insertions in purple
-lines(sumhit$vec,(sumhit$V18+sumhit$V19+sumhit$V20+sumhit$V21),xlim=c(1,lg),ylim=c(0,ymax),col="purple",lwd=1)
-# G>A in blue
-lines(sumhit$vec,sumhit$V2,xlim=c(1,lg),ylim=c(0,ymax),col="blue",lwd=2)
-# C>T in red
-lines(sumhit$vec,sumhit$V3,xlim=c(1,lg),ylim=c(0,ymax),col="red",lwd=2)
+mut <- calculate.mutation.table(OPT.MISINCORP, OPT.LENGTH)
+# Write table of post-morten damage frequencies to tables
+write.mutation.table(mut, "5p", "C>T", paste(OPT.FOLDER, "/5pCtoT_freq.txt", sep = ""))
+write.mutation.table(mut, "3p", "G>A", paste(OPT.FOLDER, "/5pGtoA_freq.txt", sep = ""))
 
-# then from 3'-ends
-nucl=subset(mut, End=="3p")
-vec<-(1:lg)
-sumhit<-data.frame(cbind(vec,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))
-insertion<-0
-for (i in vec)	{
-  sumhit[i,2]<-sum(nucl[(nucl$Pos == i), "G>A"])/sum(nucl[(nucl$Pos == i), "G"])
-  sumhit[i,3]<-sum(nucl[(nucl$Pos == i), "C>T"])/sum(nucl[(nucl$Pos == i), "C"])
-  sumhit[i,4]<-sum(nucl[(nucl$Pos == i), "A>G"])/sum(nucl[(nucl$Pos == i), "A"])
-  sumhit[i,5]<-sum(nucl[(nucl$Pos == i), "T>C"])/sum(nucl[(nucl$Pos == i), "T"])
-  sumhit[i,6]<-sum(nucl[(nucl$Pos == i), "A>C"])/sum(nucl[(nucl$Pos == i), "A"])
-  sumhit[i,7]<-sum(nucl[(nucl$Pos == i), "A>T"])/sum(nucl[(nucl$Pos == i), "A"])
-  sumhit[i,8]<-sum(nucl[(nucl$Pos == i), "C>G"])/sum(nucl[(nucl$Pos == i), "C"])
-  sumhit[i,9]<-sum(nucl[(nucl$Pos == i), "C>A"])/sum(nucl[(nucl$Pos == i), "C"])
-  sumhit[i,10]<-sum(nucl[(nucl$Pos == i), "T>G"])/sum(nucl[(nucl$Pos == i), "T"])
-  sumhit[i,11]<-sum(nucl[(nucl$Pos == i), "T>A"])/sum(nucl[(nucl$Pos == i), "T"])
-  sumhit[i,12]<-sum(nucl[(nucl$Pos == i), "G>C"])/sum(nucl[(nucl$Pos == i), "G"])
-  sumhit[i,13]<-sum(nucl[(nucl$Pos == i), "G>T"])/sum(nucl[(nucl$Pos == i), "G"])
-  sumhit[i,14]<-sum(nucl[(nucl$Pos == i), "A>-"])/sum(nucl[(nucl$Pos == i), "A"])
-  sumhit[i,15]<-sum(nucl[(nucl$Pos == i), "T>-"])/sum(nucl[(nucl$Pos == i), "T"])
-  sumhit[i,16]<-sum(nucl[(nucl$Pos == i), "C>-"])/sum(nucl[(nucl$Pos == i), "C"])
-  sumhit[i,17]<-sum(nucl[(nucl$Pos == i), "G>-"])/sum(nucl[(nucl$Pos == i), "G"])
-  sumhit[i,22]<-sum(nucl[(nucl$Pos == i), "S"])/sum(nucl[(nucl$Pos == i), "Total"])
-  NTs <- c("A", "C", "G", "T")
-  for (j in seq(NTs)) {
-    insertion[j]<-sprintf("->%s", NTs[j])
-    sumhit[i,17 + j] <-sum(nucl[(nucl$Pos == i), insertion[j]]) /sum(nucl[(nucl$Pos == i), NTs])
-  }
-}
-#  write a table for G>A frequencies
-write.table(sumhit[,2], file=paste(folder,"/5pGtoA_freq.txt",sep=""), sep="\t", quote=FALSE, col.names=c("pos\t5pG>A"))
-plot(-sumhit$vec,sumhit$V4,xlim=c(-lg, -1),ylim=c(0,ymax),col="grey",lwd=1,type="l",xlab="",ylab="",axes=FALSE)
-axis(side=1,labels=seq(-lg,-1,1),at=seq(-lg,-1,1),las=2,cex.axis=0.8)
-axis(side=4,labels=TRUE,las=2,cex.axis=0.8)
-rect(-lg-0.5,-0.01,-0.5,ymax,border="darkgrey")
-segments(-lg-0.5,-0.01,-lg-0.5,ymax,col="white",lwd=2)
-lines(-sumhit$vec,sumhit$V5,col="grey",lwd=1)
-lines(-sumhit$vec,sumhit$V6,col="grey",lwd=1)
-lines(-sumhit$vec,sumhit$V7,col="grey",lwd=1)
-lines(-sumhit$vec,sumhit$V8,col="grey",lwd=1)
-lines(-sumhit$vec,sumhit$V9,col="grey",lwd=1)
-lines(-sumhit$vec,sumhit$V10,col="grey",lwd=1)
-lines(-sumhit$vec,sumhit$V11,col="grey",lwd=1)
-lines(-sumhit$vec,sumhit$V12,col="grey",lwd=1)
-lines(-sumhit$vec,sumhit$V13,col="grey",lwd=1)
-# sofclipping in orange
-lines(-sumhit$vec,sumhit$V22,col="orange",lwd=1)
-# deletions in green
-lines(-sumhit$vec,(sumhit$V14+sumhit$V15+sumhit$V16+sumhit$V17),col="green",lwd=1)
-# insertions in pruple
-lines(-sumhit$vec,(sumhit$V18+sumhit$V19+sumhit$V20+sumhit$V21),col="purple",lwd=1)
-# G>A in blue
-lines(-sumhit$vec,sumhit$V2,col="blue",lwd=2)
-# C>T in red
-lines(-sumhit$vec,sumhit$V3,ylim=c(0,ymax),col="red",lwd=2)
+par(mar = c(1, 2, 1, 1))
+plot.mutations("5p", 2, 1, OPT.LENGTH, 1)
+
+par(mar = c(1, 1, 1, 2))
+plot.mutations("3p", 4, -OPT.LENGTH, -1, -1)
 
 # graphics.off() calls dev.off() for all devices but doesn't return anything (avoid null device message)
 graphics.off()
-
