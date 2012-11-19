@@ -42,16 +42,12 @@ def plot(op):
     return 1
 
 def checkROneLib(name):
-    """
-    Checks if a necessary R library is here
-    """
-    try:
-      rpa=constructRPath("stats/checkLibraries.R")
-      s=check_call(["Rscript",rpa,"--args",name],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-      return 0
-    except CalledProcessError:
-      return 1
-    
+    """Checks if a necessary R library is here."""
+    with open(os.devnull, "w") as devnull:
+        rpa = constructRPath("stats/checkLibraries.R")
+        return subprocess.call(["Rscript", rpa, "--args", name],
+                               stdout = devnull,
+                               stderr = devnull)
 
 def checkRLib():
     """
@@ -68,7 +64,7 @@ def checkRLib():
     if (len(missing_lib)>1):
         #Grammar Nazi has arrived
         last_ele = missing_lib.pop()
-        print ("Missing the following R libraries "+", ".join(missing_lib)+" and "+last_ele)
+        print ("Missing the following R libraries '" + "', '".join(missing_lib) + "' and '" + last_ele + "'")
         return 1
     elif (len(missing_lib)==1):
         print ("Missing the following R library "+missing_lib[0])
