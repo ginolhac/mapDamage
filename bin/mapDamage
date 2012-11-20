@@ -211,6 +211,11 @@ def main(argv):
   ref.close()
   if options.fasta:
     ff.close()
+  
+  # found no hits 
+  if counter == 0:
+    sys.stderr.write("Found no hits, terminating the program\n")
+    sys.exit(1)
 
   # output results, write summary tables to disk
   with open(options.folder+"/"+"misincorporation.txt", 'w') as fmut:
