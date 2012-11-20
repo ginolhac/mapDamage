@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import string
+import sys
 
 # from Martin Kircher, to complement DNA
 table = string.maketrans('TGCAMRWSYKVHDBtgcamrwsykvhdb','ACGTKYWSRMBDHVacgtkywsrmbdhv')
@@ -30,8 +31,8 @@ def revcomp(seq):
 def recordLg(read, coordinate, tab):
   """ record global length distribution
   don't record paired reads as they are normally not used for aDNA """
-
   std = '-' if read.is_reverse else '+'
+  
   lg = (max(coordinate) - min(coordinate))
   if not read.is_paired:
     tab[std][lg] = tab[std][lg] + 1

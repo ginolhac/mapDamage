@@ -74,7 +74,7 @@ def options(args):
           type = int, default=70,action="store")
   group.add_option("-a","--around",dest="around",help="nucleotides to retrieve before/after reads [%default]",\
           type = int, default=10,action="store")
-  group.add_option("-Q","--min-basequal",dest="minqual",help="minimun base quality Phred score considered [%default]",\
+  group.add_option("-Q","--min-basequal",dest="minqual",help="minimun base quality Phred score considered, Phred-33 assumed [%default]",\
           type = int, default=0,action="store")
   group.add_option("-d", "--folder", help="folder name to store results [results_FILENAME]", \
         action="store", type="string", dest="folder")
@@ -173,6 +173,8 @@ def options(args):
     parser.error('refplot (-b) must be inferior to around (-a)')
   if options.readplot > options.length:
     parser.error('readplot (-m) must be inferior to length (-l)')
+  if options.minqual < 0 or  options.minqual > 41:
+    parser.error('minimal base quality, Phred score, must be within this range: 0 - 41')
 
   # check folder
   if not options.folder and options.filename:

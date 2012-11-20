@@ -95,7 +95,8 @@ calculate.mutation.table <- function(filename, length)
 
 write.mutation.table <- function(tbl, end, mismatch, filename)
   {
-    columns <- c("pos", sprintf("5p%s", mismatch))    
+    columns <- c("pos", sprintf("5p%s", mismatch))
+    tbl[is.na(tbl)] <- 0 # Python doesn't like NAs  
     write.table(tbl[tbl$End == end, c("Pos", mismatch)],
                 row.names = FALSE, col.names = columns,
                 sep = "\t", quote = FALSE,
@@ -138,11 +139,11 @@ layout(matrix(c(1,1,   1,1,    # Title
                 6,7,   8,9,    # G,  T
                 10,10, 11,11), # Mismatches 5p, 3p
               4, 4, byrow = TRUE),
-       heights = c(5, 20, 20, 20))
+       heights = c(3, 20, 20, 20))
 
 # Plot title
 plot(0, type = "n", xaxt = "n", yaxt = "n", bty = "n", xlab = "", ylab = "")
-mtext(OPT.TITLE, 3, cex = 1.5)
+mtext(OPT.TITLE, 3, cex = 1.3)
 
 # Base compositions
 com <- read.table(file = OPT.COMP, sep = "\t", header = TRUE, as.is = TRUE)

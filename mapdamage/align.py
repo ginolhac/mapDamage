@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-import mapdamage
-import sys 
-import string
 import itertools
 
 # from Martin Kircher, description of CIGAR operations
@@ -19,9 +16,7 @@ import itertools
 
 
 def getCoordinates(read):  
-
   """ return external coordinates of aligned read bases """
-
   fivep = read.aend if read.is_reverse else read.pos
   threep = read.pos if read.is_reverse else read.aend
   
@@ -59,6 +54,23 @@ def align(cigarlist, seq, ref):
   return "".join(lread), "".join(lref)
 
 
+def alignWithQual(cigarlist, seq, qual, ref):
+  """ insert gaps according to the cigar string 
+  deletion: gaps to be inserted into read sequences and qualities, 
+  insertions: gaps to be inserted into reference sequence """  
+  lref = list(ref)
+  for nb, idx in parseCigar(cigarlist, 1):
+    lref[idx:idx] = ["-"] * nb
+
+  lread = list(seq)
+  lqual = list(qual)
+  for nb, idx in parseCigar(cigarlist, 2):
+    lread[idx:idx] = ["-"] * nb
+    lqual[idx:idx] = ["-"] * nb
+
+  return "".join(lread), "".join(lqual), "".join(lref)
+
+
 def getMis(read, seq, refseq, ref, length, tab, end):
   """ count mismatches using aligned reference and read,
   must be redone since N in reference were randomly replaced by any bases """
@@ -75,6 +87,26 @@ def getMis(read, seq, refseq, ref, length, tab, end):
       mut = "%s>%s" % (nt_ref, nt_seq)
       if mut in subtable:
         subtable[mut][i] += 1
+
+
+def getMisWithQual(read, seq, qual, threshold, refseq, ref, length, tab, end):
+  std = '-' if read.is_reverse else '+'
+  subtable = tab[ref][end][std]
+
+  for (i, nt_seq, q_seq, nt_ref) in itertools.izip(xrange(length), seq, qual, refseq):
+    # discard bases with low qualities, not consider gaps
+    if ord(q_seq)-33 < threshold and nt_seq != "-":
+      continue
+    else:
+      if nt_ref in subtable:
+        # record base composition in the reference, only A, C, G, T
+        subtable[nt_ref][i] += 1
+
+      # Most ref/seq pairs will be identical
+      if (nt_ref != nt_seq):
+        mut = "%s>%s" % (nt_ref, nt_seq)
+        if mut in subtable:
+          subtable[mut][i] += 1
 
 
 def parseCigar(cigarlist, op):

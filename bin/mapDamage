@@ -133,6 +133,8 @@ def main(argv):
 
   if not options.quiet:
     print("\tReading from '%s'" % options.filename)
+    if  options.minqual != 0:
+      print("\tFiltering out bases with a Phred score < %d" % options.minqual)
     if options.verbose:
       print("\t%d references are assumed in SAM/BAM file, for a total of %d nucleotides" % (len(reflengths), sum(reflengths.values())))
     print("\tWriting results to '%s/'" % options.folder)
@@ -168,9 +170,12 @@ def main(argv):
     # read.query contains aligned sequences while read.seq is the read itself 
     seq = read.query 
  
-    # add gaps according to the cigar string
-    (seq, refseq) =  mapdamage.align.align(read.cigar, seq, refseq)
-    
+    # add gaps according to the cigar string, do it for qualities if filtering options is on
+    if options.minqual == 0:
+      (seq, refseq) =  mapdamage.align.align(read.cigar, seq, refseq)
+    else:
+      (seq, qual, refseq) =  mapdamage.align.alignWithQual(read.cigar, seq, read.qqual, refseq)
+
     # reverse complement read and reference when mapped reverse strand
     if read.is_reverse:
       refseq = mapdamage.seq.revcomp(refseq)
@@ -178,11 +183,24 @@ def main(argv):
       beforerev =  mapdamage.seq.revcomp(after)
       after =  mapdamage.seq.revcomp(before)
       before = beforerev
+      if options.minqual != 0:
+        qual = mapdamage.seq.revcomp(qual)
 
-    # record soft clippinp when present
+    # record soft clipping when present
     if len(mapdamage.align.parseCigar(read.cigar, 4)) > 0:
       mapdamage.align.recordSoftClipping(mapdamage.align.parseCigar(read.cigar, 4), read, misincorp[chrom], options.length)
     
+    if options.minqual == 0:
+      # count misincorparations by comparing read and reference base by base
+      mapdamage.align.getMis(read, seq, refseq, chrom, options.length, misincorp, '5p')
+      # do the same with sequences align to 3'-ends
+      mapdamage.align.getMis(read, seq[::-1], refseq[::-1], chrom, options.length, misincorp, '3p') 
+    else:
+      # count misincorparations by comparing read and reference base by base, with quality filtering
+      mapdamage.align.getMisWithQual(read, seq, qual, options.minqual, refseq, chrom, options.length, misincorp, '5p')
+      # do the same with sequences align to 3'-ends
+      mapdamage.align.getMisWithQual(read, seq[::-1], qual[::-1], options.minqual, refseq[::-1], chrom, options.length, misincorp, '3p') 
+
     # count misincorparations by comparing read and reference base by base
     mapdamage.align.getMis(read, seq, refseq, chrom, options.length, misincorp, '5p')
     # do the same with sequences align to 3'-ends
@@ -192,7 +210,6 @@ def main(argv):
     mapdamage.composition.countRefComp(read, chrom, before, after, dnacomp)
     # compute base composition for reads
     mapdamage.composition.countReadComp(read, chrom, options.length, dnacomp)
-
 
     if options.fasta:
       mapdamage.seq.writeFasta(read, chrom, seq, refseq, min(coordinate), max(coordinate), before, after, ff)

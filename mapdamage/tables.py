@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import collections
 
 import mapdamage
 from mapdamage.version import __version__
 
 
-def initializeMut(ref, lg):  
+def initializeMut(ref, length):  
   tab = {}
   for contig in ref:
     tab_contig = tab[contig] = {}
@@ -17,18 +16,18 @@ def initializeMut(ref, lg):
       for std in ('+','-'):
         tab_std = tab_end[std] = {}
         for mut in mapdamage.seq.header:
-          tab_std[mut] = dict.fromkeys(xrange(lg), 0)
+          tab_std[mut] = dict.fromkeys(xrange(length), 0)
   
   return tab
 
 
-def printMut(mut, op, out):
-  _print_freq_table(mut, mapdamage.seq.header, op, out, offset = 1)
+def printMut(mut, opt, out):
+  _print_freq_table(mut, mapdamage.seq.header, opt, out, offset = 1)
 
 
-def initializeComp(ref, around, lg):
-  keys = {"3p" : range(-lg, 0) + range(1, around + 1),
-          "5p" : range(-around, 0) + range(1, lg + 1)}
+def initializeComp(ref, around, length):
+  keys = {"3p" : range(-length, 0) + range(1, around + 1),
+          "5p" : range(-around, 0) + range(1, length + 1)}
 
   tab = {}
   for contig in ref:
@@ -43,9 +42,9 @@ def initializeComp(ref, around, lg):
   return tab
 
 
-def printComp(comp, op, out):
+def printComp(comp, opt, out):
   columns = mapdamage.seq.letters + ("Total",)
-  _print_freq_table(comp, columns, op, out)
+  _print_freq_table(comp, columns, opt, out)
 
 
 def initializeLg():
@@ -56,9 +55,11 @@ def initializeLg():
   return tab 
 
 
-def printLg(tab, op, out):
+def printLg(tab, opt, out):
   out.write("# table produced by mapDamage version %s\n" % __version__)
-  out.write("# using mapped file %s and %s as reference file\n" % (op.filename, op.ref))
+  out.write("# using mapped file %s and %s as reference file\n" % (opt.filename, opt.ref))
+  if opt.minqual != 0:
+    out.write("# Quality filtering of bases with a Phred score < %d\n" % opt.minqual)
   out.write("# Std: strand of reads\n")
   out.write("Std\tLength\tOccurences \n")
   for std in tab:
@@ -91,9 +92,9 @@ def dmgFreqIsLow(folder):
   return False
 
 
-def _print_freq_table(table, columns, op, out, offset = 0):
+def _print_freq_table(table, columns, opt, out, offset = 0):
   out.write("# table produced by mapDamage version %s\n" % __version__)
-  out.write("# using mapped file %s and %s as reference file\n" % (op.filename, op.ref))
+  out.write("# using mapped file %s and %s as reference file\n" % (opt.filename, opt.ref))
   out.write("# Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads\n")
   out.write("Chr\tEnd\tStd\tPos\t%s\n" % ("\t".join(columns)))
 
