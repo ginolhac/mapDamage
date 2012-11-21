@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 import sys
 import string
-import sys
 
 # from Martin Kircher, to complement DNA
-table = string.maketrans('TGCAMRWSYKVHDBtgcamrwsykvhdb','ACGTKYWSRMBDHVacgtkywsrmbdhv')
+TABLE = string.maketrans('TGCAMRWSYKVHDBtgcamrwsykvhdb', \
+    'ACGTKYWSRMBDHVacgtkywsrmbdhv')
 
-letters = ("A", "C", "G", "T")
-mutations = ('G>A', 'C>T', 'A>G', 'T>C', 'A>C', 'A>T', 'C>G', 'C>A', 'T>G',
-             'T>A', 'G>C', 'G>T', 'A>-', 'T>-', 'C>-', 'G>-', '->A', '->T', '->C', '->G', 'S')
-header = letters + ("Total", ) + mutations
+LETTERS = ("A", "C", "G", "T")
+MUTATIONS = ('G>A', 'C>T', 'A>G', 'T>C', 'A>C', 'A>T', 'C>G', 'C>A', 'T>G',
+             'T>A', 'G>C', 'G>T', 'A>-', 'T>-', 'C>-', 'G>-', '->A', '->T', 
+             '->C', '->G', 'S')
+HEADER = LETTERS + ("Total", ) + MUTATIONS
 
 
-def writeFasta(read, ref, seq, refseq, start, end, before, after, fout):
+def write_fasta(read, ref, seq, refseq, start, end, before, after, fout):
   std = '-' if read.is_reverse else '+'
 
   # output coordinate in 1-based offset
@@ -25,17 +26,17 @@ def writeFasta(read, ref, seq, refseq, start, end, before, after, fout):
 
 def revcomp(seq):
   """ return reverse complemented string """
-  return seq.translate(table)[::-1]
+  return seq.translate(TABLE)[::-1]
 
 
-def recordLg(read, coordinate, tab):
+def record_lg(read, coordinate, tab):
   """ record global length distribution
   don't record paired reads as they are normally not used for aDNA """
   std = '-' if read.is_reverse else '+'
   
-  lg = (max(coordinate) - min(coordinate))
+  length = (max(coordinate) - min(coordinate))
   if not read.is_paired:
-    tab[std][lg] = tab[std][lg] + 1
+    tab[std][length] = tab[std][length] + 1
     
   return tab
 
@@ -52,7 +53,8 @@ def read_fasta_index(filename):
     for line in handle:
       ref = line.split("\t")
       if len(ref) != 5:
-        print_err("Line in fasta index contains wrong number of fields, found %i, expected 5:" % len(ref), filename, line)
+        print_err("Line in fasta index contains wrong number of fields, found %i, expected 5:" \
+            % len(ref), filename, line)
         return None
 
       try:
@@ -79,10 +81,10 @@ def describe_sequence_dicts(fasta_dict, bam_dict):
   if different:
     sys.stderr.write("  Sequence length differs:\n")
     for values in different:
-      sys.stderr.write("    - %s: %ibp vs %ibp\n" % values)
+      sys.stderr.write("    - %s: %i bp vs %i bp\n" % values)
 
   for (dd, name) in ((fasta_dict, "FASTA"), (bam_dict, "BAM")):
     if set(dd) - common:
       sys.stderr.write("  Only in %s dictionary:\n" % (name,))
       for key in set(dd) - common:
-        sys.stderr.write("    - %s = %ibp\n" % (key, dd[key]))
+        sys.stderr.write("    - %s = %i bp\n" % (key, dd[key]))

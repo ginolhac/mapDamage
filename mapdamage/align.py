@@ -16,7 +16,7 @@ import mapdamage
 #X 8 sequence mismatch
 
 
-def getCoordinates(read):  
+def get_coordinates(read):  
   """ return external coordinates of aligned read bases """
   fivep = read.aend if read.is_reverse else read.pos
   threep = read.pos if read.is_reverse else read.aend
@@ -24,14 +24,14 @@ def getCoordinates(read):
   return fivep, threep
 
 
-def getAround(coord, chrom, reflengths, lg, ref):
+def get_around(coord, chrom, reflengths, length, ref):
   """ return reference sequences before and after the read
   check for extremities and return what is available """
   coord_min = min(coord)
   coord_max = max(coord)
 
-  pos_before = max(0, coord_min - lg)
-  pos_after  = min(reflengths[chrom], coord_max + lg)
+  pos_before = max(0, coord_min - length)
+  pos_after  = min(reflengths[chrom], coord_max + length)
 
   # Uppercased, to be sure that we don't compare A,C,G,T and a,c,g,t
   before = ref.fetch(chrom, pos_before, coord_min).upper()
@@ -45,34 +45,34 @@ def align(cigarlist, seq, ref):
   deletion: gaps to be inserted into read sequences, 
   insertions: gaps to be inserted into reference sequence """  
   lref = list(ref)
-  for nb, idx in parseCigar(cigarlist, 1):
-    lref[idx:idx] = ["-"] * nb
+  for nbr, idx in parse_cigar(cigarlist, 1):
+    lref[idx:idx] = ["-"] * nbr
 
   lread = list(seq)
-  for nb, idx in parseCigar(cigarlist, 2):
-    lread[idx:idx] = ["-"] * nb
+  for nbr, idx in parse_cigar(cigarlist, 2):
+    lread[idx:idx] = ["-"] * nbr
 
   return "".join(lread), "".join(lref)
 
 
-def alignWithQual(cigarlist, seq, qual, ref):
+def align_with_qual(cigarlist, seq, qual, ref):
   """ insert gaps according to the cigar string 
   deletion: gaps to be inserted into read sequences and qualities, 
   insertions: gaps to be inserted into reference sequence """  
   lref = list(ref)
-  for nb, idx in parseCigar(cigarlist, 1):
-    lref[idx:idx] = ["-"] * nb
+  for nbr, idx in parse_cigar(cigarlist, 1):
+    lref[idx:idx] = ["-"] * nbr
 
   lread = list(seq)
   lqual = list(qual)
-  for nb, idx in parseCigar(cigarlist, 2):
-    lread[idx:idx] = ["-"] * nb
-    lqual[idx:idx] = ["-"] * nb
+  for nbr, idx in parse_cigar(cigarlist, 2):
+    lread[idx:idx] = ["-"] * nbr
+    lqual[idx:idx] = ["-"] * nbr
 
   return "".join(lread), "".join(lqual), "".join(lref)
 
 
-def getMis(read, seq, refseq, ref, length, tab, end):
+def get_mis(read, seq, refseq, ref, length, tab, end):
   """ count mismatches using aligned reference and read,
   must be redone since N in reference were randomly replaced by any bases """
   std = '-' if read.is_reverse else '+'
@@ -90,7 +90,7 @@ def getMis(read, seq, refseq, ref, length, tab, end):
         subtable[mut][i] += 1
 
 
-def getMisWithQual(read, seq, qual, threshold, refseq, ref, length, tab, end):
+def get_mis_with_qual(read, seq, qual, threshold, refseq, ref, length, tab, end):
   std = '-' if read.is_reverse else '+'
   subtable = tab[ref][end][std]
 
@@ -110,7 +110,7 @@ def getMisWithQual(read, seq, qual, threshold, refseq, ref, length, tab, end):
           subtable[mut][i] += 1
 
 
-def parseCigar(cigarlist, op):
+def parse_cigar(cigarlist, ope):
 
   """ for a specific operation (mismach, match, insertion, deletion... see above
   return occurences and index in the alignment """
@@ -118,21 +118,21 @@ def parseCigar(cigarlist, op):
   coordinate = []
   # count matches, indels and mismatches
   oplist = (0, 1, 2, 7, 8)
-  for operation,length in cigarlist:
-    if operation == op:
+  for operation, length in cigarlist:
+    if operation == ope:
         coordinate.append([length, tlength])
     if operation in oplist: 
-        tlength+=length
+        tlength += length
   return coordinate
 
 
-def recordSoftClipping(read, tab, lg):
+def record_soft_clipping(read, tab, length):
   def update_table(end, std, bases):
-    for i in range(0, min(bases, lg)):
+    for i in range(0, min(bases, length)):
       tab[end][std]['S'][i] += 1
 
   strand = '-' if read.is_reverse else '+'
-  for (nbases, idx) in mapdamage.align.parseCigar(read.cigar, 4):
+  for (nbases, idx) in mapdamage.align.parse_cigar(read.cigar, 4):
     if idx == 0:
       # Soft-clipping at the left side of the alignment
       end = '3p' if read.is_reverse else '5p'

@@ -7,7 +7,7 @@ import mapdamage
 from mapdamage.version import __version__
 
 
-def initializeMut(ref, length):  
+def initialize_mut(ref, length):  
   tab = {}
   for contig in ref:
     tab_contig = tab[contig] = {}
@@ -15,17 +15,17 @@ def initializeMut(ref, length):
       tab_end = tab_contig[end] = {}
       for std in ('+','-'):
         tab_std = tab_end[std] = {}
-        for mut in mapdamage.seq.header:
+        for mut in mapdamage.seq.HEADER:
           tab_std[mut] = dict.fromkeys(xrange(length), 0)
   
   return tab
 
 
-def printMut(mut, opt, out):
-  _print_freq_table(mut, mapdamage.seq.header, opt, out, offset = 1)
+def print_mut(mut, opt, out):
+  _print_freq_table(mut, mapdamage.seq.HEADER, opt, out, offset = 1)
 
 
-def initializeComp(ref, around, length):
+def initialize_comp(ref, around, length):
   keys = {"3p" : range(-length, 0) + range(1, around + 1),
           "5p" : range(-around, 0) + range(1, length + 1)}
 
@@ -36,18 +36,18 @@ def initializeComp(ref, around, length):
       tab_end = tab_contig[end] = {}
       for std in ('+','-'):
         tab_std = tab_end[std] = {}
-        for letters in mapdamage.seq.letters:
+        for letters in mapdamage.seq.LETTERS:
           tab_std[letters] = dict.fromkeys(keys[end], 0)
 
   return tab
 
 
-def printComp(comp, opt, out):
-  columns = mapdamage.seq.letters + ("Total",)
+def print_comp(comp, opt, out):
+  columns = mapdamage.seq.LETTERS + ("Total",)
   _print_freq_table(comp, columns, opt, out)
 
 
-def initializeLg():
+def initialize_lg():
   tab = {}
   for std in ('+','-'):
     tab[std] = collections.defaultdict(int)
@@ -55,7 +55,7 @@ def initializeLg():
   return tab 
 
 
-def printLg(tab, opt, out):
+def print_lg(tab, opt, out):
   out.write("# table produced by mapDamage version %s\n" % __version__)
   out.write("# using mapped file %s and %s as reference file\n" % (opt.filename, opt.ref))
   if opt.minqual != 0:
@@ -68,13 +68,13 @@ def printLg(tab, opt, out):
       out.write("%s\t%d\t%d\n" % (std, i+1, tab[std][i]))
 
 
-def dmgFreqIsLow(folder):
+def dmg_freq_is_low(folder):
   """ Returns true if the damage frequencies are too low to allow
   Bayesian estimation of DNA damages, i.e < 1% at first position.
   """
   total = 0.0
   for filename in ("5pCtoT_freq.txt", "5pGtoA_freq.txt"):
-    if not os.path.exists(filename):
+    if not os.path.exists(folder+"/"+filename):
       print("Error: Required table has not been created ('%s'), bayesian computation cannot be performed" \
             % filename)
       return True
@@ -110,7 +110,7 @@ def _print_freq_table(table, columns, opt, out, offset = 0):
       for (strand, subtable) in sorted(strands.iteritems()):
         subtable["Total"] = {}
         for index in sorted(subtable[columns[0]]):
-          subtable["Total"][index] = sum(subtable[letter][index] for letter in mapdamage.seq.letters)
+          subtable["Total"][index] = sum(subtable[letter][index] for letter in mapdamage.seq.LETTERS)
 
           out.write("%s\t%s\t%s\t%d" % (reference, end, strand, index + offset))
           for base in columns:

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import parseoptions
-import seq
-import align
-import tables
-import composition
-import rscript
-import version
+import mapdamage.parseoptions
+import mapdamage.seq
+import mapdamage.align
+import mapdamage.tables
+import mapdamage.composition
+import mapdamage.rscript
+import mapdamage.version

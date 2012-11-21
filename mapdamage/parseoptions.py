@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: ASCII -*-
 
-from optparse import OptionParser,OptionGroup, SUPPRESS_HELP
+from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
 import os
 import sys
 
-import mapdamage
 from mapdamage.version import __version__
-from mapdamage.rscript import checkRLib
+from mapdamage.rscript import check_R_lib
 
-def fileExist(filename):
+def file_exist(filename):
     if os.path.exists(filename) and not os.path.isdir(filename):
         return True
     elif filename == "-":
@@ -17,22 +16,6 @@ def fileExist(filename):
     else:
         sys.stderr.write("Error: '%s' is not a valid file\n" % (filename))
         return None
-
-
-def checkModule(mod):
-    module = mod.keys()
-    url = mod[module[0]]
-    try:
-        __import__(module[0])
-
-    except ImportError, e:
-        sys.stderr.write("Error: Could not import required module '%s':\n\t- %s\n" % (module[0],e))
-        sys.stderr.write("       If module is not installed, please download from '%s'.\n" % (url,))
-        sys.stderr.write("       A local install may be performed using the following command:\n")
-        sys.stderr.write("       $ python setup.py install --user\n\n")
-        return None
-
-    return True
 
 
 def whereis(program):
@@ -43,8 +26,8 @@ def whereis(program):
     return None
 
 
-def checkPyVersion():
-    req_version = (2,6)
+def check_py_version():
+    req_version = (2, 6)
     cur_version = sys.version_info
 
     if cur_version >= req_version:
@@ -62,7 +45,7 @@ def options(args):
     args = OptionGroup(parser, "Input files")
     args.add_option("-i", "--input", help="SAM/BAM file, must contain a valid header, use '-' for reading a BAM from stdin", \
           action="store", type="string", dest="filename")
-    args.add_option("-r", "--reference", help="Reference file in FASTA format",\
+    args.add_option("-r", "--reference", help="Reference file in FASTA format", \
           action="store", dest="ref")
 
     parser.add_option_group(args)
@@ -72,67 +55,68 @@ def options(args):
                      type = float, default = None)
     group.add_option("--downsample-seed", help = "Seed value to use for downsampling. See documentation for py module 'random' for default behavior.",
                      type = int, default = None)
-    group.add_option("-l","--length",dest="length",help="read length, in nucleotides to consider [%default]",\
+    group.add_option("-l", "--length", dest="length", help="read length, in nucleotides to consider [%default]", \
             type = int, default=70,action="store")
-    group.add_option("-a","--around",dest="around",help="nucleotides to retrieve before/after reads [%default]",\
+    group.add_option("-a", "--around", dest="around", help="nucleotides to retrieve before/after reads [%default]", \
             type = int, default=10,action="store")
-    group.add_option("-Q","--min-basequal",dest="minqual",help="minimun base quality Phred score considered, Phred-33 assumed [%default]",\
-            type = int, default=0,action="store")
+    group.add_option("-Q", "--min-basequal", dest="minqual", help="minimun base quality Phred score considered, Phred-33 assumed [%default]", \
+            type = int, default=0, action="store")
     group.add_option("-d", "--folder", help="folder name to store results [results_FILENAME]", \
           action="store", type="string", dest="folder")
-    group.add_option("-f","--fasta",dest="fasta",help="Write alignments in a FASTA file",\
+    group.add_option("-f", "--fasta", dest="fasta", help="Write alignments in a FASTA file", \
           default=False,action="store_true")
-    group.add_option("--plot-only",dest="plot_only",help="Run only plotting from a valid result folder",\
+    group.add_option("--plot-only", dest="plot_only", help="Run only plotting from a valid result folder", \
           default=False,action="store_true")
-    group.add_option("-q","--quiet",dest="quiet",help="Disable any output to stdout",\
+    group.add_option("-q", "--quiet", dest="quiet", help="Disable any output to stdout", \
           default=False,action="store_true")
-    group.add_option("-v","--verbose",dest="verbose",help="Display progression information during parsing",\
+    group.add_option("-v", "--verbose", dest="verbose", help="Display progression information during parsing", \
           default=False,action="store_true")
-    group.add_option("--no-plot",dest="no_r",help=SUPPRESS_HELP, default=False, action="store_true")
+    group.add_option("--no-plot", dest="no_r", help=SUPPRESS_HELP, default=False, action="store_true")
     parser.add_option_group(group)
 
     # options for plotting damage patterns
     group2 = OptionGroup(parser, "Options for graphics")
-    group2.add_option("-y","--ymax",dest="ymax",\
-            help="graphical y-axis limit for nucleotide misincorporation frequencies [%default]", type = float, default=0.3,action="store")
-    group2.add_option("-m","--readplot",dest="readplot",\
-            help="read length, in nucleotides, considered for plotting nucleotide misincorporations [%default]",\
-            type = int, default=25,action="store")
-    group2.add_option("-b","--refplot",dest="refplot",\
-            help="the number of reference nucleotides to consider for ploting base composition in the region located upstream and downstream of every read [%default]",\
-            type= int, default=10,action="store")
-    group2.add_option("-t","--title",dest="title",\
-            help="title used for both graph and filename [%default]",\
-            type="string", default="plot",action="store")
+    group2.add_option("-y", "--ymax", dest="ymax", \
+           help="graphical y-axis limit for nucleotide misincorporation frequencies [%default]", type = float, \
+           default=0.3,action="store")
+    group2.add_option("-m", "--readplot", dest="readplot", \
+           help="read length, in nucleotides, considered for plotting nucleotide misincorporations [%default]", \
+           type = int, default=25, action="store")
+    group2.add_option("-b", "--refplot", dest="refplot", \
+          help="the number of reference nucleotides to consider for ploting base composition in the region located upstream "
+          "and downstream of every read [%default]", type= int, default=10, action="store")
+    group2.add_option("-t", "--title", dest="title", \
+          help="title used for both graph and filename [%default]", \
+          type="string", default="plot",action="store")
     parser.add_option_group(group2)
 
     # Then the plethora of optional options for the statistical estimation ..
     group3 = OptionGroup(parser,"Options for the statistical estimation")
-    group3.add_option("","--rand",dest="rand",\
-            help="Number of random starting points for the likelihood optimization  [%default]", type = int, default=30,action="store")
-    group3.add_option("","--burn",dest="burn",\
+    group3.add_option("", "--rand", dest="rand", \
+            help="Number of random starting points for the likelihood optimization  [%default]", type = int, default=30, action="store")
+    group3.add_option("", "--burn", dest="burn", \
             help="Number of burnin iterations  [%default]", type = int, default=10000,action="store")
-    group3.add_option("","--adjust",dest="adjust",\
-            help="Number of adjust proposal variance parameters iterations  [%default]", type = int, default=10,action="store")
-    group3.add_option("","--iter",dest="iter",\
-            help="Number of final MCMC iterations  [%default]", type = int, default=50000,action="store")
-    group3.add_option("","--forward",dest="forward",\
-            help="Using only the 5' end of the seqs  [%default]", type = int, default=0,action="store")
-    group3.add_option("","--reverse",dest="reverse",\
-            help="Using only the 3' end of the seqs  [%default]", type = int, default=0,action="store")
-    group3.add_option("","--fix-disp",dest="fix_disp",\
+    group3.add_option("", "--adjust", dest="adjust", \
+            help="Number of adjust proposal variance parameters iterations  [%default]", type = int, default=10, action="store")
+    group3.add_option("", "--iter", dest="iter", \
+            help="Number of final MCMC iterations  [%default]", type = int, default=50000, action="store")
+    group3.add_option("", "--forward", dest="forward", \
+            help="Using only the 5' end of the seqs  [%default]", type = int, default=0, action="store")
+    group3.add_option("", "--reverse", dest="reverse", \
+            help="Using only the 3' end of the seqs  [%default]", type = int, default=0, action="store")
+    group3.add_option("", "--fix-disp", dest="fix_disp", \
             help="Fix dispersion in the overhangs  [%default]", type = int, default=1,action="store")
-    group3.add_option("","--same-hangs",dest="same_hangs",\
-            help="The overhangs are the same on both sides  [%default]", type = int, default=1,action="store")
-    group3.add_option("","--fix-nicks",dest="fix_nicks",\
-            help="Fix the nick frequency vector nu else estimate it with GAM  [%default]", type = int, default=0,action="store")
-    group3.add_option("","--double_stranded",dest="double_stranded",\
-            help="Double stranded protocol [%default]", type = int, default=1,action="store")
-    group3.add_option("","--seq-length",dest="seq_length",\
-            help="How long sequence to use from each side [%default]", type = int, default=12,action="store")
-    group3.add_option("--stats-only",dest="stats_only",help="Run only statistical estimation from a valid result folder",\
-          default=False,action="store_true")
-    group3.add_option("--no-stats",help=SUPPRESS_HELP, default=False, action="store_true")
+    group3.add_option("", "--same-hangs", dest="same_hangs", \
+            help="The overhangs are the same on both sides  [%default]", type = int, default=1, action="store")
+    group3.add_option("", "--fix-nicks" , dest="fix_nicks", \
+            help="Fix the nick frequency vector nu else estimate it with GAM  [%default]", type = int, default=0, action="store")
+    group3.add_option("", "--double_stranded", dest="double_stranded", \
+            help="Double stranded protocol [%default]", type = int, default=1, action="store")
+    group3.add_option("", "--seq-length", dest="seq_length", \
+            help="How long sequence to use from each side [%default]", type = int, default=12, action="store")
+    group3.add_option("--stats-only", dest="stats_only", help="Run only statistical estimation from a valid result folder", \
+          default=False, action="store_true")
+    group3.add_option("--no-stats", help=SUPPRESS_HELP, default=False, action="store_true")
 
     parser.add_option_group(group3)
 
@@ -140,9 +124,8 @@ def options(args):
     (options, args) = parser.parse_args()
 
     # check python version
-    if not checkPyVersion():
+    if not check_py_version():
         return None
-
 
     # check general arguments
     if not (options.plot_only or options.stats_only) and not options.filename:
@@ -150,7 +133,7 @@ def options(args):
     if not (options.plot_only or options.stats_only) and not options.ref:
         parser.error('Reference file not given')
     if not options.plot_only and not options.stats_only:
-        if not fileExist(options.filename) or not fileExist(options.ref):
+        if not file_exist(options.filename) or not file_exist(options.ref):
             return None
     if options.downsample is not None:
         if options.downsample <= 0:
@@ -193,7 +176,7 @@ def options(args):
         if not options.quiet and not options.plot_only:
             print("Warning, %s already exists" % options.folder)
         if options.plot_only:
-            if not fileExist(options.folder+"/dnacomp.txt") or not fileExist(options.folder+"/misincorporation.txt"):
+            if not file_exist(options.folder+"/dnacomp.txt") or not file_exist(options.folder+"/misincorporation.txt"):
                 parser.error('folder %s is not a valid result folder' % options.folder)
     else:
         os.makedirs(options.folder, mode = 0700)
@@ -207,7 +190,7 @@ def options(args):
         print("Warning, Rscript is not in your PATH, plotting is disabled")
         options.no_r = True
 
-    if checkRLib():
+    if check_R_lib():
         #Check for R libraries
         print("The Bayesian estimation has been disabled\n")
         options.no_stats = True
