@@ -125,42 +125,21 @@ def parseCigar(cigarlist, op):
   return coordinate
 
 
-# to be simplified using subtables
+def recordSoftClipping(read, tab, lg):
+  def update_table(end, std, bases):
+    for i in range(0, min(bases, lg)):
+      tab[end][std]['S'][i] += 1
 
-def recordSoftClipping(sclip, read, tab, lg):
-  #def update_table(left, right):
-  #      subtable = tab[ref][left]['-']['S']
-  #      for i in range(0,min(sclip[idx][0], lg)):
-  #        subtable[i] += 1
-  #      for i in range(min(len(read.seq)-sclip[idx][0], lg), min(len(read.seq), lg)):
-  #        tab[ref][right]['-']['S'][i] += 1
-
-  for idx in range(0,len(sclip)):
-    # for soft at left side
+  strand = '-' if read.is_reverse else '+'
+  for (nbases, idx) in mapdamage.align.parseCigar(read.cigar, 4):
     if idx == 0:
-      if read.is_reverse:
-        for i in range(0,min(sclip[idx][0], lg)):
-          tab['3p']['-']['S'][i] += 1
-        for i in range(min(len(read.seq)-sclip[idx][0], lg), min(len(read.seq), lg)):
-          tab['5p']['-']['S'][i] += 1
-      else: 
-        for i in range(0,min(sclip[idx][0], lg)):
-          tab['5p']['+']['S'][i] += 1
-        for i in range(min(len(read.seq)-sclip[idx][0], lg), min(len(read.seq), lg)):
-          tab['3p']['+']['S'][i] += 1
-    # for soft clip at right side
+      # Soft-clipping at the left side of the alignment
+      end = '3p' if read.is_reverse else '5p'
     else:
-      if read.is_reverse:
-        for i in range(0,min(sclip[idx][0], lg)):
-          tab['5p']['-']['S'][i] += 1
-        for i in range(min(len(read.seq)-sclip[idx][0], lg), min(len(read.seq), lg)):
-          tab['3p']['-']['S'][i] += 1
-      else:
-        for i in range(0,min(sclip[idx][0], lg)):
-          tab['3p']['+']['S'][i] += 1
-        for i in range(min(len(read.seq)-sclip[idx][0], lg), min(len(read.seq), lg)):
-          tab['5p']['+']['S'][i] += 1
+      # Soft-clipping at the right side of the alignment
+      end = '5p' if read.is_reverse else '3p'
 
+    update_table(end, strand, nbases)
 
 
 

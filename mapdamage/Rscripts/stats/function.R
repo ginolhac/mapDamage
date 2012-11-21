@@ -39,27 +39,27 @@ sampleHJ <- function(x,size,prob){
 }
 
 
-estLinNuVector <- function(nuVec,cp){
-    #Since the nick frequency is supposed to 
-    #be uniform on the double stranded interval 
-    #we fit the site specific probabilities with 
-    #a line.
-    model <- lm(nuVec[1:(cp$m/2)]~c(1:(cp$m/2)))
-    tempNuVec <- predict(model)
-    tempNuVec[tempNuVec>1] <-1 
-    tempNuVec[tempNuVec<0] <-0
-    return(c(tempNuVec,rev(1-tempNuVec)))
-}
-
-seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only){
+seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
+    if (is.na(fo_only) || is.na(re_only)){
+        cat("Must give parameters to fo_only or re_only\n")
+        stop()
+    }
     psum <- matrix(ncol=1,nrow=m)
     pvals <- dnbinom(c(1:m)-1,prob=lambda,size=lambda_disp)
     for (i in 1:m){
         psum[i,1] <- (1-sum(pvals[1:i]))/2
     }
     if (fo_only){
+        #Only the forward part
         return(c(psum))
-    }else {
+    }else if (re_only && fo_only){
+        cat("Shouldn't call this function with foward and reverse only.\n")
+        stop()
+    }else if (re_only) {
+        #The reverse part
+        return(rev(c(psum)))
+    }else{
+        #Both ends
         psum <- c(psum[1:(m/2),1],rev(psum[1:(m/2),1]))
         return(c(psum))
     }
@@ -248,7 +248,7 @@ for (int i = 0; i<laVec.size();i++){
 return(ret);
 ', plugin="RcppGSL",include="#include <gsl/gsl_sf_gamma.h>")
 
-logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m,meanLength,forward_only){
+logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
 
     if (deltad<0 || deltad>1 || deltas<0 || deltas>1  ){
         return(-Inf)
@@ -384,7 +384,7 @@ runGibbs <- function(cu_pa,iter){
             cu_pa<-updateNu(cu_pa)
         }
         esti[i,c(1:7)] <- getParams(cu_pa) 
-        esti[i,"LogLik"] <- logLikAll(cu_pa$dat,cu_pa$ThetaMat,cu_pa$DeltaD,cu_pa$DeltaS,cu_pa$laVec,cu_pa$nuVec,cu_pa$m,cu_pa$meanLength,cu_pa$forward_only)
+        esti[i,"LogLik"] <- logLikAll(cu_pa$dat,cu_pa$ThetaMat,cu_pa$DeltaD,cu_pa$DeltaS,cu_pa$laVec,cu_pa$nuVec,cu_pa$m)
         if (! (i %% 1000)){
             cat("MCMC-Iter\t",i,"\t",esti[i,"LogLik"],"\n")
         }
@@ -392,39 +392,19 @@ runGibbs <- function(cu_pa,iter){
     return(list(out=esti,cu_pa=cu_pa))
 }
 
-checkIfInsideConf <- function(out,ref_val=c(0,0,0,0,0)){
-    ret <- rep(NA,5)
-    for (i in 1:length(ref_val)){
-        if (i==1){
-            inT <- quantile(1/4-exp(-mcmcOut$out[,i])/4,c(0.025,.975))
-        }else {
-            inT <- quantile(mcmcOut$out[,i],c(0.025,.975))
-        }
-        if (inT[1]<ref_val[i] && ref_val[i]<inT[2]){
-            ret[i] <- TRUE
-        }else {
-            ret[i] <- FALSE
-        }
-    }
-    return(ret)
-}
-
-statsData <- function(out,para){
-    te <- c(mean(out[,para]),quantile(out[,para],c(0.05,0.95)))
-    names(te)[1] <-para 
-    return(te)
-}
 
 simPredCheck <- function(da,output){
+    #Simulates one draw from the posterior predictive distribution
     bases <- da[,c("A","C","G","T")]
-    #
+    #Constructing the lambda vector
     if (output$cu_pa$same_overhangs){
-        laVec <- seqProbVecLambda(sample(output$out[,"Lambda"],1),sample(output$out[,"LambdaDisp"],1),output$cu_pa$m,output$cu_pa$forward_only)
+        laVec <- seqProbVecLambda(sample(output$out[,"Lambda"],1),sample(output$out[,"LambdaDisp"],1),output$cu_pa$m,output$cu_pa$forward_only,cu_pa$reverse_only)
     }else {
-        laVecLeft <- seqProbVecLambda(sample(output$out[,"Lambda"],1),sample(output$out[,"LambdaDisp"],1),output$cu_pa$m,0)
-        laVecRight <- seqProbVecLambda(sample(output$out[,"LambdaRight"],1),sample(output$out[,"LambdaDisp"],1),output$cu_pa$m,0)
+        laVecLeft <- seqProbVecLambda(sample(output$out[,"Lambda"],1),sample(output$out[,"LambdaDisp"],1),output$cu_pa$m,0,0)
+        laVecRight <- seqProbVecLambda(sample(output$out[,"LambdaRight"],1),sample(output$out[,"LambdaDisp"],1),output$cu_pa$m,0,0)
         laVec <- c(laVecLeft[1:(output$cu_pa$m/2)],laVecRight[(output$cu_pa$m/2+1):output$cu_pa$m])
     }
+    #Constructing the nu vector
     if (output$cu_pa$nuSamples !=0){
     nuVec <- seqProbVecNuWithLengths(sample(output$out[,"Lambda"],1),sample(output$out[,"LambdaDisp"],1),sample(output$out[,"Nu"],1),nrow(cu_pa$dat),
                                                sampleHJ(output$cu_pa$lengths$Length,size=output$cu_pa$laSamples,prob=output$cu_pa$lengths$Occurences),output$cu_pa$mLe,
@@ -433,6 +413,7 @@ simPredCheck <- function(da,output){
     }else {
         nuVec <- output$cu_pa$nuVec
     }
+    #Sample the other parameters
     des <- sample(output$out[,"DeltaS"],1)
     ded <- sample(output$out[,"DeltaD"],1)
     ptrans <- 1/4-exp(-sample(output$out[,"Theta"],1))/4
@@ -461,6 +442,8 @@ simPredCheck <- function(da,output){
 }
 
 postPredCheck <- function(da,output,samples=1000){
+    #Plots the 95% posterior predictive intervals with the 
+    #data as lines.
     CTs <- matrix(NA,nrow=nrow(da),ncol=samples)
     GAs <- matrix(NA,nrow=nrow(da),ncol=samples)
     REs <- matrix(NA,nrow=nrow(da),ncol=samples)
@@ -471,18 +454,17 @@ postPredCheck <- function(da,output,samples=1000){
         REs[,i] <- apply(subs[,c("A.C","A.G","A.T","C.A","C.G","G.C","G.T","T.A","T.C","T.G")],1,mean)
     }
     subs <- simPredCheck(da,output)
-    #plot(da[,"C.T"]/da[,"C"],col="blue",pch="+")
-    CTsStats <- data.frame(x=c(1:nrow(da)),
+    CTsStats <- data.frame(x=da[,"Pos"],
                            mea=apply(CTs,1,mean),
                            med=apply(CTs,1,median),
                            loCI=apply(CTs,1,quantile,c(0.025)),
                            hiCI=apply(CTs,1,quantile,c(0.975)))
-    GAsStats <- data.frame(x=c(1:nrow(da)),
+    GAsStats <- data.frame(x=da[,"Pos"],
                            mea=apply(GAs,1,mean),
                            med=apply(GAs,1,median),
                            loCI=apply(GAs,1,quantile,c(0.025)),
                            hiCI=apply(GAs,1,quantile,c(0.975)))
-    REsStats <- data.frame(x=c(1:nrow(da)),
+    REsStats <- data.frame(x=da[,"Pos"],
                            mea=apply(REs,1,mean),
                            med=apply(REs,1,median),
                            loCI=apply(REs,1,quantile,c(0.025)),

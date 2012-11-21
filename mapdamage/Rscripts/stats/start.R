@@ -10,10 +10,19 @@ logLikAllOptimize  <- function(x){
         return(Inf)
     }
     theta_mat  <- getTheta(x[1])
-    leftLaVec  <- seqProbVecLambda(x[4],x[6],cu_pa$m,cu_pa$forward_only)#This is ugly using global variables ....
-    rightLaVec  <- seqProbVecLambda(x[5],x[6],cu_pa$m,cu_pa$forward_only)
-    laVec <- c(leftLaVec[1:(cu_pa$m/2)],rightLaVec[(cu_pa$m/2+1):cu_pa$m])
-    return(-logLikAll(cu_pa$dat,theta_mat,x[2],x[3],laVec,cu_pa$nuVec,cu_pa$m,cu_pa$meanLength,cu_pa$forward_only))
+    leftLaVec  <- seqProbVecLambda(x[4],x[6],cu_pa$m,cu_pa$forward_only,cu_pa$reverse_only)#This is ugly using global variables ....
+    rightLaVec  <- seqProbVecLambda(x[5],x[6],cu_pa$m,cu_pa$forward_only,cu_pa$reverse_only)
+    if (cu_pa$forward_only){
+        #Only using the forward end
+        laVec <- leftLaVec
+    }else if (cu_pa$reverse_only){
+        #Only using the backward end
+        laVec <- rightLaVec
+    }else {
+        #Both ends
+        laVec <- c(leftLaVec[1:(cu_pa$m/2)],rightLaVec[(cu_pa$m/2+1):cu_pa$m])
+    }
+    return(-logLikAll(cu_pa$dat,theta_mat,x[2],x[3],laVec,cu_pa$nuVec,cu_pa$m))
 }
 
 
@@ -81,7 +90,7 @@ gridSearch <- function(cp,iter){
     cp$DeltaD <- minParams$par[2]
     cp$DeltaS <- minParams$par[3]
     cp$Lambda <- minParams$par[4]
-    cp$laVec <- seqProbVecLambda(cp$Lambda,cp$LambdaDisp,nrow(cp$dat),cp$forward_only)
+    cp$laVec <- seqProbVecLambda(cp$Lambda,cp$LambdaDisp,nrow(cp$dat),cp$forward_only,cp$reverse_only)
     cp$old_lik <- - minVal
     #Since optim function returns the parameters in different orders it makes 
     #little bit complicated.
@@ -90,7 +99,7 @@ gridSearch <- function(cp,iter){
     }else if (cp$fix_disp && !cp$same_overhangs) {
         #Fixing the dispersion and overhangs are different ...
         cp$LambdaRight <- minParams$par[5]
-        cp$laVecRight <- seqProbVecLambda(cp$LambdaRight,cp$LambdaDisp,nrow(cp$dat),cp$forward_only)
+        cp$laVecRight <- seqProbVecLambda(cp$LambdaRight,cp$LambdaDisp,nrow(cp$dat),cp$forward_only,cp$reverse_only)
     } else if (!cp$fix_disp && cp$same_overhangs){
         #Variable dispersion and over hangs are same 
         cp$LambdaDisp <- minParams$par[5]
@@ -98,7 +107,7 @@ gridSearch <- function(cp,iter){
         #Variable dispersion and over hangs are different (Most general case)
         cp$LambdaRight <- minParams$par[5]
         cp$LambdaDisp <- minParams$par[6]
-        cp$laVecRight <- seqProbVecLambda(cp$LambdaRight,cp$LambdaDisp,nrow(cp$dat),cp$forward_only)
+        cp$laVecRight <- seqProbVecLambda(cp$LambdaRight,cp$LambdaDisp,nrow(cp$dat),cp$forward_only,cp$reverse_only)
     }else {
         print("There is something wrong with the settings")
         stop()

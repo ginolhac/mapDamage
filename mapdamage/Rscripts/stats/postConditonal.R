@@ -5,7 +5,7 @@ updateTheta <- function(cp){
         new_lik<- -Inf
     } else {
         theta_star_mat  <- getTheta(theta_star)
-        new_lik_func  <-  logLikAll(cp$dat,theta_star_mat,cp$DeltaD,cp$DeltaS,cp$laVec,cp$nuVec,cp$m,cp$meanLength,cp$forward_only)
+        new_lik_func  <-  logLikAll(cp$dat,theta_star_mat,cp$DeltaD,cp$DeltaS,cp$laVec,cp$nuVec,cp$m)
         new_lik <- new_lik_func+priorTheta(theta_star)
     }
     if (metroDesc(new_lik,old_lik)) {
@@ -24,7 +24,7 @@ updateDeltaD <- function(cp){
     if (deltad_star<0 || deltad_star>1){
         new_lik <- -Inf
     }else {
-        new_lik_func <- logLikAll(cp$dat,cp$ThetaMat,deltad_star,cp$DeltaS,cp$laVec,cp$nuVec,cp$m,cp$meanLength,cp$forward_only)
+        new_lik_func <- logLikAll(cp$dat,cp$ThetaMat,deltad_star,cp$DeltaS,cp$laVec,cp$nuVec,cp$m)
         new_lik <- new_lik_func+priorDeltaD(deltad_star)
     }
     if (metroDesc(new_lik,old_lik)) {
@@ -41,7 +41,7 @@ updateDeltaS <- function(cp){
     if (deltas_star<0|| deltas_star>1){
         new_lik <- -Inf
     }else {
-        new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,deltas_star,cp$laVec,cp$nuVec,cp$m,cp$meanLength,cp$forward_only)
+        new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,deltas_star,cp$laVec,cp$nuVec,cp$m)
         new_lik  <- new_lik_func+priorDeltaS(deltas_star)
     }
     if (metroDesc(new_lik,old_lik)) {
@@ -59,7 +59,7 @@ updateLambda <- function(cp){
     if (lambda_star<0 || lambda_star>1){
         return(cp)
     } 
-    laVecStarLeft  <- seqProbVecLambda(lambda_star,cp$LambdaDisp,cp$m,cp$forward_only)
+    laVecStarLeft  <- seqProbVecLambda(lambda_star,cp$LambdaDisp,cp$m,cp$forward_only,cp$reverse_only)
     if (!cp$same_overhangs){
         #The left and right overhangs are not the same!
         laVecStar <- c(laVecStarLeft[1:(cp$m/2)],cp$laVecRight[(cp$m/2+1):cp$m])
@@ -67,7 +67,7 @@ updateLambda <- function(cp){
         #It left and right are the same
         laVecStar <- laVecStarLeft
     }
-    new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,laVecStar,cp$nuVec,cp$m,cp$meanLength,cp$forward_only)
+    new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,laVecStar,cp$nuVec,cp$m)
     new_lik  <- new_lik_func+priorLambda(lambda_star)
     if (metroDesc(new_lik,old_lik)) {
         #Accept
@@ -85,7 +85,7 @@ updateLambdaRight <- function(cp){
         #Reject this right away
         return(cp)
     } 
-    laVecStarRight  <- seqProbVecLambda(lambda_right_star,cp$LambdaDisp,cp$m,cp$forward_only)
+    laVecStarRight  <- seqProbVecLambda(lambda_right_star,cp$LambdaDisp,cp$m,cp$forward_only,cp$reverse_only)
     if (!cp$same_overhangs){
         #The left and right overhangs are not the same!
         laVecStar <- c(cp$laVec[1:(cp$m/2)],laVecStarRight[(cp$m/2+1):cp$m])
@@ -98,7 +98,11 @@ updateLambdaRight <- function(cp){
         print("You shouldn't be calling this function if you are only considering the forward part")
         stop()
     }
-    new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,laVecStar,cp$nuVec,cp$m,cp$meanLength,cp$forward_only)
+    if (cp$reverse_only){
+        print("You shouldn't be calling this function if you are only considering the reverse part")
+        stop()
+    }
+    new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,laVecStar,cp$nuVec,cp$m)
     new_lik  <- new_lik_func+priorLambdaRight(lambda_right_star)
     if (metroDesc(new_lik,old_lik)) {
         #Accept
@@ -116,13 +120,13 @@ updateLambdaDisp <- function(cp){
         return(cp)
     } 
     if (!cp$same_overhangs){
-        leftLaVecStar  <- seqProbVecLambda(cp$Lambda,lambda_disp_star,cp$m,cp$forward_only)
-        rightLaVecStar  <- seqProbVecLambda(cp$LambdaRight,lambda_disp_star,cp$m,cp$forward_only)
+        leftLaVecStar  <- seqProbVecLambda(cp$Lambda,lambda_disp_star,cp$m,cp$forward_only,cp$reverse_only)
+        rightLaVecStar  <- seqProbVecLambda(cp$LambdaRight,lambda_disp_star,cp$m,cp$forward_only,cp$reverse_only)
         laVecStar <- c(leftLaVecStar[1:(cp$m/2)],rightLaVecStar[(cp$m/2+1):cp$m])
     }else {
-        laVecStar  <- seqProbVecLambda(cp$Lambda,lambda_disp_star,cp$m,cp$forward_only)
+        laVecStar  <- seqProbVecLambda(cp$Lambda,lambda_disp_star,cp$m,cp$forward_only,cp$reverse_only)
     }
-    new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,laVecStar,cp$nuVec,cp$m,cp$meanLength,cp$forward_only)
+    new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,laVecStar,cp$nuVec,cp$m)
     new_lik  <- new_lik_func+priorLambdaDisp(lambda_disp_star)
     if (metroDesc(new_lik,old_lik)) {
         #Accept
@@ -140,7 +144,7 @@ updateNu <- function(cp){
         return(cp)
     }
     nu_Vec_star <- seqProbVecNuWithLengths(cp$Lambda,cp$LambdaDisp,nu_star,cp$m,sampleHJ(cp$lengths$Length,size=cp$nuSamples,prob=cp$lengths$Occurences),cp$mLe,cp$forward_only,cu_pa$nuSamples,cu_pa$ds_protocol)
-    new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,cp$laVec,nu_Vec_star,cp$m,cp$meanLength,cp$forward_only)
+    new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,cp$laVec,nu_Vec_star,cp$m)
     new_lik  <- new_lik_func+priorNu(nu_star)
     if (metroDesc(new_lik,old_lik)) {
         #Accept
