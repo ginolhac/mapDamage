@@ -95,6 +95,8 @@ def dmgFreqIsLow(folder):
 def _print_freq_table(table, columns, opt, out, offset = 0):
   out.write("# table produced by mapDamage version %s\n" % __version__)
   out.write("# using mapped file %s and %s as reference file\n" % (opt.filename, opt.ref))
+  if opt.minqual != 0:
+    out.write("# Bases with a Phred score < %d were filtered out\n" % opt.minqual)
   out.write("# Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads\n")
   out.write("Chr\tEnd\tStd\tPos\t%s\n" % ("\t".join(columns)))
 

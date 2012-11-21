@@ -86,7 +86,7 @@ def options(args):
           default=False,action="store_true")
     group.add_option("-v","--verbose",dest="verbose",help="Display progression information during parsing",\
           default=False,action="store_true")
-    group.add_option("--no-plot",dest="nor",help=SUPPRESS_HELP, default=False, action="store_true")
+    group.add_option("--no-plot",dest="no_r",help=SUPPRESS_HELP, default=False, action="store_true")
     parser.add_option_group(group)
 
     # options for plotting damage patterns
@@ -116,6 +116,8 @@ def options(args):
             help="Number of final MCMC iterations  [%default]", type = int, default=50000,action="store")
     group3.add_option("","--forward",dest="forward",\
             help="Using only the 5' end of the seqs  [%default]", type = int, default=0,action="store")
+    group3.add_option("","--reverse",dest="reverse",\
+            help="Using only the 3' end of the seqs  [%default]", type = int, default=0,action="store")
     group3.add_option("","--fix-disp",dest="fix_disp",\
             help="Fix dispersion in the overhangs  [%default]", type = int, default=1,action="store")
     group3.add_option("","--same-hangs",dest="same_hangs",\
@@ -138,6 +140,7 @@ def options(args):
     # check python version
     if not checkPyVersion():
         return None
+
 
     # check general arguments
     if not (options.plot_only or options.stats_only) and not options.filename:
@@ -176,6 +179,11 @@ def options(args):
     if options.minqual < 0 or  options.minqual > 41:
         parser.error('minimal base quality, Phred score, must be within this range: 0 - 41')
 
+    # check statistic options
+    if options.forward and options.reverse:
+        parser.error('Cannot use only forward end and only reverse end for the statistics')
+
+
     # check folder
     if not options.folder and options.filename:
         options.folder = "results_"+os.path.splitext(os.path.basename(options.filename))[0]
@@ -195,7 +203,7 @@ def options(args):
     # check if the Rscript executable is present on the system
     if not whereis('Rscript'):
         print("Warning, Rscript is not in your PATH, plotting is disabled")
-        options.nor = True
+        options.no_r = True
 
     if checkRLib():
         #Check for R libraries
