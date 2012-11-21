@@ -57,20 +57,22 @@ import pysam
 import mapdamage
 
 
-def downsample_reads(bamfile, downsample_to):
-    if downsample_to is None:
+def downsample_reads(bamfile, options):
+    if options.downsample is None:
         return bamfile
-    elif downsample_to < 1:
-        assert downsample_to > 0, "Downsample fraction must be positive, not %s" % downsample_to
-        return (record for record in bamfile if random.random() < downsample_to)
+
+    rand = random.Random(options.downsample_seed)
+    if options.downsample < 1:
+        assert options.downsample > 0, "Downsample fraction must be positive, not %s" % options.downsample
+        return (record for record in bamfile if rand.random() < options.downsample)
     else:
-        sample = [None] * downsample_to
+        sample = [None] * options.downsample
         for (index, record) in enumerate(bamfile):
-            if index >= downsample_to:
-                index = random.randint(0, index)
-                if index >= downsample_to:
+            if index >= options.downsample:
+                index = rand.randint(0, index)
+                if index >= options.downsample:
                     continue
-            sample[index] = record
+                sample[index] = record
 
         return filter(None, sample)
 
@@ -153,7 +155,7 @@ def main(argv):
     counter = filtered = 0
 
     # main loop
-    for read in downsample_reads(in_bam, options.downsample):
+    for read in downsample_reads(in_bam, options):
         counter += 1
 
         if read.is_unmapped:

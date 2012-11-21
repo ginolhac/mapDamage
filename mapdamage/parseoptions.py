@@ -70,6 +70,8 @@ def options(args):
     group.add_option("-n", "--downsample", help = "Downsample to a randomly selected fraction of the reads (if 0 < DOWNSAMPLE < 1), or " \
                      "a fixed number of randomly selected reads (if DOWNSAMPLE >= 1). By default, no downsampling is performed.",
                      type = float, default = None)
+    group.add_option("--downsample-seed", help = "Seed value to use for downsampling. See documentation for py module 'random' for default behavior.",
+                     type = int, default = None)
     group.add_option("-l","--length",dest="length",help="read length, in nucleotides to consider [%default]",\
             type = int, default=70,action="store")
     group.add_option("-a","--around",dest="around",help="nucleotides to retrieve before/after reads [%default]",\
