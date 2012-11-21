@@ -74,6 +74,11 @@ def dmgFreqIsLow(folder):
   """
   total = 0.0
   for filename in ("5pCtoT_freq.txt", "5pGtoA_freq.txt"):
+    if not os.path.exists(filename):
+      print("Error: Required table has not been created ('%s'), bayesian computation cannot be performed" \
+            % filename)
+      return True
+
     with open(os.path.join(folder, filename)) as handle:
       for line in handle:
         freq = line.strip().split('\t')
