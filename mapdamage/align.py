@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import itertools
+import mapdamage
 
 # from Martin Kircher, description of CIGAR operations
 #O BAM Description
