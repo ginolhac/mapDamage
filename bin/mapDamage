@@ -72,8 +72,8 @@ def downsample_reads(bamfile, options):
                 index = rand.randint(0, index)
                 if index >= options.downsample:
                     continue
-                sample[index] = record
-
+            sample[index] = record
+                
         return filter(None, sample)
 
 
