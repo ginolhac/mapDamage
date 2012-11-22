@@ -54,11 +54,15 @@ logLikAllOptimizeWOLambdaDispAndSamOverhang <- function(x){
 
 
 gridSearch <- function(cp,iter){
+    #Starts the Markov chain in local maxima for "quicker" burn-in period
+    #No theoritical reasoning behind here but seems to work well in practice.
     if (cp$nuSamples!=0){
         print("Can't use the grid search with simulated nu vector")
         stop()
     }
-    cat("Starting grid search, starting from random values\n")
+    if(!cp$quiet){
+        cat("Starting grid search, starting from random values\n")
+    }
     minVal <- Inf
     minParams <- list()
     control  <- list(maxit=5000)
@@ -83,7 +87,9 @@ gridSearch <- function(cp,iter){
             minParams <- out
             minVal <- out$value
         }
-        cat("Iteration\t",i,"\t",-minVal,"\n")
+        if (cp$verbose){
+            cat("Iteration\t",i,"\t",-minVal,"\n")
+        }
     }
     cp$Theta <- minParams$par[1]
     cp$ThetaMat <- getTheta(cp$Theta)

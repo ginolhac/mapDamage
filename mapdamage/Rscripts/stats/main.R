@@ -1,9 +1,9 @@
 #Load the libraries
-library(inline)
-library(ggplot2)
-library(Rcpp)
-library(gam)
-library(RcppGSL)
+suppressMessages(library(inline))  #Already checked the libraries 
+suppressMessages(library(ggplot2)) #thus ignoring any messages from them
+suppressMessages(library(Rcpp))
+suppressMessages(library(gam)) 
+suppressMessages(library(RcppGSL))
 
 #Miscellaneous functions 
 source(paste(path_to_mapDamage_stats,"function.R",sep=""))
@@ -34,7 +34,7 @@ if (nu_samples!=0){
 }
 
 if (forward_only && reverse_only){
-    cat("Cannot specify using only the 5' end and the 3' end which makes no sense\n")
+    write("Cannot specify using only the 5' end and the 3' end which makes no sense",stderr())
     stop()
 }
 
@@ -75,7 +75,9 @@ cu_pa <- list(
               reverse_only=reverse_only,
               fix_disp= fix_disp,
               same_overhangs= same_overhangs,
-              old_lik=-Inf
+              old_lik=-Inf,
+              verbose=verbose,
+              quiet=quiet
               )
 
 if (nu_samples!=0){
@@ -99,10 +101,10 @@ cu_pa$laVec <- seqProbVecLambda(cu_pa$Lambda,cu_pa$LambdaDisp,nrow(cu_pa$dat),cu
 if (!cu_pa$same_overhangs){
     #The overhangs are not the same
     if (cu_pa$forward_only){
-        cat("Cannot use different overhangs with only the 5' end\n")
+        write("Cannot use different overhangs with only the 5' end",stderr())
         stop()
     } else if (cu_pa$reverse_only){
-        cat("Cannot use different overhangs with only the 3' end\n")
+        write("Cannot use different overhangs with only the 3' end",stderr())
         stop()
     }
     cu_pa$laVecRight <- seqProbVecLambda(cu_pa$LambdaRight,cu_pa$LambdaDisp,nrow(cu_pa$dat),cu_pa$forward_only,cu_pa$reverse_only)
@@ -117,11 +119,11 @@ if (!cu_pa$same_overhangs){
 if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
     #Using the single stranded protocol with nu samples which makes 
     #no sense
-    print("Silly to use the MC estimation for nu_i if using the single stranded protocol")
+    write("Silly to use the MC estimation for nu_i if using the single stranded protocol", stderr())
     stop()
 }else if (cu_pa$nuSamples!=0 & cu_pa$fix_nu) {
     #Using the fixed nu parameter with nu samples which makes no sense 
-    print("Silly to use the MC estimation for nu_i and use fix_nu ")
+    write("Silly to use the MC estimation for nu_i and use fix_nu ", stderr())
     stop()
 }else if (cu_pa$nuSamples!=0){
     #Using the nu vector
@@ -198,21 +200,31 @@ cu_pa$old_lik <- logLikAll(cu_pa$dat,
 
 if (adjust_iter==0){
     #Single burnin period
-    cat("Single burn in period\n")
+    if (!cu_pa$quiet){
+        cat("Single burn in period\n")
+    }
     mcmcOut <- runGibbs(cu_pa,burn_in)
     cu_pa <- mcmcOut$cu_pa
 }else {
     for (i in 1:adjust_iter){
-        cat("Adjusting the proposal variance iteration ",i," \n")
+        if (!cu_pa$quiet){
+            cat("Adjusting the proposal variance iteration ",i," \n")
+        }
         mcmcOut <- runGibbs(cu_pa,burn_in)
         cu_pa <- mcmcOut$cu_pa
         proposeParameters <- adjustPropVar(mcmcOut,proposeParameters)
     }
 }
 
-cat("Done burning, starting the iterations\n")
+if (!cu_pa$quiet){
+    cat("Done burning, starting the iterations\n")
+}
 mcmcOut <- runGibbs(cu_pa,iterations)
 cu_pa <- mcmcOut$cu_pa
+
+if (!cu_pa$quiet){
+    cat("Done with the iterations, finishing up\n")
+}
 
 if (out_file_base!=""){
     cat("Writing and plotting to files\n")
