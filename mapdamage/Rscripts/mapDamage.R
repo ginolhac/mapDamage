@@ -105,14 +105,14 @@ write.mutation.table <- function(tbl, end, mismatch, filename)
 
 
 plot.mutations <- function(end, axis.at, start.i, end.i, modifier) {
-  do.plot <- function(tbl, end, modifier, mismatches, color) {
+  do.plot <- function(tbl, end, modifier, mismatches, color, width) {
     subtable <- tbl[tbl$End == end, c("Pos", mismatches)]
     rates    <- rowSums(subtable) - subtable$Pos
     subtable <- aggregate(list(Rate = rates), list(Pos = subtable$Pos), sum)
     
     lines(subtable$Pos * modifier, subtable$Rate,
           xlim = c(1, OPT.LENGTH), ylim = c(0, OPT.YMAX),
-          col = color, lwd = 1)
+          col = color, lwd = width)
   }
   
   plot(NA, xlim = c(start.i, end.i), ylim=c(0, OPT.YMAX), col="grey", lwd = 1, type = "l", xlab = "", ylab = "", axes = FALSE)
@@ -121,14 +121,14 @@ plot.mutations <- function(end, axis.at, start.i, end.i, modifier) {
   draw.open.rect(start.i, OPT.YMAX, end.i, -0.01, padding = 0.5)
   
   for (mismatch in MISMATCHES) {
-    do.plot(mut, end, modifier, mismatch, "grey")
+    do.plot(mut, end, modifier, mismatch, "grey", 1)
   }
   
-  do.plot(mut, end, modifier, CLIPPING,   "orange")
-  do.plot(mut, end, modifier, DELETIONS,  "green")
-  do.plot(mut, end, modifier, INSERTIONS, "purple")
-  do.plot(mut, end, modifier, "G>A",      "blue")
-  do.plot(mut, end, modifier, "C>T",      "red")
+  do.plot(mut, end, modifier, CLIPPING,   "orange", 1)
+  do.plot(mut, end, modifier, DELETIONS,  "green", 1)
+  do.plot(mut, end, modifier, INSERTIONS, "purple", 1)
+  do.plot(mut, end, modifier, "G>A",      "blue", 2)
+  do.plot(mut, end, modifier, "C>T",      "red", 2)
 }
 
 
