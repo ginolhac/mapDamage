@@ -20,7 +20,24 @@ def count_read_comp(read, chrom, length, comp):
   _update_table(comp[chrom]['3p'][std], reversed(seq), xrange(-1, - length - 1, -1))
 
 
+def count_read_comp_with_qual(read, chrom, opt, comp):
+  std, seq, qual = '+', read.query, read.qqual
+  if read.is_reverse:
+    std, seq, qual = '-', mapdamage.seq.revcomp(seq), qual[::-1]
+
+  _update_table_with_qual(comp[chrom]['5p'][std], seq, qual, \
+      xrange(1, opt.length + 1), opt.minqual)
+  _update_table_with_qual(comp[chrom]['3p'][std], reversed(seq), reversed(qual), \
+      xrange(-1, - opt.length - 1, -1), opt.minqual)
+
+
 def _update_table(table, sequence, indices):
   for (index, nt) in itertools.izip(indices, sequence):
     if nt in table:
-      table[nt][index]      += 1
+      table[nt][index] += 1
+
+
+def _update_table_with_qual(table, sequence, qualities, indices, threshold):
+  for (index, nt, qual) in itertools.izip(indices, sequence, qualities):
+    if nt in table and (ord(qual)-33) >= threshold:
+      table[nt][index] += 1
