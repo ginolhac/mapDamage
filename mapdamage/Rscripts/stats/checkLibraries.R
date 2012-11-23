@@ -10,7 +10,7 @@ if (whichProgram=="inline"){
 } else if (whichProgram=="Rcpp"){
     library(Rcpp)
 } else if  (whichProgram=="gam"){
-    library(gam)
+    library(gam) 
 } else if  (whichProgram=="RcppGSL"){
     library(RcppGSL)
 } else {

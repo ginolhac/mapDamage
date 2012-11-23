@@ -146,6 +146,9 @@ def options(args):
     if options.stats_only and not options.folder:
         parser.error('Folder not provided, required with --stats-only')
 
+    if options.verbose and options.quiet:
+        parser.error('Cannot use verbose and quiet option at the same time')
+
     # check options
     if options.length < 0:
         parser.error('length (-l) must be a positive integrer')

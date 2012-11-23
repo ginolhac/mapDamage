@@ -41,7 +41,7 @@ sampleHJ <- function(x,size,prob){
 
 seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
     if (is.na(fo_only) || is.na(re_only)){
-        cat("Must give parameters to fo_only or re_only\n")
+        write("Must give parameters to fo_only or re_only",stderr())
         stop()
     }
     psum <- matrix(ncol=1,nrow=m)
@@ -53,7 +53,7 @@ seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
         #Only the forward part
         return(c(psum))
     }else if (re_only && fo_only){
-        cat("Shouldn't call this function with foward and reverse only.\n")
+        write("Shouldn't call this function with foward and reverse only.",stderr())
         stop()
     }else if (re_only) {
         #The reverse part
@@ -385,7 +385,7 @@ runGibbs <- function(cu_pa,iter){
         }
         esti[i,c(1:7)] <- getParams(cu_pa) 
         esti[i,"LogLik"] <- logLikAll(cu_pa$dat,cu_pa$ThetaMat,cu_pa$DeltaD,cu_pa$DeltaS,cu_pa$laVec,cu_pa$nuVec,cu_pa$m)
-        if (! (i %% 1000)){
+        if (! (i %% 1000) && cu_pa$verbose){
             cat("MCMC-Iter\t",i,"\t",esti[i,"LogLik"],"\n")
         }
     }

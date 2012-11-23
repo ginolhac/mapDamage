@@ -54,14 +54,22 @@ import mapdamage
 
 
 def downsample_reads(bamfile, options):
+    """
+    Takes a subset of the bamfile. Can use a approximate fraction of the
+    hits or specific number of reads using reservoir sampling. Returns 
+    a list in the last case otherwise a iterator.
+    """
     if options.downsample is None:
+        # no subsampling
         return bamfile
 
     rand = random.Random(options.downsample_seed)
     if options.downsample < 1:
+        # use fraction of the reads
         assert options.downsample > 0, "Downsample fraction must be positive, not %s" % options.downsample
         return (record for record in bamfile if rand.random() < options.downsample)
     else:
+        # use reservoir sampling
         sample = [None] * options.downsample
         for (index, record) in enumerate(bamfile):
             if index >= options.downsample:
@@ -87,7 +95,7 @@ def main(argv):
             mapdamage.rscript.plot(options)
             return 0
 
-    # Run the Bayesian estimation if the matrix construction is done
+    # run the Bayesian estimation if the matrix construction is done
     if options.stats_only:
         # does not work for very low damage levels
         if mapdamage.tables.dmg_freq_is_low(options.folder):
@@ -242,7 +250,7 @@ def main(argv):
     if mapdamage.tables.dmg_freq_is_low(options.folder):
         options.no_stats = True
 
-    # Run the Bayesian estimation
+    # run the Bayesian estimation
     if not options.no_stats:
         mapdamage.rscript.run_stats(options)
 
