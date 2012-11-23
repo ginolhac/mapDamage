@@ -157,7 +157,7 @@ plot.base.composition(com, "T", "red",   OPT.AROUND, xlabels = TRUE,  ylabels.at
 mut <- calculate.mutation.table(OPT.MISINCORP, OPT.LENGTH)
 # Write table of post-morten damage frequencies to tables
 write.mutation.table(mut, "5p", "C>T", paste(OPT.FOLDER, "/5pCtoT_freq.txt", sep = ""))
-write.mutation.table(mut, "3p", "G>A", paste(OPT.FOLDER, "/5pGtoA_freq.txt", sep = ""))
+write.mutation.table(mut, "3p", "G>A", paste(OPT.FOLDER, "/3pGtoA_freq.txt", sep = ""))
 
 par(mar = c(1, 2, 1, 1))
 plot.mutations("5p", 2, 1, OPT.LENGTH, 1)

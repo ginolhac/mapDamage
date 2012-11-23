@@ -9,68 +9,239 @@ mapDamage2 is Python/R scripts that tracks and quantify DNA damage patterns amon
 * R (version >= 2.15.1) must be present in your $PATH. Otherwise, only tables will be produced.
 * pysam, python package, an interface for reading/writing SAM/BAM files
 * R libraries:
-- inline
-- gam
-- Rccp
-- RcppGSL
-- ggplot2 (>=0.9.2)
+ - inline
+ - gam
+ - Rccp
+ - RcppGSL
+ - ggplot2 (>=0.9.2)
 
 ### Installation
 
-mapDamage2 has been successfully tested on GNU/Linux and MacOSX environments.
+mapDamage2 was successfully tested on GNU/Linux and MacOSX environments.
 
 install the mapDamage package:
 download the tarball archive
+
 untar the archive
-  tar xfz mapDamage-0.4.tgz
-  cd mapDamage-0.4
+ 
+`tar xfz mapDamage-0.4.tgz`
+  
+`cd mapDamage-0.4`
+
 run the following command if you have administrator rights
-  sudo python setup.py install
+  
+`sudo python setup.py install`
+
 otherwise install it locally
-  python setup.py install --user
+ 
+`python setup.py install --user`
+
 Then, $HOME/.local/bin must be in your PATH
 
 
 
 To install R, follow the instructions available at
-http://www.r-project.org/
+[http://www.r-project.org/]
+
+
 Install the missing R packages by running in a R console and selecting a CRAN mirror:
-install.packages("inline")
-install.packages("gam")
-install.packages("Rcpp")
-install.packages("ggplot2")
+
+`install.packages("inline")`
+`install.packages("gam")`
+`install.packages("Rcpp")`
+`install.packages("ggplot2")`
 
 For RcppGSL, download the tarball at the following url:
-http://cran.r-project.org/web/packages/RcppGSL/index.html
+
+[http://cran.r-project.org/web/packages/RcppGSL/index.html]
 and install it:
-install.packages("RcppGSL_0.2.0.tar.gz")
 
-### Examples and datasets
-The original page with examples, datasets and result files is there:
+`install.packages("RcppGSL_0.2.0.tar.gz")`
 
-http://geogenetics.ku.dk/publications/mapdamage/
+---
 
 News in version 0.4
----------------------
+--------------------
+- The main new feature is the **approximate bayesian estimation of damage parameters**.
+- The program was rewritten in python to make it simpler and the dependencies to samtools and bedtools were replaced by the use of pysam.
+The memory footprint is now negligible and runtime reduced by ca. 25%.
 
+Inputs
+------
+
+Two files are needed:
+
+- A valid SAM/BAM file, this implies a correct header, provided with the -i option.
+- A FASTA file (could be optionally gzipped) that contains reference sequences used for mapping reads, provided by the -r option. 
+
+References described in the SAM/BAM header and the FASTA file must be coherent, i.e, 
+the references must have the same names and identical lengths.
+
+As an alternative, one can run only the plotting and / or statistic estimations 
+on an already processed dataset. Use a combination of -d option followed by 
+a valid folder and the `--plot-only` and / or `--stats-only` options.
+
+Outputs
+-------
+
+In total, 12 files are produced in the result folder.
+
+- a log file with a summary of options used and number of reads / bases processed.
+
+For the plotting:
+
+ - a pdf file that displays both fragmentation and misincorporation patterns
+ - misincorporation.txt, contains a table that compiles occurences for each type of mutations
+ - 5pCtoT\_freq.txt, contains frequencies of Cytosine to Thymine mutations per position from the 5'-ends
+ - 3pGtoA\_freq.txt, contains frequencies of Guanine to Adenine mutations per position from the 3'-ends
+ - dnacomp.txt, contains a table that compiles base compositions.
+ - lgdistribution.txt, contains a table with read length distributions per strand
+ 
+For the statistic estimations:
+
+ - Stats\_out\_MCMC\_hist.pdf, distribution barplots for the 4 damage parameters and log(likelihood)
+ - Stats\_out\_MCMC\_iter.csv, individual values for the 4 damage parameters and log(likelihood) for all iterations
+ - Stats\_out\_MCMC\_trace.jpeg, picture that displays values contained in Stats\_out\_MCMC\_iter.csv
+ - Stats\_out\_MCMC\_iter\_summ\_stat.csv, summary statistics for the 4 damage parameters and log(likelihood)
+ - Stats\_out\_post\_pred.pdf, superposition of real misincorporation patterns and fitted model 
 
 Usage
 -----
 
+    Usage: mapDamage [options] -i BAMfile -r reference.fasta
+    
+    Use option -h or --help for help
+    
+    Options:
+
+       --version             show program's version number and exit
+       -h, --help            show this help message and exit
+    Input files:
+   
+        -i FILENAME, --input=FILENAME
+                             SAM/BAM file, must contain a valid header, use '-' for reading a BAM from stdin
+        -r REF, --reference=REF
+                            Reference file in FASTA format
+    General options:
+        -n DOWNSAMPLE, --downsample=DOWNSAMPLE
+                            Downsample to a randomly selected fraction of the reads (if 0 < DOWNSAMPLE < 1), or a fixed number of randomly selected reads (if DOWNSAMPLE >= 1). By default, no downsampling is performed.
+        -l LENGTH, --length=LENGTH
+                            read length, in nucleotides to consider [70]
+        -a AROUND, --around=AROUND
+                            nucleotides to retrieve before/after reads [10]
+        -Q MINQUAL, --min-basequal=MINQUAL
+                            minimun base quality Phred score considered, Phred-33 assumed [0]
+        -d FOLDER, --folder=FOLDER
+                        folder name to store results [results_FILENAME]
+        -f, --fasta         Write alignments in a FASTA file
+        --plot-only         Run only plotting from a valid result folder
+        -q, --quiet         Disable any output to stdout
+        -v, --verbose       Display progression information during parsing
+    Options for graphics:
+        -y YMAX, --ymax=YMAX
+                            graphical y-axis limit for nucleotide misincorporation frequencies [0.3]
+        -m READPLOT, --readplot=READPLOT
+                            read length, in nucleotides, considered for plotting nucleotide misincorporations [25]
+        -b REFPLOT, --refplot=REFPLOT
+                            the number of reference nucleotides to consider for ploting base composition in the region located
+                            upstream and downstream of every read [10]
+        -t TITLE, --title=TITLE
+                            title used for both graph and filename [plot]
+    Options for the statistical estimation:
+        --rand=RAND         Number of random starting points for the likelihood optimization [30]
+        --burn=BURN         Number of burnin iterations [10000]
+        --adjust=ADJUST     Number of adjust proposal variance parameters iterations [10]
+        --iter=ITER         Number of final MCMC iterations [50000]
+        --forward=FORWARD   Using only the 5' end of the seqs [0]
+        --reverse=REVERSE   Using only the 3' end of the seqs [0]
+        --fix-disp=FIX_DISP Fix dispersion in the overhangs [1]
+        --same-hangs=SAME_HANGS
+                            The overhangs are the same on both sides [1]
+        --fix-nicks=FIX_NICKS
+                            Fix the nick frequency vector nu else estimate it with GAM [0]
+        --double_stranded=DOUBLE_STRANDED
+                            Double stranded protocol [1]
+        --seq-length=SEQ_LENGTH
+                            How long sequence to use from each side [12]
+        --stats-only        Run only statistical estimation from a valid result folder
+
+Description of tables
+---------------------
+### misincorporation table
+
+This file looks like:
+ 
+    # table produced by mapDamage version 0.4.0
+    # using mapped file hits_sort_mts.bam and NC_012920.fasta as reference file
+    # Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads
+    Chr	End	Std	Pos	A	C	G	T	Total	G>A	C>T	A>G	T>C	A>C	A>T	C>G	C>A	T>G	T>A	G>C	G>T	A>-	T>-	C>-	G>-	->A	->T	->C	->G	S
+    NC_012920.1	3p	+	1	424	579	201	424	1628	48	16	3	5	1	0	2	1	0	2	1	0	0	0	0	0	4	4	1	1	0
+    NC_012920.1	3p	+	2	466	535	213	404	1618	30	12	2	1	0	1	0	0	3	3	1	0	0	0	0	0	2	6	5	7	0
+    NC_012920.1	3p	+	3	514	463	223	417	1617	35	15	3	1	1	0	0	0	1	0	1	1	0	0	0	2	9	4	4	4	0
+    NC_012920.1	3p	+	4	514	483	221	400	1618	30	11	3	4	0	1	1	0	0	1	0	1	1	0	0	2	5	5	8	2	0
+
+The first lines that start by a hash contain information about the options used while processing the data.
+Then, the table contains occurences for each of the 12 mutation type + 4 deletions + 4 insetions + soft-clipping, per reference (`Chr` column), per strand (`Std` column) , per end (XXXX) and per position.
+
+The Fragmisincorporation plot sums up occurences mutations all references and strand orientations and displays frequencies per position.  
+
+**5p** means reads analyzed from their 5'-ends and are depicted at the bottom left.
+  
+**3p** means reads analyzed from their 3'-ends and are depicted at the bottom right.
+
+**Remark concerning soft-clipping**:
+
+Soft-clipped bases are bases located at read extremities that are NOT aligned to the reference. 
+Those bases are not taken into account and alignments are computed on aligned bases. 
+However, the soft-clipped bases are recorded and displayed as an orange line as a diagnostic for users.
+Even if, the positions for those bases are different from positions of all misincorporations, they should warn
+users that reads should be trimmed if soft-clipped base frequencies is high.
+
+
+
+
+dnacomp table
+-------------
+
+    # table produced by mapDamage version 0.4.0
+    # using mapped file hits_sort_mts.bam and NC_012920.fasta as reference file
+    # Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads
+    Chr	End	Std	Pos	A	C	G	T	Total
+    NC_012920.1	3p	+	-70	113	77	43	181	414
+    NC_012920.1	3p	+	-69	178	140	97	233	648
+    NC_012920.1	3p	+	-68	230	145	98	219	692
+    NC_012920.1	3p	+	-67	217	157	76	272	722
+    NC_012920.1	3p	+	-66	224	188	88	239	739
+    NC_012920.1	3p	+	-65	244	165	104	262	775
+    NC_012920.1	3p	+	-64	223	185	102	288	798
+
+
+### Examples and datasets
+
+A simple command line that would process a whole BAM file with both plotting and statistic estimation is:
+    mapDamage -i mymap.bam -r myreference.fasta
+
+
+
+The original page with examples, datasets and result files is there:
+
+http://geogenetics.ku.dk/publications/mapdamage/
 
 Citation
 --------
-If you use this script, please cite the following publication: Ginolhac A, Rasmussen M, Gilbert MT, Willerslev E, Orlando L.
-mapDamage: testing for damage patterns in ancient DNA sequences. Bioinformatics. 2011 27(15):2153-5
+If you use this program, please cite the following publication: Ginolhac A, Rasmussen M, Gilbert MT, Willerslev E, Orlando L.
+mapDamage: testing for damage patterns in ancient DNA sequences. _Bioinformatics_ 2011 **27**(15):2153-5
 http://bioinformatics.oxfordjournals.org/content/27/15/2153
 
 FAQ
 -----------
-
 Q: I got this error: could not find function "ggtitle"
+
 A: update your ggplot2 package to at least version 0.9.2 by running
 update.packages("ggplot2") and selecting a CRAN mirror
 
 Contact
 -------
-Please report bugs and suggest possible improvements to Aurelien Ginolhac, Mikkel Schubert or Hákon Jónsson by email. 
+Please report bugs and suggest possible improvements to Aurelien Ginolhac, Mikkel Schubert or Hákon Jónsson by email:
+aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com.
+
