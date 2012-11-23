@@ -26,6 +26,7 @@ def whereis(program):
     return None
 
 
+
 def check_py_version():
     req_version = (2, 6)
     cur_version = sys.version_info
@@ -38,7 +39,7 @@ def check_py_version():
         return None
 
 
-def options(args):
+def options():  
     parser = OptionParser("%prog [options] -i BAMfile -r reference.fasta\n\nUse option -h or --help for help", version=__version__, \
             epilog="report bugs to aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com")
 
@@ -198,4 +199,6 @@ def options(args):
         print("The Bayesian estimation has been disabled\n")
         options.no_stats = True
 
+
     return options
+

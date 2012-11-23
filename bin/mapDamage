@@ -51,7 +51,7 @@ except ImportError, e:
 
 import pysam
 import mapdamage
-
+from mapdamage.logger import mapDamageLogger  
 
 def downsample_reads(bamfile, options):
     """
@@ -82,7 +82,15 @@ def downsample_reads(bamfile, options):
 
 
 def main(argv):
-    options = mapdamage.parseoptions.options(argv)
+    options = mapdamage.parseoptions.options()
+    
+    # make a logger for mapDamage
+    map_logger=mapDamageLogger("root")
+    map_logger.specialize(options.folder)
+
+    # write the commandline to the log 
+    map_logger.commandline()
+
     if not options:
         return 1
 
@@ -133,7 +141,7 @@ def main(argv):
         mapdamage.seq.describe_sequence_dicts(fai_lengths, reflengths)
         return 1
 
-    # for misincorporation patterns, record mismaches
+    # for misincorporation patterns, record mismatches
     misincorp = mapdamage.tables.initialize_mut(reflengths, options.length)
     # for fragmentation patterns, record base compositions
     dnacomp =  mapdamage.tables.initialize_comp(reflengths, options.around, options.length)
@@ -149,9 +157,9 @@ def main(argv):
         print("\tWriting results to '%s/'" % options.folder)
 
 
-    # open file handler to write alignements in fasta format
+    # open file handler to write alignments in fasta format
     if options.fasta:
-        # use name of the sam/bam filename without extension
+        # use name of the SAM/BAM filename without extension
         ffasta = os.path.splitext(os.path.basename(options.filename))[0]+'.fasta'
         if not options.quiet:
             print("\tWriting alignments in '%s'" % ffasta)
@@ -254,8 +262,9 @@ def main(argv):
     if not options.no_stats:
         mapdamage.rscript.run_stats(options)
 
-
-
+    # log the time it took
+    map_logger.finish()
+    
     return 0
 
 if __name__ == '__main__':
