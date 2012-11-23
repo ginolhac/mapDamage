@@ -180,10 +180,11 @@ def main(argv):
         seq = read.query
 
         # add gaps according to the cigar string, do it for qualities if filtering options is on
-        if options.minqual == 0:
+        if not options.minqual:
             (seq, refseq) = mapdamage.align.align(read.cigar, seq, refseq)
         else:
-            (seq, qual, refseq) = mapdamage.align.align_with_qual(read.cigar, seq, read.qqual, refseq)
+            # add gaps to qualities and mask read and reference nucleotides if below desired threshold
+            (seq, qual, refseq) = mapdamage.align.align_with_qual(read.cigar, seq, read.qqual, options.minqual, refseq)
 
         # reverse complement read and reference when mapped reverse strand
         if read.is_reverse:
@@ -192,27 +193,18 @@ def main(argv):
             beforerev = mapdamage.seq.revcomp(after)
             after = mapdamage.seq.revcomp(before)
             before = beforerev
-            if options.minqual != 0:
-                qual = mapdamage.seq.revcomp(qual)
+            if options.minqual:
+              qual = qual[::-1]
 
         # record soft clipping when present
         mapdamage.align.record_soft_clipping(read, misincorp[chrom], options.length)
 
-        if options.minqual == 0:
-            # count misincorparations by comparing read and reference base by base
-            mapdamage.align.get_mis(read, seq, refseq, chrom, options.length, misincorp, '5p')
-            # do the same with sequences align to 3'-ends
-            mapdamage.align.get_mis(read, seq[::-1], refseq[::-1], chrom, options.length, misincorp, '3p')
-            # compute base composition for reads
-            mapdamage.composition.count_read_comp(read, chrom, options.length, dnacomp)
-
-        else:
-            # count misincorparations by comparing read and reference base by base, with quality filtering
-            mapdamage.align.get_mis_with_qual(read, seq, qual, options.minqual, refseq, chrom, options.length, misincorp, '5p')
-            # do the same with sequences align to 3'-ends
-            mapdamage.align.get_mis_with_qual(read, seq[::-1], qual[::-1], options.minqual, refseq[::-1], chrom, options.length, misincorp, '3p')
-            # compute base composition for reads
-            mapdamage.composition.count_read_comp_with_qual(read, chrom, options, dnacomp)
+        # count misincorparations by comparing read and reference base by base
+        mapdamage.align.get_mis(read, seq, refseq, chrom, options.length, misincorp, '5p')
+        # do the same with sequences align to 3'-ends
+        mapdamage.align.get_mis(read, seq[::-1], refseq[::-1], chrom, options.length, misincorp, '3p')
+        # compute base composition for reads
+        mapdamage.composition.count_read_comp(read, chrom, options.length, dnacomp)
 
         # compute base composition for genomic regions
         mapdamage.composition.count_ref_comp(read, chrom, before, after, dnacomp)

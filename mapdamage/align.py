@@ -55,7 +55,7 @@ def align(cigarlist, seq, ref):
   return "".join(lread), "".join(lref)
 
 
-def align_with_qual(cigarlist, seq, qual, ref):
+def align_with_qual(cigarlist, seq, qual, threshold, ref):
   """ insert gaps according to the cigar string 
   deletion: gaps to be inserted into read sequences and qualities, 
   insertions: gaps to be inserted into reference sequence """  
@@ -68,6 +68,12 @@ def align_with_qual(cigarlist, seq, qual, ref):
   for nbr, idx in parse_cigar(cigarlist, 2):
     lread[idx:idx] = ["-"] * nbr
     lqual[idx:idx] = ["-"] * nbr
+
+  for idx, score in enumerate(lqual):
+    # mask read and reference nucleotides (so not gaps) if below desired threshold
+    if (ord(score)-33) < threshold and lread[idx] != "-":
+      lread[idx] = "N"
+      lref[idx]  = "N"
 
   return "".join(lread), "".join(lqual), "".join(lref)
 
@@ -86,33 +92,13 @@ def get_mis(read, seq, refseq, ref, length, tab, end):
     # Most ref/seq pairs will be identical
     if (nt_ref != nt_seq):
       mut = "%s>%s" % (nt_ref, nt_seq)
+      # discard masked nucleotides
       if mut in subtable:
         subtable[mut][i] += 1
 
 
-def get_mis_with_qual(read, seq, qual, threshold, refseq, ref, length, tab, end):
-  std = '-' if read.is_reverse else '+'
-  subtable = tab[ref][end][std]
-
-  for (i, nt_seq, q_seq, nt_ref) in itertools.izip(xrange(length), seq, qual, refseq):
-    # discard bases with low qualities, not consider gaps
-    if ord(q_seq)-33 < threshold and nt_seq != "-":
-      continue
-    else:
-      if nt_ref in subtable:
-        # record base composition in the reference, only A, C, G, T
-        subtable[nt_ref][i] += 1
-
-      # Most ref/seq pairs will be identical
-      if (nt_ref != nt_seq):
-        mut = "%s>%s" % (nt_ref, nt_seq)
-        if mut in subtable:
-          subtable[mut][i] += 1
-
-
 def parse_cigar(cigarlist, ope):
-
-  """ for a specific operation (mismach, match, insertion, deletion... see above
+  """ for a specific operation (mismach, match, insertion, deletion... see above)
   return occurences and index in the alignment """
   tlength = 0
   coordinate = []
@@ -127,6 +113,7 @@ def parse_cigar(cigarlist, ope):
 
 
 def record_soft_clipping(read, tab, length):
+  """ record soft clipped bases at extremities """
   def update_table(end, std, bases):
     for i in range(0, min(bases, length)):
       tab[end][std]['S'][i] += 1

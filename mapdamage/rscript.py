@@ -34,8 +34,7 @@ def plot(opt):
       opt.ymax, opt.folder, opt.title, __version__]
   code = subprocess.call(map(str, call))
 
-  #print " ".join(map(str, call))
-  if code == 0:
+  if code == 0 and not opt.quiet:
     print("pdf %s generated using R" % title)
     return 0
   else:
@@ -80,25 +79,25 @@ def run_stats(opt):
     """
     Runs the Bayesian estimation program, using the options o
     """
-    arg = ["Rscript",                           \
-         construct_R_path("stats/runGeneral.R"),\
-         "--args",                              \
-         opt.rand,                              \
-         opt.burn,                              \
-         opt.adjust,                            \
-         opt.iter,                              \
-         opt.forward,                           \
-         opt.reverse,                           \
-         opt.fix_disp,                          \
-         opt.same_hangs,                        \
-         0,                                     \
-         opt.fix_nicks,                         \
-         opt.double_stranded,                   \
-         opt.seq_length,                        \
-         opt.folder+"/",                        \
-         construct_R_path("stats/"),            \
-         opt.folder+"/Stats_out",               \
-         int(opt.verbose),                      \
+    arg = ["Rscript",                            \
+         construct_R_path("stats/runGeneral.R"), \
+         "--args",                               \
+         opt.rand,                               \
+         opt.burn,                               \
+         opt.adjust,                             \
+         opt.iter,                               \
+         opt.forward,                            \
+         opt.reverse,                            \
+         opt.fix_disp,                           \
+         opt.same_hangs,                         \
+         0,                                      \
+         opt.fix_nicks,                          \
+         opt.double_stranded,                    \
+         opt.seq_length,                         \
+         opt.folder+"/",                         \
+         construct_R_path("stats/"),             \
+         opt.folder+"/Stats_out",                \
+         int(opt.verbose),                       \
          int(opt.quiet)
          ]  
     arg = [str(i) for i in arg]

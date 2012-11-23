@@ -6,8 +6,8 @@ mapDamage2 is Python/R scripts that tracks and quantify DNA damage patterns amon
 ### Requirements
 
 * Python (version >= 2.6)
-* R (version >= 2.15.1) must be present in your $PATH. Otherwise, only tables will be produced.
-* pysam, python package, an interface for reading/writing SAM/BAM files
+* [http://www.r-project.org/][R] (version >= 2.15.1) must be present in your $PATH. Otherwise, only tables will be produced.
+* [http://code.google.com/p/pysam/][pysam], python package, an interface for reading/writing SAM/BAM files
 * R libraries:
  - inline
  - gam
@@ -19,44 +19,36 @@ mapDamage2 is Python/R scripts that tracks and quantify DNA damage patterns amon
 
 mapDamage2 was successfully tested on GNU/Linux and MacOSX environments.
 
-install the mapDamage package:
-download the tarball archive
+1. install the mapDamage package:
+> download the tarball archive  
+> untar the archive  
+> `tar xfz mapDamage-0.4.tgz`  
+> `cd mapDamage-0.4`  
+> run the following command if you have administrator rights  
+> `sudo python setup.py install`  
+> otherwise install it locally  
+> `python setup.py install --user`  
+> Then, $HOME/.local/bin must be in your PATH
 
-untar the archive
- 
-`tar xfz mapDamage-0.4.tgz`
-  
-`cd mapDamage-0.4`
+2. install the python package pysam
+> Download the tarball archive:  
+> [http://code.google.com/p/pysam/downloads/list][]  
+> and follow instructions in the INSTALL text file.
 
-run the following command if you have administrator rights
-  
-`sudo python setup.py install`
-
-otherwise install it locally
- 
-`python setup.py install --user`
-
-Then, $HOME/.local/bin must be in your PATH
-
-
-
-To install R, follow the instructions available at
-[http://www.r-project.org/]
+3. To install R, follow the instructions available at
+> [http://www.r-project.org/][]
 
 
-Install the missing R packages by running in a R console and selecting a CRAN mirror:
+4. Install the missing R packages by running in a R console and selecting a CRAN mirror:
+> `install.packages("inline")`  
+> `install.packages("gam")`  
+> `install.packages("Rcpp")`  
+> `install.packages("ggplot2")`  
 
-`install.packages("inline")`
-`install.packages("gam")`
-`install.packages("Rcpp")`
-`install.packages("ggplot2")`
-
-For RcppGSL, download the tarball at the following url:
-
-[http://cran.r-project.org/web/packages/RcppGSL/index.html]
-and install it:
-
-`install.packages("RcppGSL_0.2.0.tar.gz")`
+> > For RcppGSL, download the tarball at the following url:  
+> > [http://cran.r-project.org/web/packages/RcppGSL/index.html][]  
+> > and install it:  
+> > `install.packages("RcppGSL_0.2.0.tar.gz")`
 
 ---
 
@@ -116,8 +108,9 @@ Usage
 
        --version             show program's version number and exit
        -h, --help            show this help message and exit
+
     Input files:
-   
+  
         -i FILENAME, --input=FILENAME
                              SAM/BAM file, must contain a valid header, use '-' for reading a BAM from stdin
         -r REF, --reference=REF
@@ -137,7 +130,9 @@ Usage
         --plot-only         Run only plotting from a valid result folder
         -q, --quiet         Disable any output to stdout
         -v, --verbose       Display progression information during parsing
+
     Options for graphics:
+
         -y YMAX, --ymax=YMAX
                             graphical y-axis limit for nucleotide misincorporation frequencies [0.3]
         -m READPLOT, --readplot=READPLOT
@@ -147,7 +142,9 @@ Usage
                             upstream and downstream of every read [10]
         -t TITLE, --title=TITLE
                             title used for both graph and filename [plot]
+
     Options for the statistical estimation:
+
         --rand=RAND         Number of random starting points for the likelihood optimization [30]
         --burn=BURN         Number of burnin iterations [10000]
         --adjust=ADJUST     Number of adjust proposal variance parameters iterations [10]
@@ -181,7 +178,15 @@ This file looks like:
     NC_012920.1	3p	+	4	514	483	221	400	1618	30	11	3	4	0	1	1	0	0	1	0	1	1	0	0	2	5	5	8	2	0
 
 The first lines that start by a hash contain information about the options used while processing the data.
-Then, the table contains occurences for each of the 12 mutation type + 4 deletions + 4 insetions + soft-clipping, per reference (`Chr` column), per strand (`Std` column) , per end (XXXX) and per position.
+Then, the table contains occurences for each of the 12 mutation type + 4 deletions + 4 insetions + 
+soft-clipping, per reference (`Chr` column), per strand (`Std` column) , per end (`End` column) and per position (`Pos` column). 
+In Z>X, Z comes from the reference, X is the nucleotide from reads. Eventually, A, C, G, T come from the reference and Total is the sum of the four nucleotides.
+Frequencies depicted in Fragmisincorporation pdf file are computed per position as follows:
+
+occurences of mutations / occurences of the reference nucleotide. In order to compensate for base composition biases.
+
+In this example, for G>A at the first base from the 3'-ends and for the positive strand:
+`48 / 201 = 0.238806`
 
 The Fragmisincorporation plot sums up occurences mutations all references and strand orientations and displays frequencies per position.  
 
@@ -198,11 +203,9 @@ Even if, the positions for those bases are different from positions of all misin
 users that reads should be trimmed if soft-clipped base frequencies is high.
 
 
-
-
-dnacomp table
--------------
-
+### dnacomp table
+First lines of one example below:
+ 
     # table produced by mapDamage version 0.4.0
     # using mapped file hits_sort_mts.bam and NC_012920.fasta as reference file
     # Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads
@@ -215,23 +218,46 @@ dnacomp table
     NC_012920.1	3p	+	-65	244	165	104	262	775
     NC_012920.1	3p	+	-64	223	185	102	288	798
 
+The first lines that start by a hash contain information about the options used while processing the data.
+Then, the table contains occurences for each nucleotides, per reference (`Chr` column), 
+per strand (`Std` column) , per end (`End` column) and per position (`Pos` column).
 
-### Examples and datasets
+At a given position, base composition is recorded either for the reference or for reads.
 
+The following table details which sequences and coordinates are used by default:
+
+| Positions       |      5p              |          3p          |
+|:---------------:|:--------------------:|:--------------------:|
+| negative values | reference, -10 to -1 | reads, -25 to -1     |
+| positive values | reads, +1 to +25     | reference, +1 to +10 |
+
+ 
+
+
+Examples and datasets
+---------------------
 A simple command line that would process a whole BAM file with both plotting and statistic estimation is:
+
     mapDamage -i mymap.bam -r myreference.fasta
 
+To run the plotting part with a new scale to fit lower levels of DNA damages, 0.1 as y-limit instead of 0.3 by default:
+
+     mapDamage -d results_mydata -y 0.1 --plot-only
+
+To run the statistic estimationst using only the 5'-ends and display all iterations:
+
+     mapDamage -d results_mydata --forward --stats-only -v
 
 
 The original page with examples, datasets and result files is there:
 
-http://geogenetics.ku.dk/publications/mapdamage/
+[http://geogenetics.ku.dk/publications/mapdamage/][]
 
 Citation
 --------
 If you use this program, please cite the following publication: Ginolhac A, Rasmussen M, Gilbert MT, Willerslev E, Orlando L.
 mapDamage: testing for damage patterns in ancient DNA sequences. _Bioinformatics_ 2011 **27**(15):2153-5
-http://bioinformatics.oxfordjournals.org/content/27/15/2153
+[http://bioinformatics.oxfordjournals.org/content/27/15/2153][]
 
 FAQ
 -----------
@@ -243,5 +269,5 @@ update.packages("ggplot2") and selecting a CRAN mirror
 Contact
 -------
 Please report bugs and suggest possible improvements to Aurelien Ginolhac, Mikkel Schubert or Hákon Jónsson by email:
-aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com.
+aginolhac at snm.ku.dk, MSchubert at snm.ku.dk or jonsson.hakon at gmail.com.
 

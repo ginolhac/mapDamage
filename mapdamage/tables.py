@@ -73,7 +73,7 @@ def dmg_freq_is_low(folder):
   Bayesian estimation of DNA damages, i.e < 1% at first position.
   """
   total = 0.0
-  for filename in ("5pCtoT_freq.txt", "5pGtoA_freq.txt"):
+  for filename in ("5pCtoT_freq.txt", "3pGtoA_freq.txt"):
     if not os.path.exists(folder+"/"+filename):
       print("Error: Required table has not been created ('%s'), bayesian computation cannot be performed" \
             % filename)
