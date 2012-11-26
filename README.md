@@ -78,7 +78,7 @@ Outputs
 
 In total, 12 files are produced in the result folder.
 
-- a log file with a summary of options used and number of reads / bases processed.
+- Runtime\_log.txt, log file with a summary of options used and number of reads / bases processed.
 
 For the plotting:
 
