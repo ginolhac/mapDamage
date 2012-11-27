@@ -101,6 +101,8 @@ def main(argv):
             return 1
         else:
             mapdamage.rscript.plot(options)
+            if options.plot_lg:
+                mapdamage.rscript.opt_plots(options)
             return 0
 
     # run the Bayesian estimation if the matrix construction is done
@@ -244,6 +246,8 @@ def main(argv):
     # plot using R
     if not options.no_r:
         mapdamage.rscript.plot(options)
+        if options.plot_lg:
+            mapdamage.rscript.opt_plots(options)
 
     # does not work for very low damage levels
     if mapdamage.tables.dmg_freq_is_low(options.folder):

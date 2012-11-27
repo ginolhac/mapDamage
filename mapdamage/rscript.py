@@ -35,11 +35,33 @@ def plot(opt):
   code = subprocess.call(map(str, call))
 
   if code == 0 and not opt.quiet:
-    print("pdf %s generated using R" % title)
+    print("pdf %s generated" % title)
     return 0
   else:
     print("Error: plotting with R failed")
     return 1
+
+
+        
+def opt_plots(opt):       
+  """ optional plots for length distribution
+  and cumulative C>T mutations, per strand """
+  
+  fmut = opt.folder+"/"+"misincorporation.txt"
+  flength = opt.folder+"/"+"lgdistribution.txt"
+  output = opt.folder+"/"+"Length_"+opt.title+".pdf"
+
+  script = construct_R_path("lengths.R") 
+  call = ["Rscript", script, flength, output, fmut, opt.length, \
+      opt.title, __version__]
+  code = subprocess.call(map(str, call))
+  if code == 0 and not opt.quiet:
+    print("additional pdf %s generated" % output)
+    return 0
+  else:
+    print("Error: plotting with R failed")
+    return 1
+
 
 def check_R_one_lib(name):
     """Checks if a necessary R library is here."""
@@ -48,6 +70,7 @@ def check_R_one_lib(name):
         return subprocess.call(["Rscript", rpa, "--args", name],
                                stdout = devnull,
                                stderr = devnull)
+
 
 def check_R_lib():
     """

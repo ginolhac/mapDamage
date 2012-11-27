@@ -89,6 +89,9 @@ def options():
     group2.add_option("-t", "--title", dest="title", \
           help="title used for both graph and filename [%default]", \
           type="string", default="plot",action="store")
+    group.add_option("", "--length-plot", dest="plot_lg", help="Plot length distributions, global and per strand. "
+          "Plus cumulative damage-related mutations per strand", \
+          default=False,action="store_true")
     parser.add_option_group(group2)
 
     # Then the plethora of optional options for the statistical estimation ..
