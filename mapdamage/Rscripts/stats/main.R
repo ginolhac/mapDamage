@@ -239,9 +239,11 @@ if (out_file_base!=""){
     plotEverything(mcmcOut,hi=1)
     dev.off()
     #Posterior predictive plot 
-    pdf(paste(out_file_base,"_post_pred.pdf",sep=""))
-    postPredCheck(dat,mcmcOut)
+    pdf(paste(out_file_base,"_MCMC_post_pred.pdf",sep=""))
+    siteProb <- postPredCheck(dat,mcmcOut)
     dev.off()
+    #Write correcting probabilities 
+    write.csv(siteProb,paste(out_file_base,"_MCMC_correct_prob.csv",sep=""))
 } else {
     cat("Plotting\n")
     plotEverything(mcmcOut,hi=0)

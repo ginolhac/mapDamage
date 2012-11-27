@@ -395,6 +395,8 @@ runGibbs <- function(cu_pa,iter){
 
 simPredCheck <- function(da,output){
     #Simulates one draw from the posterior predictive distribution
+    #and the probability of a C>T substitution because of a cytosine 
+    #demnation.
     bases <- da[,c("A","C","G","T")]
     #Constructing the lambda vector
     if (output$cu_pa$same_overhangs){
@@ -406,9 +408,9 @@ simPredCheck <- function(da,output){
     }
     #Constructing the nu vector
     if (output$cu_pa$nuSamples !=0){
-    nuVec <- seqProbVecNuWithLengths(sample(output$out[,"Lambda"],1),sample(output$out[,"LambdaDisp"],1),sample(output$out[,"Nu"],1),nrow(cu_pa$dat),
-                                               sampleHJ(output$cu_pa$lengths$Length,size=output$cu_pa$laSamples,prob=output$cu_pa$lengths$Occurences),output$cu_pa$mLe,
-                                           output$cu_pa$forward_only,output$cu_pa$nuSamples,output$cu_pa$ds_protocol) 
+        nuVec <- seqProbVecNuWithLengths(sample(output$out[,"Lambda"],1),sample(output$out[,"LambdaDisp"],1),sample(output$out[,"Nu"],1),nrow(cu_pa$dat),
+                                                   sampleHJ(output$cu_pa$lengths$Length,size=output$cu_pa$laSamples,prob=output$cu_pa$lengths$Occurences),output$cu_pa$mLe,
+                                               output$cu_pa$forward_only,output$cu_pa$nuSamples,output$cu_pa$ds_protocol) 
     nuVec <- c(nuVec,rev(1-nuVec))
     }else {
         nuVec <- output$cu_pa$nuVec
@@ -423,52 +425,81 @@ simPredCheck <- function(da,output){
     colnames(subs) <- c("A","C","G","T",coln)
     Theta <- matrix(ptrans,4,4)
     diag(Theta) <- 1-3*ptrans
+    #
+    damProb <- rep(NA,nrow(output$cu_pa$dat)) 
+    damProbGA <- damProb 
     for (i in 1:nrow(output$cu_pa$dat)){
+        #Construct the site specific probabilities 
         pct <- nuVec[i]*(laVec[i]*des+ded*(1-laVec[i]))
         pga <- (1-nuVec[i])*(laVec[i]*des+ded*(1-laVec[i]))
-        pDam <- matrix(c(
+        pDamMat <- matrix(c(
                          1,0,0,0,
                          0,1-pct,0,pct,
                          pga,0,1-pga,0,
                          0,0,0,1
                          ),nrow=4,byrow=TRUE)
-        ThetapDam <- pDam %*% Theta
+        ThetapDam <- pDamMat %*% Theta
+        #Calculate the probability of cytosine demanation
+        damProb[i] <- (ThetapDam[2,4]-ptrans)/(1-3*ptrans)
+        #Do not forget the reverse complement 
+        damProbGA[i] <- (ThetapDam[3,1]-ptrans)/(1-3*ptrans)
+        #Then draw from a multinomial distribution
         subs[i,c("A.C","A.G","A.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"A"],ThetapDam[1,]))[-1]/output$cu_pa$dat[i,"A"]
         subs[i,c("C.A","C.G","C.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"C"],ThetapDam[2,]))[-2]/output$cu_pa$dat[i,"C"]
         subs[i,c("G.A","G.C","G.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"G"],ThetapDam[3,]))[-3]/output$cu_pa$dat[i,"G"]
         subs[i,c("T.A","T.C","T.G")] <- t(rmultinom(1,output$cu_pa$dat[i,"T"],ThetapDam[4,]))[-4]/output$cu_pa$dat[i,"T"]
     }
-    return(subs)
+    return(list(subs=subs,damProb=damProb,damProbGA=damProbGA))
+}
+
+calcSampleStats <- function(da,X){
+    return(data.frame(
+                      x=1:nrow(da),
+                      pos=da[,"Pos"],
+                      mea=apply(X,1,mean),
+                      med=apply(X,1,median),
+                      loCI=apply(X,1,quantile,c(0.025)),
+                      hiCI=apply(X,1,quantile,c(0.975))
+                      ))
 }
 
 postPredCheck <- function(da,output,samples=1000){
-    #Plots the 95% posterior predictive intervals with the 
-    #data as lines.
+    #Plots the 95% posterior predictive intervals with the data as lines.
+    #Returns the site specific probability of a C>T or G>A substitution 
+    #because of a cytosine demnation.
     CTs <- matrix(NA,nrow=nrow(da),ncol=samples)
     GAs <- matrix(NA,nrow=nrow(da),ncol=samples)
     REs <- matrix(NA,nrow=nrow(da),ncol=samples)
-    for (i in 1:samples){
-        subs <- simPredCheck(da,output)
-        CTs[,i] <- subs[,"C.T"]
-        GAs[,i] <- subs[,"G.A"]
-        REs[,i] <- apply(subs[,c("A.C","A.G","A.T","C.A","C.G","G.C","G.T","T.A","T.C","T.G")],1,mean)
+    C2TProbs <- matrix(NA,nrow=nrow(da),ncol=samples)
+    G2AProbs <- matrix(NA,nrow=nrow(da),ncol=samples)
+    #Two indices here, 1-based and the relative one
+    da <- cbind(1:(nrow(da)),da)
+    colnames(da)[1] <- "oneBased"
+    #Get the breaks depending on parameters for pretty plots
+    if (!output$cu_pa$forward_only || !output$cu_pa$reverse_only){
+        bres <- c(seq(from=1,to=floor(nrow(da)/2),by=2),rev(seq(from=nrow(dat),to=floor(nrow(da)/2)+1,by=-2)))
+    }else if (output$cu_pa$forward_only) {
+        bres <- seq(from=1,to=nrow(da),by=2)
+    } else if (output$cu_pa$reverse_only){
+        bres <- seq(from=nrow(dat),to=1,by=-2)
+    }else {
+        write("There is something fishy with the options",stderr())
+        stop()
     }
-    subs <- simPredCheck(da,output)
-    CTsStats <- data.frame(x=da[,"Pos"],
-                           mea=apply(CTs,1,mean),
-                           med=apply(CTs,1,median),
-                           loCI=apply(CTs,1,quantile,c(0.025)),
-                           hiCI=apply(CTs,1,quantile,c(0.975)))
-    GAsStats <- data.frame(x=da[,"Pos"],
-                           mea=apply(GAs,1,mean),
-                           med=apply(GAs,1,median),
-                           loCI=apply(GAs,1,quantile,c(0.025)),
-                           hiCI=apply(GAs,1,quantile,c(0.975)))
-    REsStats <- data.frame(x=da[,"Pos"],
-                           mea=apply(REs,1,mean),
-                           med=apply(REs,1,median),
-                           loCI=apply(REs,1,quantile,c(0.025)),
-                           hiCI=apply(REs,1,quantile,c(0.975)))
+    labs <- dat[bres,"Pos"]
+    #Sample from the posterior predicitive distibution
+    for (i in 1:samples){
+        sam <- simPredCheck(da,output)
+        C2TProbs[,i] <- sam$damProb
+        G2AProbs[,i] <- sam$damProbGA
+        CTs[,i] <- sam$subs[,"C.T"]
+        GAs[,i] <- sam$subs[,"G.A"]
+        REs[,i] <- apply(sam$subs[,c("A.C","A.G","A.T","C.A","C.G","G.C","G.T","T.A","T.C","T.G")],1,mean)
+    }
+    CTsStats <- calcSampleStats(da,CTs)
+    GAsStats <- calcSampleStats(da,GAs)
+    REsStats <- calcSampleStats(da,REs) 
+    #Plotting the posterior predictive intervals
     plot(ggplot()+
          geom_point(aes(x,mea,colour="C2T",aes_string="subs"),data=CTsStats)+
          geom_point(aes(x,mea,colour="G2A"),data=GAsStats)+
@@ -476,14 +507,19 @@ postPredCheck <- function(da,output,samples=1000){
          geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="C2T"),data=CTsStats)+
          geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="G2A"),data=GAsStats)+
          geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="Res"),data=REsStats)+
-         geom_line(aes(Pos,C.T/C),color="red",data=data.frame(da))+
-         geom_line(aes(Pos,G.A/G),color="green",data=data.frame(da))+
-         geom_line(aes(Pos,((A.C+A.G+A.T)/A+(C.A+C.G)/C+(G.C+G.T)/G+(T.A+T.C+T.G)/T)/10),color="blue",data=data.frame(da))+
+         geom_line(aes(oneBased,C.T/C),color="red",data=data.frame(da))+
+         geom_line(aes(oneBased,G.A/G),color="green",data=data.frame(da))+
+         geom_line(aes(oneBased,((A.C+A.G+A.T)/A+(C.A+C.G)/C+(G.C+G.T)/G+(T.A+T.C+T.G)/T)/10),color="blue",data=data.frame(da))+
          ylab("Substitution rate")+
-         xlab("Position")+
+         xlab("Relative position")+
+         scale_x_continuous(breaks=bres,labels=labs)+
          labs(colour = "Subs. type")+
          ggtitle("Posterior prediction intervals")
          )
+    #The correcting probabilities 
+    coProbs <- cbind(da[,"Pos"],apply(C2TProbs,1,mean),apply(G2AProbs,1,mean))
+    colnames(coProbs) <- c("Position","C.T","G.A")
+    return(coProbs)
 }
 
 
@@ -511,6 +547,5 @@ writeMCMC <- function(out,filename){
     rownames(summStat)[2] <- "Std." 
     rownames(summStat)[3] <- "Acceptance ratio" 
     write.csv(summStat,paste(filename,"_summ_stat.csv",sep=""))
-
 }
 

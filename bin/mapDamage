@@ -229,7 +229,6 @@ def main(argv):
 
     # close file handlers
     in_bam.close()
-    ref.close()
     if options.fasta:
         fhfasta.close()
 
@@ -253,6 +252,15 @@ def main(argv):
     # run the Bayesian estimation
     if not options.no_stats:
         mapdamage.rscript.run_stats(options)
+        # rescale the qualities
+        if options.rescale :
+            mapdamage.rescale.rescale_qual(ref,options.filename,options.folder,reflengths,options)
+    
+
+    
+    # need the fasta reference still open for rescaling
+    ref.close()
+    
 
     # log the time it took
     map_logger.finish()

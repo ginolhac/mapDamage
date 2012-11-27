@@ -117,6 +117,8 @@ def options():
             help="How long sequence to use from each side [%default]", type = int, default=12, action="store")
     group3.add_option("--stats-only", dest="stats_only", help="Run only statistical estimation from a valid result folder", \
           default=False, action="store_true")
+    group3.add_option("--rescale", dest="rescale", help="Rescale the quality scores in the BAM file using the output from the statistical estimation", \
+          default=False, action="store_true")
     group3.add_option("--no-stats", help=SUPPRESS_HELP, default=False, action="store_true")
 
     parser.add_option_group(group3)

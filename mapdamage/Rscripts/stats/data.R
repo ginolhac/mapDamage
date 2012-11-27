@@ -30,7 +30,7 @@ joinFowAndRev <- function(fo,re,nrPos){
     te <- fo[1:nrPos,]
     te2 <- re[nrPos:1,]
     out <- rbind(te,te2)
-    out[,"Pos"] <- seq(from=1,to=nrow(out),by=1)
+    out[,"Pos"] <- c(1:nrPos,-c(nrPos:1))
     return(out)
 }
 
