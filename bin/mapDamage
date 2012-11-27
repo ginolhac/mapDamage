@@ -26,16 +26,17 @@ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
-OR OTHER DEALINGS IN THE SOFTWARE. """
+OR OTHER DEALINGS IN THE SOFTWARE.
 
-""" plot and quantify damage patterns from a SAM/BAM file
+plot and quantify damage patterns from a SAM/BAM file
 
 :Authors: Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson, Ludovic Orlando
 :Contact: aginolhac@snm.ku.dk, MSchubert@snm.ku.dk, jonsson.hakon@gmail.com
 :Date: November 2012
 :Type: tool
 :Input: SAM/BAM
-:Output: tabulated tables, pdf """
+:Output: tabulated tables, pdf 
+"""
 
 # check if pysam if available
 MODULE = "pysam"
@@ -81,14 +82,14 @@ def downsample_reads(bamfile, options):
         return filter(None, sample)
 
 
-def main(argv):
+def main():
     options = mapdamage.parseoptions.options()
     
     # make a logger for mapDamage
-    map_logger=mapDamageLogger("root")
+    map_logger = mapDamageLogger("root")
     map_logger.specialize(options.folder)
 
-    # write the commandline to the log 
+    # write the command line to the log 
     map_logger.commandline()
 
     if not options:
@@ -121,6 +122,11 @@ def main(argv):
     # open SAM/BAM file
     if options.filename == "-":
         in_bam = pysam.Samfile("-", 'rb')
+        # disabling rescaling if reading from standard input since we need
+        # to read it twice
+        if options.rescale:
+            print("Warning, reading from standard input, rescaling is disabled")
+            options.rescale = False
     else:
         in_bam = pysam.Samfile(options.filename)
 
@@ -204,7 +210,7 @@ def main(argv):
             after = mapdamage.seq.revcomp(before)
             before = beforerev
             if options.minqual:
-              qual = qual[::-1]
+                qual = qual[::-1]
 
         # record soft clipping when present
         mapdamage.align.record_soft_clipping(read, misincorp[chrom], options.length)
@@ -257,19 +263,19 @@ def main(argv):
     if not options.no_stats:
         mapdamage.rscript.run_stats(options)
         # rescale the qualities
-        if options.rescale :
-            mapdamage.rescale.rescale_qual(ref,options.filename,options.folder,reflengths,options)
-    
-
+        if options.rescale:
+            if not options.quiet:
+                print("Starting rescaling...")
+            mapdamage.rescale.rescale_qual(ref, options)
     
     # need the fasta reference still open for rescaling
     ref.close()
     
-
     # log the time it took
     map_logger.finish()
     
     return 0
 
+
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

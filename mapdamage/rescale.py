@@ -7,12 +7,13 @@ import itertools
 import math
 
 def funny_log(x):
-    if (x==0):
+    if (x == 0):
         return 0
     else :
         return math.log(x)
 
-def get_corr_prob(fi):
+
+def get_corr_prob(folder):
     """
     Reads the damage probability correction file, returns a 
     dictionary with this structure 
@@ -20,20 +21,21 @@ def get_corr_prob(fi):
                           -  GA  -  probability
     """
     try:
-        fi_handle = csv.DictReader(open(os.path.join(fi,"Stats_out_MCMC_correct_prob.csv")))
+        fi_handle = csv.DictReader(open(os.path.join(folder,"Stats_out_MCMC_correct_prob.csv")))
         corr_prob = {}
-        for li in fi_handle:
-            if (corr_prob.has_key(li["Position"])):
-                sys.exit('This file has multiple position definitions %s, line %d: %s' % (filename, reader.line_num))
+        for line in fi_handle:
+            if (corr_prob.has_key(line["Position"])):
+                sys.exit('This file has multiple position definitions %s, line %d: %s' % \
+                    (folder, fi_handle.line_num, corr_prob[line["Position"]]))
             else:
-                corr_prob[int(li["Position"])] = {'C.T':float(li["C.T"]),'G.A':float(li["G.A"])}
+                corr_prob[int(line["Position"])] = {'C.T':float(line["C.T"]), 'G.A':float(line["G.A"])}
         return corr_prob
     except csv.Error as e:
-        sys.exit('File %s, line %d: %s' % (filename, reader.line_num, e))
+        sys.exit('File %s, line %d: %s' % (os.path.join(folder,"Stats_out_MCMC_correct_prob.csv"), \
+            fi_handle.line_num, e))
 
 
-
-def corr_this_base(corr_prob,nt_seq,nt_ref,pos,length):
+def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length):
     """
     The position specific damaging correction, using the input 
     corr_prob dictionary holding the damage correcting values 
@@ -77,9 +79,10 @@ def corr_this_base(corr_prob,nt_seq,nt_ref,pos,length):
         # used for the statistical estimation.
         return (p5_corr+p3_corr)/2
     else:
-        return max(p5_corr,p3_corr)
+        return max(p5_corr, p3_corr)
 
-def rescale_qual_read(bam,read,ref,reflengths,corr_prob,options,debug=False):
+
+def rescale_qual_read(bam, read, ref, corr_prob, debug = False):
     """
     bam              a pysam bam object
     read             a pysam read object
@@ -99,7 +102,8 @@ def rescale_qual_read(bam,read,ref,reflengths,corr_prob,options,debug=False):
     chrom = bam.getrname(read.tid)
     refseq = ref.fetch(chrom, min(coordinate), max(coordinate)).upper()
     # add gaps to qualities and mask read and reference nucleotides if below desired threshold
-    (seq, qual, refseq) = mapdamage.align.align_with_qual(read.cigar, raw_seq, read.qqual,-100, refseq)
+    (seq, qual, refseq) = mapdamage.align.align_with_qual(read.cigar, \
+        raw_seq, read.qqual, -100, refseq)
     length_read = len(raw_seq)
     length_align = len(seq)
     # reverse complement read and reference when mapped reverse strand
@@ -109,10 +113,11 @@ def rescale_qual_read(bam,read,ref,reflengths,corr_prob,options,debug=False):
         qual = qual[::-1]
     new_qual = [-100]*length_read
     pos_on_read = 0
-    for (i, nt_seq, nt_ref,nt_qual) in itertools.izip(xrange(length_align), seq, refseq, qual):
-        # rescale the quality according to the triplet position, pair of the reference and the sequence
-        pdam = 1-corr_this_base(corr_prob,nt_seq,nt_ref,pos_on_read+1,length_read)
-        pseq = 1-math.exp(-(float(ord(nt_qual))-float(33))/10)
+    for (i, nt_seq, nt_ref, nt_qual) in itertools.izip(xrange(length_align), seq, refseq, qual):
+        # rescale the quality according to the triplet position, 
+        # pair of the reference and the sequence
+        pdam = 1 - corr_this_base(corr_prob, nt_seq, nt_ref, pos_on_read + 1, length_read)
+        pseq = 1 - math.exp(-(float(ord(nt_qual))-float(33))/10)
         newp = pdam*pseq
         new_qual[pos_on_read] = chr(int(round(-10*math.log(abs(1-newp)))+33))
         if nt_seq != "-":
@@ -120,7 +125,7 @@ def rescale_qual_read(bam,read,ref,reflengths,corr_prob,options,debug=False):
     # done with the aligned portion of the read 
     new_qual = "".join(new_qual)
     if read.is_reverse:
-        new_qual=new_qual[::-1]
+        new_qual = new_qual[::-1]
 
     if (read.cigar[0][0] == 4):
         # check for soft clipping at forward end 
@@ -138,7 +143,7 @@ def rescale_qual_read(bam,read,ref,reflengths,corr_prob,options,debug=False):
         print ""
         if (refseq != seq):
             print "Reference and the sequence are not the same"
-            print [i for i, (left, right) in enumerate(zip(refseq,seq)) if left != right]
+            print [i for i, (left, right) in enumerate(zip(refseq, seq)) if left != right]
             print ""
         if read.is_reverse:
             print "rea-"+read.qual[::-1]
@@ -150,13 +155,14 @@ def rescale_qual_read(bam,read,ref,reflengths,corr_prob,options,debug=False):
             print "new-"+new_qual
         if (read.qual != new_qual):
             print "New and old qual are not the same"
-            print [i for i, (left, right) in enumerate(zip(refseq,seq)) if left != right]
+            print [i for i, (left, right) in enumerate(zip(refseq, seq)) if left != right]
         print ""
         print ""
+
     return read
 
 
-def rescale_qual(ref,bam_filename,fi,reflengths,options):
+def rescale_qual(ref, options):
     """    
     ref                a pysam fasta ref file
     bam_filename       name of a BAM/SAM file to read
@@ -167,20 +173,23 @@ def rescale_qual(ref,bam_filename,fi,reflengths,options):
     Iterates through BAM file, makes a new BAM file with rescaled qualities.
     """
     # open SAM/BAM file
-    if bam_filename == "-":
-        bam = pysam.Samfile("-", 'rb')
-    else:
-        bam = pysam.Samfile(bam_filename)
+    bam = pysam.Samfile(options.filename)
 
     # format the output filename
-    file_name, file_extension = os.path.splitext(options.filename)
-    out_file_name = os.path.basename(options.filename)+"_rescaled.bam"
+    file_name = os.path.splitext(options.filename)[0]
+    out_file_name = os.path.basename(file_name)+"_rescaled.bam"
 
-    bam_out = pysam.Samfile(os.path.join(options.folder,out_file_name),"wb",template=bam)
-    corr_prob=get_corr_prob(fi)
+    bam_out = pysam.Samfile(os.path.join(options.folder, out_file_name), "wb", template = bam)
+    
+    corr_prob = get_corr_prob(options.folder)
+    
     for hit in bam:
-        hit=rescale_qual_read(bam,hit,ref,reflengths,corr_prob,options)
+        hit = rescale_qual_read(bam, hit, ref, corr_prob)
         bam_out.write(hit)
     bam.close()
     bam_out.close()
+    if not options.quiet:
+        print("Done with rescaling.")
+    if options.verbose:
+        print("Rescaled BAM: %s" % os.path.join(options.folder, out_file_name))
 
