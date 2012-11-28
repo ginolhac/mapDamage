@@ -45,8 +45,8 @@ plot.length <- function(tbl, strand, title, color) {
 plot.lengthStd <- function(tbl, title) {
     subplus = subset(tbl, Std == "+")
     subminus = subset(tbl, Std == "-")
-    plot(subplus$Length, subplus$Occurences, type="h", col=rgb(0,0,1,1/4), main = title, axes = FALSE)
-    lines(subminus$Length, subminus$Occurences, type="h", col=rgb(1,0,0,1/4))
+    plot(subplus$Length, subplus$Occurences, type="h", col=rgb(1,0,0,1/2), main = title, axes = FALSE)
+    lines(subminus$Length, subminus$Occurences, type="h", col=rgb(0,0,1,1/2))
     mtext("Occurences", side = 4, line = 2.5, cex = 0.7)
     mtext("Read length", side = 1, line = 2, cex = 0.7)
     xcoord = seq(min(subplus$Length), max(subplus$Length), 10)
@@ -61,9 +61,9 @@ plot.cumul.mutation <- function(tbl, end, mut, sid) {
     subplus = subset(tbl, Std == "+" & End == end)
     subminus = subset(tbl, Std == "-" & End == end)
     
-    plot(cumsum(subplus[, mut]), type = "l", col = rgb(0,0,1,1/2), 
+    plot(cumsum(subplus[, mut]), type = "l", col = rgb(1,0,0,1/2), 
 	 lwd = 2, axes = FALSE)
-    lines(cumsum(subminus[, mut]), col = rgb(1,0,0,1/2), lwd = 2)
+    lines(cumsum(subminus[, mut]), col = rgb(0,0,1,1/2), lwd = 2)
     axis(side = 1, labels = TRUE, las = 2, cex.axis = 0.6)
     axis(side = sid, labels = seq(0,1,0.1), at = seq(0,1,0.1), las = 2, cex.axis = 0.6)
     mtext(mut, side = 3, line = 2, cex = 0.8)
