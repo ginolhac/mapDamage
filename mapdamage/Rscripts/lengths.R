@@ -49,8 +49,6 @@ plot.lengthStd <- function(tbl, title) {
 plot.cumul.mutation <- function(tbl, end, mut, sid) {
     subplus = subset(tbl, Std == "+" & End == end)
     subminus = subset(tbl, Std == "-" & End == end)
-    print(subplus)
-  # plot(seq(0,70,1),c(0,cumsum(subplus[, "C>T"]/sum(subplus[, "C>T"]))), type="l")
     plot(c(0, cumsum(subplus[, mut]/sum(subplus[, mut]))), 
 	 type = "l", col = rgb(1,0,0,1/2), lwd = 2, axes = FALSE)
     lines(c(0, cumsum(subminus[, mut]/sum(subminus[, mut]))), 
@@ -80,8 +78,8 @@ mtext(OPT.TITLE, 3, cex = 1.3)
 
 # Base compositions
 lg <- read.table(file = OPT.LGDIST, sep = "\t", header = TRUE, as.is = TRUE)
-plot.length(lg, "Length distribution", "black")
-plot.lengthStd(lg, "Length per strand")
+iplot.length(lg, "Single-end read length distribution", "black")
+plot.lengthStd(lg, "Single-end read length per strand")
 
 # Misincorporation patterns
 mut <- calculate.mutation.table(OPT.MISINCORP, OPT.LENGTH)
