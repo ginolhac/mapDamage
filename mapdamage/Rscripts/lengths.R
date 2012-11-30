@@ -6,28 +6,18 @@ OPT.LENGTH    <- args[4]
 OPT.TITLE     <- args[5]
 OPT.VERSION   <- args[6]
 
-NUCLEOTIDES <- c("A", "C", "G", "T", "Total")
-MISMATCHES  <- c("A>C", "A>G", "A>T", "C>A", "C>G", "C>T", "G>A", "G>C", "G>T", "T>A", "T>C", "T>G")
-INSERTIONS  <- c("->A", "->C", "->G", "->T")
-DELETIONS   <- c("A>-", "C>-", "G>-", "T>-")
-CLIPPING    <- c("S")
-EVERYTHING  <- c(NUCLEOTIDES, MISMATCHES, INSERTIONS, DELETIONS, CLIPPING)
+MISMATCHES  <- c("C>T", "G>A")
 
-calculate.mutation.table <- function(filename, length)
-  {
+calculate.mutation.table <- function(filename, length){
+
     tbl <- read.table(file = filename, sep = "\t", header = TRUE, check.names = FALSE)
-    tbl <- aggregate(tbl[, EVERYTHING], tbl[, c("End", "Std", "Pos")], sum)
-    for (mismatch in MISMATCHES) {
-      tbl[, mismatch] <- tbl[, mismatch] / tbl[, substr(mismatch, 1, 1)]
-    }
-    for (mismatch in c(INSERTIONS, DELETIONS, CLIPPING)) {
-      tbl[, mismatch] <- tbl[, mismatch] / tbl[, "Total"]
-    }
+    tbl <- aggregate(tbl[, MISMATCHES], tbl[, c("End", "Std", "Pos")], sum)
+    
     return(tbl[tbl$Pos <= length, ])
-  }
+}
 
 
-plot.length <- function(tbl, strand, title, color) {
+plot.length <- function(tbl, title, color) {
     table <- aggregate(tbl$Occurences, by=list(tbl$Length), FUN=sum)
     names(table)<- c("Length", "Occurences")
     plot(table$Length, table$Occurences, type="h",
@@ -39,7 +29,6 @@ plot.length <- function(tbl, strand, title, color) {
     xcoord = seq(min(table$Length), max(table$Length), 10)
     axis(side = 1, labels = xcoord, at = xcoord, las = 2, cex.axis = 0.6)
     axis(side = 2, labels = TRUE, las = 2, cex.axis = 0.6)
-
 }
 
 plot.lengthStd <- function(tbl, title) {
@@ -60,18 +49,20 @@ plot.lengthStd <- function(tbl, title) {
 plot.cumul.mutation <- function(tbl, end, mut, sid) {
     subplus = subset(tbl, Std == "+" & End == end)
     subminus = subset(tbl, Std == "-" & End == end)
-    
-    plot(cumsum(subplus[, mut]), type = "l", col = rgb(1,0,0,1/2), 
-	 lwd = 2, axes = FALSE)
-    lines(cumsum(subminus[, mut]), col = rgb(0,0,1,1/2), lwd = 2)
+    print(subplus)
+  # plot(seq(0,70,1),c(0,cumsum(subplus[, "C>T"]/sum(subplus[, "C>T"]))), type="l")
+    plot(c(0, cumsum(subplus[, mut]/sum(subplus[, mut]))), 
+	 type = "l", col = rgb(1,0,0,1/2), lwd = 2, axes = FALSE)
+    lines(c(0, cumsum(subminus[, mut]/sum(subminus[, mut]))), 
+	 col = rgb(0,0,1,1/2), lwd = 2)
     axis(side = 1, labels = TRUE, las = 2, cex.axis = 0.6)
     axis(side = sid, labels = seq(0,1,0.1), at = seq(0,1,0.1), las = 2, cex.axis = 0.6)
     mtext(mut, side = 3, line = 2, cex = 0.8)
-    mtext("Read position", side = 1, line = 1.5, cex = 0.7)
+    mtext("Read position", side = 1, line = 1.8, cex = 0.7)
     mtext("Cumulative frequencies", side = sid, line = 2.5, cex = 0.7)
     legend('topleft',c('+ strand','- strand'),
-       fill = rgb(1:0,0,0:1,0.4), bty = 'n',
-       border = NA)
+       	  fill = rgb(1:0,0,0:1,0.4), bty = 'n',
+          border = NA)
 }
 
 
@@ -89,7 +80,7 @@ mtext(OPT.TITLE, 3, cex = 1.3)
 
 # Base compositions
 lg <- read.table(file = OPT.LGDIST, sep = "\t", header = TRUE, as.is = TRUE)
-plot.length(lg, "+-", "Length distribution", "black")
+plot.length(lg, "Length distribution", "black")
 plot.lengthStd(lg, "Length per strand")
 
 # Misincorporation patterns
