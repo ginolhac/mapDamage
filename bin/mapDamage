@@ -148,9 +148,7 @@ def main():
     fai_lengths = mapdamage.seq.read_fasta_index(options.ref + ".fai")
     if not fai_lengths:
         return 1
-    elif (fai_lengths != reflengths):
-        sys.stderr.write("Sequence dictionary in FASTA/BAM differs:\n")
-        mapdamage.seq.describe_sequence_dicts(fai_lengths, reflengths)
+    elif not mapdamage.seq.compare_sequence_dicts(fai_lengths, reflengths):
         return 1
 
     # for misincorporation patterns, record mismatches
