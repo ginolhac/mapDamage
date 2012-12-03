@@ -78,7 +78,7 @@ mtext(OPT.TITLE, 3, cex = 1.3)
 
 # Base compositions
 lg <- read.table(file = OPT.LGDIST, sep = "\t", header = TRUE, as.is = TRUE)
-iplot.length(lg, "Single-end read length distribution", "black")
+plot.length(lg, "Single-end read length distribution", "black")
 plot.lengthStd(lg, "Single-end read length per strand")
 
 # Misincorporation patterns

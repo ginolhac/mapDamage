@@ -76,7 +76,7 @@ def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length):
         return max(p5_corr, p3_corr)
 
 
-def rescale_qual_read(bam, read, ref, corr_prob, debug = True):
+def rescale_qual_read(bam, read, ref, corr_prob, debug = False):
     """
     bam              a pysam bam object
     read             a pysam read object
