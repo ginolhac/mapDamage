@@ -67,9 +67,13 @@ def downsample_reads(bamfile, options):
     rand = random.Random(options.downsample_seed)
     if options.downsample < 1:
         # use fraction of the reads
+        if options.verbose:
+            print("\tDownsampling %.2f fraction of the original file" % options.downsample)
         assert options.downsample > 0, "Downsample fraction must be positive, not %s" % options.downsample
         return (record for record in bamfile if rand.random() < options.downsample)
     else:
+        if options.verbose:
+            print("\tDownsampling %d random reads from the original file" % options.downsample)
         # use reservoir sampling
         sample = [None] * options.downsample
         for (index, record) in enumerate(bamfile):
