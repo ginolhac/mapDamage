@@ -262,10 +262,11 @@ def main():
     # run the Bayesian estimation
     if not options.no_stats:
         mapdamage.rscript.run_stats(options)
-        # rescale the qualities
-        if options.rescale:
-            if not options.quiet:
-                print("Starting rescaling...")
+    
+    # rescale the qualities
+    if options.rescale:
+        if not options.quiet:
+            print("Starting rescaling...")
             mapdamage.rescale.rescale_qual(ref, options)
     
     # need the fasta reference still open for rescaling

@@ -6,12 +6,6 @@ import pysam
 import itertools
 import math
 
-def funny_log(x):
-    if (x == 0):
-        return 0
-    else :
-        return math.log(x)
-
 
 def get_corr_prob(folder):
     """
@@ -82,7 +76,7 @@ def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length):
         return max(p5_corr, p3_corr)
 
 
-def rescale_qual_read(bam, read, ref, corr_prob, debug = False):
+def rescale_qual_read(bam, read, ref, corr_prob, debug = True):
     """
     bam              a pysam bam object
     read             a pysam read object
@@ -117,9 +111,9 @@ def rescale_qual_read(bam, read, ref, corr_prob, debug = False):
         # rescale the quality according to the triplet position, 
         # pair of the reference and the sequence
         pdam = 1 - corr_this_base(corr_prob, nt_seq, nt_ref, pos_on_read + 1, length_read)
-        pseq = 1 - math.exp(-(float(ord(nt_qual))-float(33))/10)
-        newp = pdam*pseq
-        new_qual[pos_on_read] = chr(int(round(-10*math.log(abs(1-newp)))+33))
+        pseq = 1 - 10**(-(float(ord(nt_qual))-float(33))/10)
+        newp = pdam*pseq #This could be numerically unstable
+        new_qual[pos_on_read] = chr(int(round(-10*math.log10(abs(1-newp)))+33))
         if nt_seq != "-":
             pos_on_read += 1
     # done with the aligned portion of the read 
@@ -134,8 +128,6 @@ def rescale_qual_read(bam, read, ref, corr_prob, debug = False):
         # the same backwards
         new_qual = new_qual + read.qual[-read.cigar[-1][1]:]
 
-    # done
-    read.qual = new_qual 
     if debug:
         print ""
         print "ref-"+refseq 
@@ -158,6 +150,8 @@ def rescale_qual_read(bam, read, ref, corr_prob, debug = False):
             print [i for i, (left, right) in enumerate(zip(refseq, seq)) if left != right]
         print ""
         print ""
+    # done
+    read.qual = new_qual 
 
     return read
 
@@ -185,6 +179,9 @@ def rescale_qual(ref, options):
     
     for hit in bam:
         hit = rescale_qual_read(bam, hit, ref, corr_prob)
+        if hit.is_paired:
+            sys.stderr.write("Cannot rescale paired end reads in this versio\n")
+            sys.exit(1)
         bam_out.write(hit)
     bam.close()
     bam_out.close()
