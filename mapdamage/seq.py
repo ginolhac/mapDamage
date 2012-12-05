@@ -66,25 +66,43 @@ def read_fasta_index(filename):
   return fai
 
 
-def describe_sequence_dicts(fasta_dict, bam_dict):
-  """Compares a FASTA and BAM sequence dictionary, and prints any differences"""
+def compare_sequence_dicts(fasta_dict, bam_dict):
+  """Compares a FASTA and BAM sequence dictionary, and prints any differences.
+  Returns true if all required sequences are found, false otherwise."""
+  if fasta_dict == bam_dict:
+    return True
+
+  sys.stderr.write("Sequence dictionaries in FASTA/BAM files differ:\n")
   common = set(fasta_dict) & set(bam_dict)
   if not common:
-    sys.stderr.write("  No sequences in common!\n")
-    return
+    sys.stderr.write("FATAL ERROR: No sequences in common!\n")
+    return False
 
+  # Check that the lengths of required sequences match (fatal error)
   different = []
   for key in sorted(common):
     if fasta_dict[key] != bam_dict[key]:
       different.append((key, fasta_dict[key], bam_dict[key]))
 
   if different:
-    sys.stderr.write("  Sequence length differs:\n")
+    sys.stderr.write("FATAL ERROR: Length of required sequences differ:\n")
     for values in different:
       sys.stderr.write("    - %s: %i bp vs %i bp\n" % values)
 
-  for (dd, name) in ((fasta_dict, "FASTA"), (bam_dict, "BAM")):
-    if set(dd) - common:
-      sys.stderr.write("  Only in %s dictionary:\n" % (name,))
-      for key in set(dd) - common:
-        sys.stderr.write("    - %s = %i bp\n" % (key, dd[key]))
+  # Check for sequences only found in the BAM file (fatal errors)
+  bam_only = set(bam_dict) - common
+  if bam_only:
+    sys.stderr.write("FATAL ERROR: Sequences missing from FASTA dictionary:\n")
+    for key in bam_only:
+      sys.stderr.write("    - %s = %i bp\n" % (key, bam_dict[key]))
+
+  # Check for sequences only found in the BAM file (fatal errors)
+  fasta_only = set(fasta_dict) - common
+  if fasta_only:
+    sys.stderr.write("WARNING: FASTA file contains extra sequences:\n")
+    for key in fasta_only:
+      sys.stderr.write("    - %s = %i bp\n" % (key, fasta_dict[key]))
+
+  sys.stderr.write("\n")
+
+  return not (different or bam_only)

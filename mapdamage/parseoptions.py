@@ -89,9 +89,6 @@ def options():
     group2.add_option("-t", "--title", dest="title", \
           help="title used for both graph and filename [%default]", \
           type="string", default="plot",action="store")
-    group.add_option("", "--length-plot", dest="plot_lg", help="Plot length distributions, global and per strand. "
-          "Plus cumulative damage-related mutations per strand", \
-          default=False,action="store_true")
     parser.add_option_group(group2)
 
     # Then the plethora of optional options for the statistical estimation ..
@@ -105,24 +102,24 @@ def options():
     group3.add_option("", "--iter", dest="iter", \
             help="Number of final MCMC iterations  [%default]", type = int, default=50000, action="store")
     group3.add_option("", "--forward", dest="forward", \
-            help="Using only the 5' end of the seqs  [%default]", type = int, default=0, action="store")
+            help="Using only the 5' end of the seqs  [%default]", default=False, action="store_true")
     group3.add_option("", "--reverse", dest="reverse", \
-            help="Using only the 3' end of the seqs  [%default]", type = int, default=0, action="store")
+            help="Using only the 3' end of the seqs  [%default]", default=False, action="store_true")
     group3.add_option("", "--fix-disp", dest="fix_disp", \
-            help="Fix dispersion in the overhangs  [%default]", type = int, default=1,action="store")
+            help="Fix dispersion in the overhangs  [%default]", default=True,action="store_false")
     group3.add_option("", "--same-hangs", dest="same_hangs", \
-            help="The overhangs are the same on both sides  [%default]", type = int, default=1, action="store")
+            help="The overhangs are the same on both sides  [%default]", default=True, action="store_false")
     group3.add_option("", "--fix-nicks" , dest="fix_nicks", \
-            help="Fix the nick frequency vector nu else estimate it with GAM  [%default]", type = int, default=0, action="store")
+            help="Fix the nick frequency vector nu else estimate it with GAM  [%default]", default=False, action="store_true")
     group3.add_option("", "--double_stranded", dest="double_stranded", \
-            help="Double stranded protocol [%default]", type = int, default=1, action="store")
+            help="Double stranded protocol [%default]", default=True, action="store_false")
     group3.add_option("", "--seq-length", dest="seq_length", \
             help="How long sequence to use from each side [%default]", type = int, default=12, action="store")
     group3.add_option("--stats-only", dest="stats_only", help="Run only statistical estimation from a valid result folder", \
           default=False, action="store_true")
     group3.add_option("--rescale", dest="rescale", help="Rescale the quality scores in the BAM file using the output from the statistical estimation", \
           default=False, action="store_true")
-    group3.add_option("--no-stats", help=SUPPRESS_HELP, default=False, action="store_true")
+    group3.add_option("--no-stats", help="Disabled statistical estimation, active by default", default=False, action="store_true")
 
     parser.add_option_group(group3)
 
@@ -188,7 +185,7 @@ def options():
             if not file_exist(options.folder+"/dnacomp.txt") or not file_exist(options.folder+"/misincorporation.txt"):
                 parser.error('folder %s is not a valid result folder' % options.folder)
     else:
-        os.makedirs(options.folder, mode = 0700)
+        os.makedirs(options.folder, mode = 0750)
         if options.plot_only or options.stats_only:
             sys.stderr.write("Error, %s does not exist while plot/stats only was used\n" % options.folder)
             return None

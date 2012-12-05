@@ -15,6 +15,8 @@ mapDamage2 is Python/R scripts that tracks and quantify DNA damage patterns amon
  - RcppGSL
  - ggplot2 (>=0.9.2)
 
+Of note, the 5 R libraries are only required for the statistical estimation of DNA damages.
+
 ### Installation
 
 mapDamage2 was successfully tested on GNU/Linux and MacOSX environments.
@@ -55,34 +57,45 @@ mapDamage2 was successfully tested on GNU/Linux and MacOSX environments.
 News in version 0.4
 --------------------
 - The main new feature is the **approximate bayesian estimation of damage parameters**.
+- Those parameters are optionally used to rescale quality scores. A new BAM file is produced  
+where mutated bases that are likely to be damage-related are downscaled according to their initial  
+qualities and position in reads.
+- It is now possible to filter out nucleotides with qualities inferior to a threshold defined by users.  
+This feature allows to:
+> 1. reduce the impact of sequencing errors when counting misincorporations.
+> 2. analyze the rescaled BAM file with different quality thresholds to find which one filtered out damage patterns.  
+This threshold can then be used for SNP calling.
 - The program was rewritten in python to make it simpler and the dependencies to samtools and bedtools were replaced by the use of pysam.
-The memory footprint is now negligible and runtime reduced by ca. 25%.
+The memory footprint is now negligible and runtime reduced by _ca._ 25%.
 
 Inputs
 ------
 
 Two files are needed:
 
-- A valid SAM/BAM file, this implies a correct header, provided with the -i option.
-- A FASTA file (could be optionally gzipped) that contains reference sequences used for mapping reads, provided by the -r option. 
+- A valid SAM/BAM file, this implies a correct header, provided with the **-i** option.
+- A FASTA file (could be optionally gzipped) that contains reference sequences used for mapping reads, provided by the **-r** option. 
 
-References described in the SAM/BAM header and the FASTA file must be coherent, i.e, 
-the references must have the same names and identical lengths.
+References described in the SAM/BAM header and the FASTA file must be coherent, _i.e_,  
+the references must have the identical names and lengths. Extra sequences present in the FASTA header  
+raise a warning but the program will proceed since all needed references are available.
 
 As an alternative, one can run only the plotting and / or statistic estimations 
-on an already processed dataset. Use a combination of -d option followed by 
+on an already processed dataset. Use a combination of **-d** option followed by 
 a valid folder and the `--plot-only` and / or `--stats-only` options.
 
 Outputs
 -------
 
-In total, 12 files are produced in the result folder.
+When all options are activated, 15 files are produced in the result folder.
 
 - Runtime\_log.txt, log file with a summary of options used and number of reads / bases processed.
 
 For the plotting:
 
- - a pdf file that displays both fragmentation and misincorporation patterns
+ - a pdf file, Fragmisincorporation\_plot.pdf that displays both fragmentation and misincorporation patterns
+ - a pdf file, Length\_plot.pdf, that displays length distribution of singleton reads also per strand.  
+Cumulative frequencies of C>T at 5'-end and G>A at 3'-end are also displayed per strand.
  - misincorporation.txt, contains a table that compiles occurences for each type of mutations
  - 5pCtoT\_freq.txt, contains frequencies of Cytosine to Thymine mutations per position from the 5'-ends
  - 3pGtoA\_freq.txt, contains frequencies of Guanine to Adenine mutations per position from the 3'-ends
@@ -96,6 +109,9 @@ For the statistic estimations:
  - Stats\_out\_MCMC\_trace.jpeg, picture that displays values contained in Stats\_out\_MCMC\_iter.csv
  - Stats\_out\_MCMC\_iter\_summ\_stat.csv, summary statistics for the 4 damage parameters and log(likelihood)
  - Stats\_out\_post\_pred.pdf, superposition of real misincorporation patterns and fitted model 
+ - Stats\_out\_MCMC\_correct\_prob.csv, probalities of T and A to be damage-related according to read positions
+ - Rescaled BAM file, where damage-related bases have downscaled quality scores. 
+
 
 Usage
 -----
@@ -117,7 +133,9 @@ Usage
                             Reference file in FASTA format
     General options:
         -n DOWNSAMPLE, --downsample=DOWNSAMPLE
-                            Downsample to a randomly selected fraction of the reads (if 0 < DOWNSAMPLE < 1), or a fixed number of randomly selected reads (if DOWNSAMPLE >= 1). By default, no downsampling is performed.
+                            Downsample to a randomly selected fraction of the reads (if 0 < DOWNSAMPLE < 1), 
+                            or a fixed number of randomly selected reads (if DOWNSAMPLE >= 1). By default, 
+                            no downsampling is performed.
         -l LENGTH, --length=LENGTH
                             read length, in nucleotides to consider [70]
         -a AROUND, --around=AROUND
@@ -149,18 +167,20 @@ Usage
         --burn=BURN         Number of burnin iterations [10000]
         --adjust=ADJUST     Number of adjust proposal variance parameters iterations [10]
         --iter=ITER         Number of final MCMC iterations [50000]
-        --forward=FORWARD   Using only the 5' end of the seqs [0]
-        --reverse=REVERSE   Using only the 3' end of the seqs [0]
-        --fix-disp=FIX_DISP Fix dispersion in the overhangs [1]
+        --forward=FORWARD   Using only the 5' end of the seqs [False]
+        --reverse=REVERSE   Using only the 3' end of the seqs [False]
+        --fix-disp=FIX_DISP Fix dispersion in the overhangs [True]
         --same-hangs=SAME_HANGS
-                            The overhangs are the same on both sides [1]
+                            The overhangs are the same on both sides [True]
         --fix-nicks=FIX_NICKS
-                            Fix the nick frequency vector nu else estimate it with GAM [0]
+                            Fix the nick frequency vector nu else estimate it with GAM [False]
         --double_stranded=DOUBLE_STRANDED
-                            Double stranded protocol [1]
+                            Double stranded protocol [True]
         --seq-length=SEQ_LENGTH
                             How long sequence to use from each side [12]
         --stats-only        Run only statistical estimation from a valid result folder
+        --rescale           Rescale the quality scores in the BAM file using the output from the statistical estimation
+        --no-stats          Disabled statistical estimation, active by default
 
 Description of tables
 ---------------------
@@ -178,17 +198,17 @@ This file looks like:
     NC_012920.1	3p	+	4	514	483	221	400	1618	30	11	3	4	0	1	1	0	0	1	0	1	1	0	0	2	5	5	8	2	0
 
 The first lines that start by a hash contain information about the options used while processing the data.
-Then, the table contains occurences for each of the 12 mutation type + 4 deletions + 4 insetions + 
+Then, the table contains occurrences for each of the 12 mutation type + 4 deletions + 4 insertions + 
 soft-clipping, per reference (`Chr` column), per strand (`Std` column) , per end (`End` column) and per position (`Pos` column). 
 In Z>X, Z comes from the reference, X is the nucleotide from reads. Eventually, A, C, G, T come from the reference and Total is the sum of the four nucleotides.
 Frequencies depicted in Fragmisincorporation pdf file are computed per position as follows:
 
-occurences of mutations / occurences of the reference nucleotide. In order to compensate for base composition biases.
+occurrences of mutations / occurrences of the reference nucleotide. In order to compensate for base composition biases.
 
 In this example, for G>A at the first base from the 3'-ends and for the positive strand:
 `48 / 201 = 0.238806`
 
-The Fragmisincorporation plot sums up occurences mutations all references and strand orientations and displays frequencies per position.  
+The Fragmisincorporation plot sums up occurrences mutations all references and strand orientations and displays frequencies per position.  
 
 **5p** means reads analyzed from their 5'-ends and are depicted at the bottom left.
   
@@ -219,7 +239,7 @@ First lines of one example below:
     NC_012920.1	3p	+	-64	223	185	102	288	798
 
 The first lines that start by a hash contain information about the options used while processing the data.
-Then, the table contains occurences for each nucleotides, per reference (`Chr` column), 
+Then, the table contains occurrences for each nucleotides, per reference (`Chr` column), 
 per strand (`Std` column) , per end (`End` column) and per position (`Pos` column).
 
 At a given position, base composition is recorded either for the reference or for reads.
@@ -244,7 +264,7 @@ To run the plotting part with a new scale to fit lower levels of DNA damages, 0.
 
      mapDamage -d results_mydata -y 0.1 --plot-only
 
-To run the statistic estimationst using only the 5'-ends and display all iterations:
+To run the statistic estimations using only the 5'-ends and display all iterations:
 
      mapDamage -d results_mydata --forward --stats-only -v
 
@@ -268,6 +288,6 @@ update.packages("ggplot2") and selecting a CRAN mirror
 
 Contact
 -------
-Please report bugs and suggest possible improvements to Aurelien Ginolhac, Mikkel Schubert or Hákon Jónsson by email:
+Please report bugs and suggest possible improvements to Aurélien Ginolhac, Mikkel Schubert or Hákon Jónsson by email:
 aginolhac at snm.ku.dk, MSchubert at snm.ku.dk or jonsson.hakon at gmail.com.
 

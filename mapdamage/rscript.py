@@ -100,7 +100,7 @@ def check_R_lib():
 
 def run_stats(opt):
     """
-    Runs the Bayesian estimation program, using the options o
+    Runs the Bayesian estimation program, using the options opt
     """
     arg = ["Rscript",                            \
          construct_R_path("stats/runGeneral.R"), \
@@ -109,13 +109,13 @@ def run_stats(opt):
          opt.burn,                               \
          opt.adjust,                             \
          opt.iter,                               \
-         opt.forward,                            \
-         opt.reverse,                            \
-         opt.fix_disp,                           \
-         opt.same_hangs,                         \
+         bool_to_int(opt.forward),               \
+         bool_to_int(opt.reverse),               \
+         bool_to_int(opt.fix_disp),              \
+         bool_to_int(opt.same_hangs),            \
          0,                                      \
-         opt.fix_nicks,                          \
-         opt.double_stranded,                    \
+         bool_to_int(opt.fix_nicks),             \
+         bool_to_int(opt.double_stranded),       \
          opt.seq_length,                         \
          opt.folder+"/",                         \
          construct_R_path("stats/"),             \
@@ -132,3 +132,7 @@ def run_stats(opt):
     return 0
 
 
+def bool_to_int(boolean):
+    """ return 0 for False and 1 for True """
+    result = 1 if boolean else 0
+    return result
