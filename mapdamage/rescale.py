@@ -6,6 +6,13 @@ import pysam
 import itertools
 import math
 
+def phred_pval_to_char(pval):
+    """Transforming error rate to ASCII character using the Phred scale"""
+    return chr(int(round(-10*math.log10(abs(pval)))+33))
+
+def phred_char_to_pval(ch):
+    """Transforming ASCII character in the Phred scale to the error rate"""
+    return 10**(-(float(ord(ch))-float(33))/10)
 
 def get_corr_prob(folder):
     """
@@ -67,23 +74,100 @@ def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length):
     else:
         p3_corr = 0
 
-    if p5_corr != 0 and p3_corr != 0:
-        # take a mean of the corrections this happens 
-        # when the read is shorter than the length 
-        # used for the statistical estimation.
-        return (p5_corr+p3_corr)/2
+    if pos < abs(back_pos) :
+        # then we use the forward correction
+        return p5_corr
+    else :
+        # else the backward correction
+        return p3_corr
+
+def initialize_subs():
+    """Initialize a substitution table, to track the expected substitution counts"""
+    per_qual = dict(zip(range(0,130),[0]*130))
+    subs = {"CT-before":per_qual.copy(),\
+            "TC-before":per_qual.copy(),\
+            "GA-before":per_qual.copy(),\
+            "AG-before":per_qual.copy(),\
+            "CT-after":per_qual.copy(),\
+            "TC-after":per_qual.copy(),\
+            "GA-after":per_qual.copy(),\
+            "AG-after":per_qual.copy(),\
+            "A":0,\
+            "C":0,\
+            "G":0,\
+            "T":0,\
+            "CT-pvals":0.0,\
+            "TC-pvals":0.0,\
+            "GA-pvals":0.0,\
+            "AG-pvals":0.0,\
+            }
+    return subs
+
+
+
+def record_subs(subs,nt_seq,nt_ref,nt_qual,nt_newqual,prob_corr):
+    """ record the expected substitution change"""
+    if ( nt_seq == "T" and nt_ref == "C"):
+        sub_type = "CT"
+        subs["CT-pvals"] += prob_corr
+    elif ( nt_seq == "A" and nt_ref == "G"):
+        sub_type = "GA"
+        subs["GA-pvals"] += prob_corr
+    elif ( nt_seq == "C" and nt_ref == "T"):
+        sub_type = "TC"
+        subs["TC-pvals"] += 1-phred_char_to_pval(nt_qual)
+    elif ( nt_seq == "G" and nt_ref == "A"):
+        sub_type = "AG"
+        subs["AG-pvals"] += 1-phred_char_to_pval(nt_qual)
     else:
-        return max(p5_corr, p3_corr)
+        sub_type = "NN"
+    if (sub_type != "NN"):
+        # record only transitions 
+        subs[sub_type+"-before"][int(ord(nt_qual))-33] += 1
+        subs[sub_type+"-after"][int(ord(nt_newqual))-33] += 1
+    if (nt_ref in ["A","C","G","T"]):
+        subs[nt_ref] += 1
 
+def qual_summary_subs(subs):
+    """Calculates summary statistics for the substition table subs"""
+    for i in ["CT-before","TC-before","GA-before","AG-before","CT-after","TC-after","GA-after","AG-after"]:
+        for lv in [0,10,20,30,40]:
+            for qv in subs[i]:
+                if qv >= lv :
+                    key = i+"-Q"+str(lv)
+                    if subs.has_key(key):
+                        subs[key] += subs[i][qv]
+                    else:
+                        subs[key] = subs[i][qv]
 
-def rescale_qual_read(bam, read, ref, corr_prob, debug = False):
+def print_subs(subs):
+    """Print the substition table"""
+    print("\tThe expected substition frequencies using the scaled qualities as probalities:")
+    print("\tCT\t"+str(subs["CT-pvals"]/subs["C"]))
+    print("\tTC\t"+str(subs["TC-pvals"]/subs["T"]))
+    print("\tGA\t"+str(subs["GA-pvals"]/subs["G"]))
+    print("\tAG\t"+str(subs["AG-pvals"]/subs["A"]))
+    print("\tQuality metrics before and after scaling")
+    print("\tCT-Q0 \t"+str(subs["CT-before-Q0"])+"\t"+str(subs["CT-after-Q0"]))
+    print("\tCT-Q10 \t"+str(subs["CT-before-Q10"])+"\t"+str(subs["CT-after-Q10"]))
+    print("\tCT-Q20 \t"+str(subs["CT-before-Q20"])+"\t"+str(subs["CT-after-Q20"]))
+    print("\tCT-Q30 \t"+str(subs["CT-before-Q30"])+"\t"+str(subs["CT-after-Q30"]))
+    print("\tCT-Q40 \t"+str(subs["CT-before-Q40"])+"\t"+str(subs["CT-after-Q40"]))
+    print("\tGA-Q0 \t"+str(subs["GA-before-Q0"])+"\t"+str(subs["GA-after-Q0"]))
+    print("\tGA-Q10 \t"+str(subs["GA-before-Q10"])+"\t"+str(subs["GA-after-Q10"]))
+    print("\tGA-Q20 \t"+str(subs["GA-before-Q20"])+"\t"+str(subs["GA-after-Q20"]))
+    print("\tGA-Q30 \t"+str(subs["GA-before-Q30"])+"\t"+str(subs["GA-after-Q30"]))
+    print("\tGA-Q40 \t"+str(subs["GA-before-Q40"])+"\t"+str(subs["GA-after-Q40"]))
+    
+
+def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False):
     """
     bam              a pysam bam object
     read             a pysam read object
     ref              a pysam fasta ref file
     reflengths       a dictionary holding the length of the references 
+    subs             a dictionary holding the corrected number of substition before and after scaling 
     corr_prob dictionary from get_corr_prob
-    options            options from the command line parsing
     returns a read with rescaled quality score
     
     Iterates through the read and reference, rescales the quality 
@@ -111,13 +195,15 @@ def rescale_qual_read(bam, read, ref, corr_prob, debug = False):
         # rescale the quality according to the triplet position, 
         # pair of the reference and the sequence
         pdam = 1 - corr_this_base(corr_prob, nt_seq, nt_ref, pos_on_read + 1, length_read)
-        pseq = 1 - 10**(-(float(ord(nt_qual))-float(33))/10)
-        newp = pdam*pseq #This could be numerically unstable
-        new_qual[pos_on_read] = chr(int(round(-10*math.log10(abs(1-newp)))+33))
+        pseq = 1 - phred_char_to_pval(nt_qual)
+        newp = pdam*pseq # this could be numerically unstable
+        new_qual[pos_on_read] = phred_pval_to_char(1-newp)
+        record_subs(subs,nt_seq,nt_ref,nt_qual,new_qual[pos_on_read],newp)
         if nt_seq != "-":
             pos_on_read += 1
     # done with the aligned portion of the read 
     new_qual = "".join(new_qual)
+
     if read.is_reverse:
         new_qual = new_qual[::-1]
 
@@ -132,6 +218,9 @@ def rescale_qual_read(bam, read, ref, corr_prob, debug = False):
         print ""
         print "ref-"+refseq 
         print "seq-"+seq
+        print "   -"+"          |         |         |         |         |         |         |"
+        print "x10-"+"          1         2         3         4         5         6         7"
+        print "Is reverse"+str(read.is_reverse)
         print ""
         if (refseq != seq):
             print "Reference and the sequence are not the same"
@@ -146,8 +235,10 @@ def rescale_qual_read(bam, read, ref, corr_prob, debug = False):
         else:
             print "new-"+new_qual
         if (read.qual != new_qual):
+            print "   -"+"          |         |         |         |         |         |         |"
+            print "x10-"+"          1         2         3         4         5         6         7"
             print "New and old qual are not the same"
-            print [i for i, (left, right) in enumerate(zip(refseq, seq)) if left != right]
+            print [i for i, (left, right) in enumerate(zip(read.qual, new_qual)) if left != right]
         print ""
         print ""
     # done
@@ -177,14 +268,21 @@ def rescale_qual(ref, options):
     
     corr_prob = get_corr_prob(options.folder)
     
+    subs = initialize_subs()
+
     for hit in bam:
-        hit = rescale_qual_read(bam, hit, ref, corr_prob)
+        hit = rescale_qual_read(bam, hit, ref, corr_prob,subs)
         if hit.is_paired:
             sys.stderr.write("Cannot rescale paired end reads in this versio\n")
             sys.exit(1)
         bam_out.write(hit)
+    if (subs["TC-before"] != subs["TC-after"] or subs["AG-before"] != subs["AG-after"]):
+        sys.exit("Qualities for T.C and A.G transitions shouln't change in the re scaling.")
+    qual_summary_subs(subs)
     bam.close()
     bam_out.close()
+    if not options.quiet:
+        print_subs(subs)
     if not options.quiet:
         print("Done with rescaling.")
     if options.verbose:

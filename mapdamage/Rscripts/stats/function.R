@@ -439,10 +439,10 @@ simPredCheck <- function(da,output){
                          0,0,0,1
                          ),nrow=4,byrow=TRUE)
         ThetapDam <- pDamMat %*% Theta
-        #Calculate the probability of cytosine demanation
-        damProb[i] <- (ThetapDam[2,4]-ptrans)/(1-3*ptrans)
+        #Calculate the probability C.T due to cytosine demanation
+        damProb[i] <- (1-ptrans)*pct/((1-ptrans)*pct+ptrans) 
         #Do not forget the reverse complement 
-        damProbGA[i] <- (ThetapDam[3,1]-ptrans)/(1-3*ptrans)
+        damProbGA[i] <- (1-ptrans)*pga/((1-ptrans)*pga+ptrans) 
         #Then draw from a multinomial distribution
         subs[i,c("A.C","A.G","A.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"A"],ThetapDam[1,]))[-1]/output$cu_pa$dat[i,"A"]
         subs[i,c("C.A","C.G","C.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"C"],ThetapDam[2,]))[-2]/output$cu_pa$dat[i,"C"]
@@ -463,7 +463,7 @@ calcSampleStats <- function(da,X){
                       ))
 }
 
-postPredCheck <- function(da,output,samples=1000){
+postPredCheck <- function(da,output,samples=5000){
     #Plots the 95% posterior predictive intervals with the data as lines.
     #Returns the site specific probability of a C>T or G>A substitution 
     #because of a cytosine demnation.

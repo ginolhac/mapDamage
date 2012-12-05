@@ -137,6 +137,7 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
                                         cu_pa$nuSamples,
                                       cu_pa$ds_protocol)
 } else if (fix_nu){
+    #Ones at the 5' end and zeros at the 3' end
     if (cu_pa$forward_only){
         cu_pa$nuVec <- rep(1,nrow(dat))
     }else if (cu_pa$reverse_only){
@@ -148,7 +149,7 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
     #This is for a non linear nick frequency, assumes the G>T and G>A are 
     #mostly due to dna damage patterns do not use for low damage datasets
     te<-(dat[,"C.T"]/dat[,"C"])/(dat[,"G.A"]/dat[,"G"]+dat[,"C.T"]/dat[,"C"])
-    if (sum(is.na(te) | te==0 | te==1)!=0 ){
+    if (sum(is.na(te) )!=0 ){
         write("Warning, To few substitutions to assess the nick frequency, using constant nick frequency instead", stderr())
         if (cu_pa$forward_only){
             cu_pa$nuVec <- rep(1,nrow(dat))
