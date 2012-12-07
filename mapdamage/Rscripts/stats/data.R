@@ -43,3 +43,9 @@ getSeqLen <- function(pa){
     les$Occurences <- les$Occurences[les$Occurences!=0]/sum(les$Occurences)
     return(les)
 }
+
+readBaseFreqs <- function(fol){
+    fil <- "dnacomp_genome.csv"
+    dat <- read.csv(paste(fol,fil,sep=""),header=TRUE)
+    return(c(dat$A,dat$C,dat$G,dat$T))
+}

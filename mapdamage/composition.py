@@ -2,6 +2,7 @@
 
 import mapdamage
 import itertools
+import csv
 
 
 def count_ref_comp(read, chrom, before, after, comp):
@@ -27,3 +28,31 @@ def _update_table(table, sequence, indices):
     if nt in table:
       table[nt][index] += 1
 
+
+def get_base_comp(filename,destination=False):
+    """
+    Gets the basecomposition of all the sequences in filename
+    and returns the value to destination if given.
+    """
+    f = open(filename,"r")
+    bases = {"A":0,"C":0,"G":0,"T":0}
+    for li in f:
+        if li[0] == ">":
+            continue
+        for b in li:
+            b = b.upper()
+            if (b in bases.keys()):
+                bases[b] = bases[b] + 1 
+    f.close()
+    su = sum(bases.values())
+    for i in bases.keys():
+        bases[i] = float(bases[i])/float(su)
+    if (destination==False):
+        return bases
+    else:
+        # write the results
+        fo = open(destination,"w")
+        fow = csv.DictWriter(fo,bases.keys())
+        fow.writeheader()
+        fow.writerow(bases)
+        fo.close

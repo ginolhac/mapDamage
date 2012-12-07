@@ -1,10 +1,82 @@
+getPmat <- function(tmu,tv_ti_ratio,acgt){
+    if (sum(acgt>=1)!=0 || sum(acgt<=0)!=0){
+        write("The ACGT frequencies must be in the range 0 to 1",stderr())
+        stop()       
+    }
+    if (all.equal(sum(acgt),1)!=TRUE){
+        write("The ACGT frequencies do not sum to 1",stderr())
+        stop()       
+    }
+    if (tv_ti_ratio<=0){
+        write("The transversion and transtition ratio cannot go under 0",stderr())
+        stop()       
+    }
+    #Returns the substitution probability matrix.
+    if (identical(tv_ti_ratio,1) && identical(acgt,c(.25,.25,.25,.25))){
+        return(jukesCantorPmat(tmu))
+    }else{
+        Q <- qmatHKY85(tmu,tv_ti_ratio,acgt)
+        r  <- eigen(Q)
+        B <- r$vectors
+        E  <- diag(exp(r$values))
 
-getTheta <- function(tmu){
+        #      Q        The eigen vector change of basis
+        #  M  ->   M   
+        #
+        #  ^       ^
+        #  |B^-1   |B
+        #     Eig
+        #  N  ->   N
+        out <- solve(a=t(B),b= E %*% t(B))#Little trick to avoid numerical difficulties
+        rownames(out) <- c("A","C","G","T")
+        colnames(out) <- c("A","C","G","T")
+        return(out) 
+    } 
+}
+
+jukesCantorPmat <- function(tmu){
     #Using the Juke-Cantor model
     return(matrix(rep(1/4-exp(-tmu)/4,16),nrow=4,ncol=4)+diag(rep(exp(-tmu),4)))
 }
 
+qmatHKY85 <- function(tmu,tv_ti,acgt){
+    #HKY85 model
+    #               |    sum_1         pi_c * tv_ti      pi_g           pi_t * tv_ti  |
+    #               | pi_a * tv_ti     sum_2             pi_g * tv_ti   pi_t          |
+    #  Q = tmu  *   |    pi_a          pi_c * tv_ti      sum_3          pi_t * tv_ti  |
+    #               |    pi_a*tv_ti    pi_c              pi_g * tv_ti   sum_4         |
+    #returns this matrix
+    #This could be replaced with the analytical formulas for the substitutions probabilities.
+    
+    Qmat <- matrix(rep(acgt,4),ncol=4,byrow=TRUE)
+    diag(Qmat) <- 0
+
+    #Adjusting the transversions versus transitions
+    #-  *  -  *    
+    #*  -  *  -    
+    #-  *  -  *    
+    #*  -  *  -    
+
+    Qmat[1,2] <- tv_ti*Qmat[1,2]
+    Qmat[1,4] <- tv_ti*Qmat[1,4]
+
+    Qmat[2,1] <- tv_ti*Qmat[2,1]
+    Qmat[2,3] <- tv_ti*Qmat[2,3]
+    
+    Qmat[3,2] <- tv_ti*Qmat[3,2]
+    Qmat[3,4] <- tv_ti*Qmat[3,4]
+
+    Qmat[4,1] <- tv_ti*Qmat[4,1]
+    Qmat[4,3] <- tv_ti*Qmat[4,3]
+
+    diag(Qmat) <- -apply(Qmat,1,sum)
+
+    Qmat <- tmu * Qmat 
+    return(Qmat)
+}
+
 metroDesc <- function(lpr,lol){
+    # the logic in the Metropolis-Hastings step 
     stopifnot(!is.na(lpr))
     stopifnot(!is.na(lol))
     if (log(runif(1))<lpr-lol){
@@ -290,12 +362,18 @@ logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
 
 
 getParams <- function(cp){
-    return(c(cp$Theta,cp$DeltaD,cp$DeltaS,cp$Lambda,cp$LambdaRight,cp$LambdaDisp,cp$Nu))
+    return(c(cp$Theta,cp$Rho,cp$DeltaD,cp$DeltaS,cp$Lambda,cp$LambdaRight,cp$LambdaDisp,cp$Nu))
 }
 
-plotEverything <- function(mcmcOut,hi=0,pl){
+plotRunningMedian <- function(dat,ylab,k=111){
+    xlab = paste("Running median of iterations (W. size ",k,")")
+    plot(runmed(dat,k),xlab=xlab,ylab=ylab,type="l")
+}
+
+plotEverything <- function(mcmcOut,hi=0,pl,thin=100){
     if (sum(c(cu_pa$same_overhangs==FALSE,
                     cu_pa$fix_disp==FALSE,
+                    cu_pa$fix_ti_tv==FALSE,
                     cu_pa$nuSamples!=0))>1){
         #Check if I need to add a extra row
         a_extra_row <- 1
@@ -305,6 +383,9 @@ plotEverything <- function(mcmcOut,hi=0,pl){
     par(mfrow=c(3,2+a_extra_row))
     if(hi){
         hist(mcmcOut$out[,"Theta"],main="Theta",xlab="",freq=FALSE)
+        if (!mcmcOut$cu_pa$fix_ti_tv){
+            hist(mcmcOut$out[,"Rho"],main="Rho",xlab="",freq=FALSE)
+        }
         hist(mcmcOut$out[,"DeltaD"],main="DeltaD",xlab="",freq=FALSE)
         hist(mcmcOut$out[,"DeltaS"],main="DeltaS",xlab="",freq=FALSE)
         hist(mcmcOut$out[,"Lambda"],main="Lambda",xlab="",freq=FALSE)
@@ -319,20 +400,23 @@ plotEverything <- function(mcmcOut,hi=0,pl){
         }
         hist(mcmcOut$out[,"LogLik"],main="LogLik",xlab="",freq=FALSE)
     }else {
-        plot(mcmcOut$out[,"Theta"],xlab="iteration",ylab="Theta")
-        plot(mcmcOut$out[,"DeltaD"],xlab="iteration",ylab="DeltaD")
-        plot(mcmcOut$out[,"DeltaS"],xlab="iteration",ylab="DeltaS")
-        plot(mcmcOut$out[,"Lambda"],xlab="iteration",ylab="Lambda")
+        plotRunningMedian(mcmcOut$out[,"Theta"],ylab="Theta")
+        if (!mcmcOut$cu_pa$fix_ti_tv){
+            plotRunningMedian(mcmcOut$out[,"Rho"],ylab="Rho")
+        }
+        plotRunningMedian(mcmcOut$out[,"DeltaD"],ylab="DeltaD")
+        plotRunningMedian(mcmcOut$out[,"DeltaS"],ylab="DeltaS")
+        plotRunningMedian(mcmcOut$out[,"Lambda"],ylab="Lambda")
         if (!mcmcOut$cu_pa$same_overhangs){
-            plot(mcmcOut$out[,"LambdaRight"],xlab="iteration",ylab="LambdaRight")
+            plotRunningMedian(mcmcOut$out[,"LambdaRight"],ylab="LambdaRight")
         }
         if (!mcmcOut$cu_pa$fix_disp){
-            plot(mcmcOut$out[,"LambdaDisp"],xlab="iteration",ylab="LambdaDisp")
+            plotRunningMedian(mcmcOut$out[,"LambdaDisp"],ylab="LambdaDisp")
         }
         if (mcmcOut$cu_pa$nuSamples!=0){
-            plot(mcmcOut$out[,"Nu"],xlab="iteration",ylab="Nu")
+            plotRunningMedian(mcmcOut$out[,"Nu"],ylab="Nu")
         }
-        plot(mcmcOut$out[,"LogLik"],xlab="iteration",ylab="LogLik")
+        plotRunningMedian(mcmcOut$out[,"LogLik"],ylab="LogLik")
     }
     par(mfrow=c(1,1))
 }
@@ -352,6 +436,8 @@ adjustPropVar <- function(mcmc,propVar){
             next
         } else if (i=="LambdaDisp" & mcmc$cu_pa$fix_disp){
             next
+        } else if (i=="Rho" & mcmc$cu_pa$fix_ti_tv){
+            next
         }
         rat <- accRat(mcmc$out[,i])
         if (rat<0.1){
@@ -364,10 +450,14 @@ adjustPropVar <- function(mcmc,propVar){
 }
 
 runGibbs <- function(cu_pa,iter){
-    esti <- matrix(nrow=iter,ncol=8)
-    colnames(esti) <- c("Theta","DeltaD","DeltaS","Lambda","LambdaRight","LambdaDisp","Nu","LogLik")
+    esti <- matrix(nrow=iter,ncol=9)
+    colnames(esti) <- c("Theta","Rho","DeltaD","DeltaS","Lambda","LambdaRight","LambdaDisp","Nu","LogLik")
     for (i in 1:iter){
         cu_pa<-updateTheta(cu_pa)
+        if (!cu_pa$fix_ti_tv){
+            #Fix the transition and transversion ratio
+            cu_pa<-updateRho(cu_pa)
+        }
         cu_pa<-updateDeltaD(cu_pa)
         cu_pa<-updateDeltaS(cu_pa)
         cu_pa<-updateLambda(cu_pa)
@@ -383,7 +473,7 @@ runGibbs <- function(cu_pa,iter){
             #Update the nu parameter by via MC estimation
             cu_pa<-updateNu(cu_pa)
         }
-        esti[i,c(1:7)] <- getParams(cu_pa) 
+        esti[i,c(1:8)] <- getParams(cu_pa) 
         esti[i,"LogLik"] <- logLikAll(cu_pa$dat,cu_pa$ThetaMat,cu_pa$DeltaD,cu_pa$DeltaS,cu_pa$laVec,cu_pa$nuVec,cu_pa$m)
         if (! (i %% 1000) && cu_pa$verbose){
             cat("MCMC-Iter\t",i,"\t",esti[i,"LogLik"],"\n")
@@ -400,31 +490,56 @@ simPredCheck <- function(da,output){
     bases <- da[,c("A","C","G","T")]
     #Constructing the lambda vector
     if (output$cu_pa$same_overhangs){
-        laVec <- seqProbVecLambda(sample(output$out[,"Lambda"],1),sample(output$out[,"LambdaDisp"],1),output$cu_pa$m,output$cu_pa$forward_only,cu_pa$reverse_only)
+        laVec <- seqProbVecLambda(sample(output$out[,"Lambda"],1),
+                                  sample(output$out[,"LambdaDisp"],1),
+                                  output$cu_pa$m,
+                                  output$cu_pa$forward_only,
+                                  cu_pa$reverse_only)
     }else {
-        laVecLeft <- seqProbVecLambda(sample(output$out[,"Lambda"],1),sample(output$out[,"LambdaDisp"],1),output$cu_pa$m,0,0)
-        laVecRight <- seqProbVecLambda(sample(output$out[,"LambdaRight"],1),sample(output$out[,"LambdaDisp"],1),output$cu_pa$m,0,0)
+        laVecLeft <- seqProbVecLambda(sample(output$out[,"Lambda"],1),
+                                      sample(output$out[,"LambdaDisp"],1),
+                                      output$cu_pa$m,
+                                      0,
+                                      0)
+        laVecRight <- seqProbVecLambda(sample(output$out[,"LambdaRight"],1),
+                                       sample(output$out[,"LambdaDisp"],1),
+                                       output$cu_pa$m,
+                                       0,
+                                       0)
         laVec <- c(laVecLeft[1:(output$cu_pa$m/2)],laVecRight[(output$cu_pa$m/2+1):output$cu_pa$m])
     }
     #Constructing the nu vector
     if (output$cu_pa$nuSamples !=0){
-        nuVec <- seqProbVecNuWithLengths(sample(output$out[,"Lambda"],1),sample(output$out[,"LambdaDisp"],1),sample(output$out[,"Nu"],1),nrow(cu_pa$dat),
-                                                   sampleHJ(output$cu_pa$lengths$Length,size=output$cu_pa$laSamples,prob=output$cu_pa$lengths$Occurences),output$cu_pa$mLe,
-                                               output$cu_pa$forward_only,output$cu_pa$nuSamples,output$cu_pa$ds_protocol) 
-    nuVec <- c(nuVec,rev(1-nuVec))
+        write("The MC sampling for the nu vector hasn't gone through a extensive testing procedure",stderr())
+        stop()
+        nuVec <- seqProbVecNuWithLengths(sample(output$out[,"Lambda"],1),
+                                         sample(output$out[,"LambdaDisp"],1),
+                                         sample(output$out[,"Nu"],1),
+                                         nrow(cu_pa$dat),
+                                         sampleHJ(output$cu_pa$lengths$Length,
+                                                 size=output$cu_pa$laSamples,
+                                                 prob=output$cu_pa$lengths$Occurences),
+                                         output$cu_pa$mLe,
+                                         output$cu_pa$forward_only,
+                                         output$cu_pa$nuSamples,
+                                         output$cu_pa$ds_protocol) 
+        nuVec <- c(nuVec,rev(1-nuVec))
     }else {
         nuVec <- output$cu_pa$nuVec
     }
+    
     #Sample the other parameters
     des <- sample(output$out[,"DeltaS"],1)
     ded <- sample(output$out[,"DeltaD"],1)
-    ptrans <- 1/4-exp(-sample(output$out[,"Theta"],1))/4
+    the <- sample(output$out[,"Theta"],1)
+    rho <- sample(output$out[,"Rho"],1)
+    pmat <- getPmat(the,rho,output$cu_pa$acgt)
+    ptransCT <- pmat["C","T"]
+    ptransGA <- pmat["G","A"]
     #
     coln <- c("A.C","A.G","A.T","C.A","C.G","C.T","G.A","G.C","G.T","T.A","T.C","T.G")
     subs <- matrix(NA,nrow=nrow(output$cu_pa$dat),ncol=4+length(coln))
     colnames(subs) <- c("A","C","G","T",coln)
-    Theta <- matrix(ptrans,4,4)
-    diag(Theta) <- 1-3*ptrans
     #
     damProb <- rep(NA,nrow(output$cu_pa$dat)) 
     damProbGA <- damProb 
@@ -438,11 +553,11 @@ simPredCheck <- function(da,output){
                          pga,0,1-pga,0,
                          0,0,0,1
                          ),nrow=4,byrow=TRUE)
-        ThetapDam <- pDamMat %*% Theta
+        ThetapDam <- pDamMat %*% pmat 
         #Calculate the probability C.T due to cytosine demanation
-        damProb[i] <- (1-ptrans)*pct/((1-ptrans)*pct+ptrans) 
+        damProb[i] <- (1-pmat["C","T"])*pct/((1-ptransCT)*pct+ptransCT) 
         #Do not forget the reverse complement 
-        damProbGA[i] <- (1-ptrans)*pga/((1-ptrans)*pga+ptrans) 
+        damProbGA[i] <- (1-pmat["G","A"])*pga/((1-ptransGA)*pga+ptransGA) 
         #Then draw from a multinomial distribution
         subs[i,c("A.C","A.G","A.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"A"],ThetapDam[1,]))[-1]/output$cu_pa$dat[i,"A"]
         subs[i,c("C.A","C.G","C.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"C"],ThetapDam[2,]))[-2]/output$cu_pa$dat[i,"C"]
@@ -463,7 +578,7 @@ calcSampleStats <- function(da,X){
                       ))
 }
 
-postPredCheck <- function(da,output,samples=5000){
+postPredCheck <- function(da,output,samples=10000){
     #Plots the 95% posterior predictive intervals with the data as lines.
     #Returns the site specific probability of a C>T or G>A substitution 
     #because of a cytosine demnation.
@@ -526,6 +641,9 @@ postPredCheck <- function(da,output,samples=5000){
 writeMCMC <- function(out,filename){
     #Writes the posterior samples to a file
     parameters <- c("Theta","DeltaD","DeltaS","Lambda")
+    if (!out$cu_pa$fix_ti_tv){
+        parameters <- c(parameters,"Rho")
+    }
     if (!out$cu_pa$same_overhangs){
         parameters <- c(parameters,"LambdaRight")
     }

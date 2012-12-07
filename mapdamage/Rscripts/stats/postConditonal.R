@@ -4,7 +4,7 @@ updateTheta <- function(cp){
     if (theta_star<0 ){
         new_lik<- -Inf
     } else {
-        theta_star_mat  <- getTheta(theta_star)
+        theta_star_mat  <- getPmat(theta_star,cp$Rho,cp$acgt)
         new_lik_func  <-  logLikAll(cp$dat,theta_star_mat,cp$DeltaD,cp$DeltaS,cp$laVec,cp$nuVec,cp$m)
         new_lik <- new_lik_func+priorTheta(theta_star)
     }
@@ -17,6 +17,24 @@ updateTheta <- function(cp){
     return(cp)
 }
 
+updateRho <- function(cp){
+    old_lik  <- cp$old_lik+priorRho(cp$Rho)
+    rho_star <- proposeRho(cp$Rho,1)
+    if (rho_star<=0 ){
+        new_lik<- -Inf
+    } else {
+        rho_star_mat  <- getPmat(cp$Theta,rho_star,cp$acgt)
+        new_lik_func  <-  logLikAll(cp$dat,rho_star_mat,cp$DeltaD,cp$DeltaS,cp$laVec,cp$nuVec,cp$m)
+        new_lik <- new_lik_func+priorRho(rho_star)
+    }
+    if (metroDesc(new_lik,old_lik)) {
+        #Accept
+        cp$Rho  <- rho_star
+        cp$ThetaMat  <- rho_star_mat
+        cp$old_lik <- new_lik_func
+    }
+    return(cp)
+}
 
 updateDeltaD <- function(cp){
     old_lik <- cp$old_lik+priorDeltaD(cp$DeltaD)
@@ -51,7 +69,6 @@ updateDeltaS <- function(cp){
     }
     return(cp)
 }
-
 
 updateLambda <- function(cp){
     old_lik  <- cp$old_lik+priorLambda(cp$Lambda)

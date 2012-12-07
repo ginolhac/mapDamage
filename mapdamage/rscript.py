@@ -121,7 +121,9 @@ def run_stats(opt):
          construct_R_path("stats/"),             \
          opt.folder+"/Stats_out",                \
          int(opt.verbose),                       \
-         int(opt.quiet)
+         int(opt.quiet),                         \
+         int(opt.jukes_cantor),                       \
+         opt.folder+"/acgt_ratio.csv"            \
          ]  
     arg = [str(i) for i in arg]
     try:

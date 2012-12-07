@@ -97,8 +97,10 @@ def initialize_subs():
             "G":0,\
             "T":0,\
             "CT-pvals":0.0,\
+            "CT-pvals_before":0.0,\
             "TC-pvals":0.0,\
             "GA-pvals":0.0,\
+            "GA-pvals_before":0.0,\
             "AG-pvals":0.0,\
             }
     return subs
@@ -106,19 +108,25 @@ def initialize_subs():
 
 
 def record_subs(subs,nt_seq,nt_ref,nt_qual,nt_newqual,prob_corr):
-    """ record the expected substitution change"""
+    """ record the expected substitution change, prob_corr is the excact version for nt_qual"""
     if ( nt_seq == "T" and nt_ref == "C"):
         sub_type = "CT"
         subs["CT-pvals"] += prob_corr
+        subs["CT-pvals_before"] += 1-phred_char_to_pval(nt_qual)
     elif ( nt_seq == "A" and nt_ref == "G"):
         sub_type = "GA"
         subs["GA-pvals"] += prob_corr
+        subs["GA-pvals_before"] += 1-phred_char_to_pval(nt_qual)
     elif ( nt_seq == "C" and nt_ref == "T"):
         sub_type = "TC"
         subs["TC-pvals"] += 1-phred_char_to_pval(nt_qual)
+        if (nt_qual != nt_newqual):
+            raise SystemError("Internal error: rescaling qualities for the wrong transitions")
     elif ( nt_seq == "G" and nt_ref == "A"):
         sub_type = "AG"
         subs["AG-pvals"] += 1-phred_char_to_pval(nt_qual)
+        if (nt_qual != nt_newqual):
+            raise SystemError("Internal error: rescaling qualities for the wrong transitions")
     else:
         sub_type = "NN"
     if (sub_type != "NN"):
@@ -142,22 +150,22 @@ def qual_summary_subs(subs):
 
 def print_subs(subs):
     """Print the substition table"""
-    print("\tThe expected substition frequencies using the scaled qualities as probalities:")
-    print("\tCT\t"+str(subs["CT-pvals"]/subs["C"]))
-    print("\tTC\t"+str(subs["TC-pvals"]/subs["T"]))
-    print("\tGA\t"+str(subs["GA-pvals"]/subs["G"]))
-    print("\tAG\t"+str(subs["AG-pvals"]/subs["A"]))
+    print("\tThe expected substition frequencies before and after scaling using the scaled qualities as probalities:")
+    print("\tCT\t"+str(subs["CT-pvals_before"]/subs["C"])+"\t\t"+str(subs["CT-pvals"]/subs["C"]))
+    print("\tTC\t"+str(subs["TC-pvals"]/subs["T"])+"\t\t"+str(subs["TC-pvals"]/subs["T"]))
+    print("\tGA\t"+str(subs["GA-pvals_before"]/subs["G"])+"\t\t"+str(subs["GA-pvals"]/subs["G"]))
+    print("\tAG\t"+str(subs["AG-pvals"]/subs["A"])+"\t\t"+str(subs["AG-pvals"]/subs["A"]))
     print("\tQuality metrics before and after scaling")
-    print("\tCT-Q0 \t"+str(subs["CT-before-Q0"])+"\t"+str(subs["CT-after-Q0"]))
-    print("\tCT-Q10 \t"+str(subs["CT-before-Q10"])+"\t"+str(subs["CT-after-Q10"]))
-    print("\tCT-Q20 \t"+str(subs["CT-before-Q20"])+"\t"+str(subs["CT-after-Q20"]))
-    print("\tCT-Q30 \t"+str(subs["CT-before-Q30"])+"\t"+str(subs["CT-after-Q30"]))
-    print("\tCT-Q40 \t"+str(subs["CT-before-Q40"])+"\t"+str(subs["CT-after-Q40"]))
-    print("\tGA-Q0 \t"+str(subs["GA-before-Q0"])+"\t"+str(subs["GA-after-Q0"]))
-    print("\tGA-Q10 \t"+str(subs["GA-before-Q10"])+"\t"+str(subs["GA-after-Q10"]))
-    print("\tGA-Q20 \t"+str(subs["GA-before-Q20"])+"\t"+str(subs["GA-after-Q20"]))
-    print("\tGA-Q30 \t"+str(subs["GA-before-Q30"])+"\t"+str(subs["GA-after-Q30"]))
-    print("\tGA-Q40 \t"+str(subs["GA-before-Q40"])+"\t"+str(subs["GA-after-Q40"]))
+    print("\tCT-Q0 \t"+str(subs["CT-before-Q0"])+"\t\t"+str(subs["CT-after-Q0"]))
+    print("\tCT-Q10 \t"+str(subs["CT-before-Q10"])+"\t\t"+str(subs["CT-after-Q10"]))
+    print("\tCT-Q20 \t"+str(subs["CT-before-Q20"])+"\t\t"+str(subs["CT-after-Q20"]))
+    print("\tCT-Q30 \t"+str(subs["CT-before-Q30"])+"\t\t"+str(subs["CT-after-Q30"]))
+    print("\tCT-Q40 \t"+str(subs["CT-before-Q40"])+"\t\t"+str(subs["CT-after-Q40"]))
+    print("\tGA-Q0 \t"+str(subs["GA-before-Q0"])+"\t\t"+str(subs["GA-after-Q0"]))
+    print("\tGA-Q10 \t"+str(subs["GA-before-Q10"])+"\t\t"+str(subs["GA-after-Q10"]))
+    print("\tGA-Q20 \t"+str(subs["GA-before-Q20"])+"\t\t"+str(subs["GA-after-Q20"]))
+    print("\tGA-Q30 \t"+str(subs["GA-before-Q30"])+"\t\t"+str(subs["GA-after-Q30"]))
+    print("\tGA-Q40 \t"+str(subs["GA-before-Q40"])+"\t\t"+str(subs["GA-after-Q40"]))
     
 
 def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False):

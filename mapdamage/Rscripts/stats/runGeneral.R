@@ -16,6 +16,7 @@ argsList <- argsList[-1]  #Skip --args
 
 proposeParameters <- list( 
                           Theta=0.0003,
+                          Rho=0.001,
                           DeltaD=0.001,
                           DeltaS=0.009,
                           Lambda=0.008,
@@ -33,6 +34,7 @@ proposeParameters <- list(
 
 start_vals <- list(
                    ptrans = 0.00396/3,
+                   rho = 1,
                    deltad = 0.0285,
                    deltas = 0.269,
                    lambda = 0.27,
@@ -69,6 +71,9 @@ path_to_mapDamage_stats <- argsList[14]              # Absolute path to the mapD
 out_file_base  <- argsList[15]                       # Base file name of the output
 verbose <- as.logical(as.numeric(argsList[16]))      # These options control the volume of the output
 quiet <- as.logical(as.numeric(argsList[17]))
+
+jukes_cantor <- as.logical(as.numeric(argsList[18])) # Fix the transition and transversion ratio and acgt frequencies are equal
+path_to_acgt <- argsList[19] 
 
 
 #######################################################

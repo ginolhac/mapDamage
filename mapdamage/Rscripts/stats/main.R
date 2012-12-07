@@ -51,10 +51,20 @@ if (forward_only){
     dat <- joinFowAndRev(fow_dat,rev_dat,sub_length)
 }
 
+#Getting everythin ready for the mutation model
+if (jukes_cantor){
+    acgt <- c(0.25,.25,0.25,0.25)
+    fix_ti_tv <- TRUE
+}else {
+    acgt <- readBaseFreqs(path_to_dat)
+    fix_ti_tv <- FALSE
+}
+
 cu_pa <- list(
               dat=dat,
               ThetaMat=NA,
               Theta=-log((-start_vals$ptrans+.25)*4),
+              Rho=start_vals$rho,
               DeltaD=start_vals$deltad,
               DeltaS=start_vals$deltas,
               Lambda=start_vals$lambda,
@@ -75,6 +85,8 @@ cu_pa <- list(
               reverse_only=reverse_only,
               fix_disp= fix_disp,
               same_overhangs= same_overhangs,
+              fix_ti_tv = fix_ti_tv,
+              acgt = acgt,
               old_lik=-Inf,
               verbose=verbose,
               quiet=quiet
@@ -87,8 +99,7 @@ if (nu_samples!=0){
     cu_pa$mLe  <- max(start_vals$lengths$Length)
 }
 
-
-cu_pa$ThetaMat <- getTheta(cu_pa$Theta)
+cu_pa$ThetaMat <- getPmat(cu_pa$Theta,cu_pa$Rho,cu_pa$acgt)
 
 #######################################################
 #
@@ -232,7 +243,7 @@ if (out_file_base!=""){
     #Print everything to file
     writeMCMC(mcmcOut,paste(out_file_base,"_MCMC_iter",sep=""))
     #Traceplot
-    jpeg(paste(out_file_base,"_MCMC_trace.jpeg",sep=""),width = 960, height = 960,quality=90)
+    pdf(paste(out_file_base,"_MCMC_trace.pdf",sep=""))
     plotEverything(mcmcOut,hi=0)
     dev.off()
     #histogram of the conditional distributions

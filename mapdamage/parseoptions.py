@@ -107,6 +107,8 @@ def options():
             help="Using only the 3' end of the seqs  [%default]", default=False, action="store_true")
     group3.add_option("", "--fix-disp", dest="fix_disp", \
             help="Fix dispersion in the overhangs  [%default]", default=True,action="store_false")
+    group3.add_option("", "--jukes-cantor", dest="jukes_cantor", \
+            help="Use Jukes Cantor instead of HKY85  [%default]", default=False,action="store_true")
     group3.add_option("", "--same-hangs", dest="same_hangs", \
             help="The overhangs are the same on both sides  [%default]", default=True, action="store_false")
     group3.add_option("", "--fix-nicks" , dest="fix_nicks", \

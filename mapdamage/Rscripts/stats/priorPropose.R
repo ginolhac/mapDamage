@@ -2,6 +2,10 @@ priorTheta <- function(x){
     return(dnorm(x=x,mean=1,sd=500,log=TRUE))
 }
 
+priorRho <- function(x){
+    return(dnorm(x=x,mean=1,sd=500,log=TRUE))
+}
+
 priorDeltaD <- function(x){
     if (x<0 || x>1){
         return(-Inf)
@@ -45,10 +49,17 @@ priorNu <- function(x){
     return(dbeta(x=x,shape1=1,shape2=1,log=TRUE))
 }
 
-
-
 proposeTheta <- function(x=NA,ra=NA){
     sh1 <- proposeParameters$Theta 
+    if (!is.na(ra)){
+        return(rnorm(1,mean=x,sd=sh1))
+    } else {
+        return(0)
+    }
+}
+
+proposeRho <- function(x=NA,ra=NA){
+    sh1 <- proposeParameters$Rho 
     if (!is.na(ra)){
         return(rnorm(1,mean=x,sd=sh1))
     } else {
