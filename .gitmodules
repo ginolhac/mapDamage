@@ -1,0 +1,3 @@
+[submodule "mapdamage/seqtk"]
+	path = mapdamage/seqtk
+	url = https://github.com/lh3/seqtk.git

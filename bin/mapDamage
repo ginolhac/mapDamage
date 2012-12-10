@@ -260,7 +260,7 @@ def main():
         options.no_stats = True
 
     # before running the Bayesian estimation get the base composition
-    mapdamage.composition.get_base_comp(options.filename,os.path.join(options.folder,"dnacomp_genome.csv"))
+    mapdamage.composition.get_base_comp(options.ref,os.path.join(options.folder,"dnacomp_genome.csv"))
 
     # run the Bayesian estimation
     if not options.no_stats:

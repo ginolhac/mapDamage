@@ -6,9 +6,9 @@ from subprocess import CalledProcessError, check_call
 from mapdamage.version import __version__
 import mapdamage
 
-def construct_R_path(name):
-    """Construct a path to the R script given the name"""
-    return(os.path.join(mapdamage.__path__[0], "Rscripts", name))
+def construct_path(name,folder="Rscripts"):
+    """Construct a path to the mapdamage package data given the name"""
+    return(os.path.join(mapdamage.__path__[0], folder, name))
 
 def plot(opt):
   """
@@ -29,7 +29,7 @@ def plot(opt):
   fcomp = opt.folder+"/"+"dnacomp.txt"
   title = opt.folder+"/"+"Fragmisincorporation_"+opt.title+".pdf"
 
-  script = construct_R_path("mapDamage.R") 
+  script = construct_path("mapDamage.R") 
   call = ["Rscript", script, fcomp, title, opt.refplot, fmut, opt.readplot, \
       opt.ymax, opt.folder, opt.title, __version__]
   code = subprocess.call(map(str, call))
@@ -51,7 +51,7 @@ def opt_plots(opt):
   flength = opt.folder+"/"+"lgdistribution.txt"
   output = opt.folder+"/"+"Length_"+opt.title+".pdf"
 
-  script = construct_R_path("lengths.R") 
+  script = construct_path("lengths.R") 
   call = ["Rscript", script, flength, output, fmut, opt.length, \
       opt.title, __version__]
   code = subprocess.call(map(str, call))
@@ -66,7 +66,7 @@ def opt_plots(opt):
 def check_R_one_lib(name):
     """Checks if a necessary R library is here."""
     with open(os.devnull, "w") as devnull:
-        rpa = construct_R_path("stats/checkLibraries.R")
+        rpa = construct_path("stats/checkLibraries.R")
         return subprocess.call(["Rscript", rpa, "--args", name],
                                stdout = devnull,
                                stderr = devnull)
@@ -103,7 +103,7 @@ def run_stats(opt):
     Runs the Bayesian estimation program, using the options opt
     """
     arg = ["Rscript",                            \
-         construct_R_path("stats/runGeneral.R"), \
+         construct_path("stats/runGeneral.R"), \
          "--args",                               \
          opt.rand,                               \
          opt.burn,                               \
@@ -118,7 +118,7 @@ def run_stats(opt):
          bool_to_int(opt.double_stranded),       \
          opt.seq_length,                         \
          opt.folder+"/",                         \
-         construct_R_path("stats/"),             \
+         construct_path("stats/"),             \
          opt.folder+"/Stats_out",                \
          int(opt.verbose),                       \
          int(opt.quiet),                         \
