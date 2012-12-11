@@ -121,6 +121,22 @@ def main():
         else:
             mapdamage.rscript.run_stats(options)
             return 0
+    
+    # fetch all references and associated lengths in nucleotides
+    try:
+        ref = pysam.Fastafile(options.ref)
+    except IOError:
+        # Couldn't open the reference file
+        sys.stderr.write("Couldn't open the reference file "+options.ref+\
+            " or there are permission problems writing the "+options.ref+".fai file\n")
+        return 1
+    
+    # rescale the qualities
+    if options.rescale_only:
+        if not options.quiet:
+            print("Starting rescaling...")
+            mapdamage.rescale.rescale_qual(ref, options)
+            return 0
 
     # open SAM/BAM file
     if options.filename == "-":
@@ -133,14 +149,6 @@ def main():
     else:
         in_bam = pysam.Samfile(options.filename)
 
-    # fetch all references and associated lengths in nucleotides
-    try:
-        ref = pysam.Fastafile(options.ref)
-    except IOError:
-        # Couldn't open the reference file
-        sys.stderr.write("Couldn't open the reference file "+options.ref+\
-            " or there are permission problems writing the "+options.ref+".fai file\n")
-        return 1
 
     reflengths = dict(zip(in_bam.references, in_bam.lengths))
     # check if references in SAM/BAM are the same in the fasta reference file

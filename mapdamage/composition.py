@@ -52,7 +52,6 @@ def get_base_comp(filename,destination=False):
         sys.exit(1)
     # get the base frequencies
     ba_su = sum(bases.values())
-    print(ba_su)
     for ba in alp:
         bases[ba] = float(bases[ba])/float(ba_su)
     if (destination==False):

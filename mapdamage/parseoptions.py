@@ -121,6 +121,8 @@ def options():
           default=False, action="store_true")
     group3.add_option("--rescale", dest="rescale", help="Rescale the quality scores in the BAM file using the output from the statistical estimation", \
           default=False, action="store_true")
+    group3.add_option("--rescale-only", dest="rescale_only", help="Run only rescaling from a valid result folder", \
+          default=False, action="store_true")
     group3.add_option("--no-stats", help="Disabled statistical estimation, active by default", default=False, action="store_true")
 
     parser.add_option_group(group3)
@@ -150,6 +152,12 @@ def options():
         parser.error('Folder not provided, required with --plot-only')
     if options.stats_only and not options.folder:
         parser.error('Folder not provided, required with --stats-only')
+    if options.rescale_only and not options.folder:
+        parser.error('Folder not provided, required with --rescale-only')
+    if options.rescale_only and not options.filename:
+        parser.error('Input bam not provided, required with --rescale-only')
+    if options.rescale_only and not options.ref:
+        parser.error('Reference not provided, required with --rescale-only')
 
     if options.verbose and options.quiet:
         parser.error('Cannot use verbose and quiet option at the same time')
@@ -188,8 +196,8 @@ def options():
                 parser.error('folder %s is not a valid result folder' % options.folder)
     else:
         os.makedirs(options.folder, mode = 0750)
-        if options.plot_only or options.stats_only:
-            sys.stderr.write("Error, %s does not exist while plot/stats only was used\n" % options.folder)
+        if options.plot_only or options.stats_only or options.rescale_only:
+            sys.stderr.write("Error, %s does not exist while plot/stats/rescale only was used\n" % options.folder)
             return None
 
 
