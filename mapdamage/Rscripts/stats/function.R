@@ -535,7 +535,9 @@ simPredCheck <- function(da,output){
     rho <- sample(output$out[,"Rho"],1)
     pmat <- getPmat(the,rho,output$cu_pa$acgt)
     ptransCT <- pmat["C","T"]
+    ptransCC <- pmat["C","C"]
     ptransGA <- pmat["G","A"]
+    ptransGG <- pmat["G","G"]
     #
     coln <- c("A.C","A.G","A.T","C.A","C.G","C.T","G.A","G.C","G.T","T.A","T.C","T.G")
     subs <- matrix(NA,nrow=nrow(output$cu_pa$dat),ncol=4+length(coln))
@@ -555,9 +557,9 @@ simPredCheck <- function(da,output){
                          ),nrow=4,byrow=TRUE)
         ThetapDam <- pDamMat %*% pmat 
         #Calculate the probability C.T due to cytosine demanation
-        damProb[i] <- (1-pmat["C","T"])*pct/((1-ptransCT)*pct+ptransCT) 
+        damProb[i] <- ptransCC*pct/(ptransCC*pct+ptransCT) 
         #Do not forget the reverse complement 
-        damProbGA[i] <- (1-pmat["G","A"])*pga/((1-ptransGA)*pga+ptransGA) 
+        damProbGA[i] <- ptransGG*pga/(ptransGG*pga+ptransGA) 
         #Then draw from a multinomial distribution
         subs[i,c("A.C","A.G","A.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"A"],ThetapDam[1,]))[-1]/output$cu_pa$dat[i,"A"]
         subs[i,c("C.A","C.G","C.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"C"],ThetapDam[2,]))[-2]/output$cu_pa$dat[i,"C"]
