@@ -1,5 +1,5 @@
 #! /usr/bin/Rscript
-
+#Parses the command line arguments and calls the main program
 
 rm(list=ls())
 graphics.off()

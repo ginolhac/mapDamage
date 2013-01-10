@@ -1,3 +1,4 @@
+#The main work flow of the package
 #Load the libraries
 suppressMessages(library(inline))  #Already checked the libraries 
 suppressMessages(library(ggplot2)) #thus ignoring any messages from them
@@ -51,7 +52,7 @@ if (forward_only){
     dat <- joinFowAndRev(fow_dat,rev_dat,sub_length)
 }
 
-#Getting everythin ready for the mutation model
+#Getting everything ready for the mutation model
 if (jukes_cantor){
     acgt <- c(0.25,.25,0.25,0.25)
     fix_ti_tv <- TRUE
@@ -60,6 +61,7 @@ if (jukes_cantor){
     fix_ti_tv <- FALSE
 }
 
+#A list that keeps everything between the iterations
 cu_pa <- list(
               dat=dat,
               ThetaMat=NA,
@@ -158,7 +160,7 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
     }
 }else {
     #This is for a non linear nick frequency, assumes the G>T and G>A are 
-    #mostly due to dna damage patterns do not use for low damage datasets
+    #mostly due to DNA damage patterns do not use for low damage datasets
     te<-(dat[,"C.T"]/dat[,"C"])/(dat[,"G.A"]/dat[,"G"]+dat[,"C.T"]/dat[,"C"])
     if (sum(is.na(te) )!=0 ){
         write("Warning, To few substitutions to assess the nick frequency, using constant nick frequency instead", stderr())
@@ -211,7 +213,7 @@ cu_pa$old_lik <- logLikAll(cu_pa$dat,
 
 
 if (adjust_iter==0){
-    #Single burnin period
+    #Single burning period
     if (!cu_pa$quiet){
         cat("Single burn in period\n")
     }
@@ -242,7 +244,7 @@ if (out_file_base!=""){
     cat("Writing and plotting to files\n")
     #Print everything to file
     writeMCMC(mcmcOut,paste(out_file_base,"_MCMC_iter",sep=""))
-    #Traceplot
+    #Trace plot
     pdf(paste(out_file_base,"_MCMC_trace.pdf",sep=""))
     plotEverything(mcmcOut,hi=0)
     dev.off()

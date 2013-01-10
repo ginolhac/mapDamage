@@ -1,4 +1,6 @@
+#Various useful functions
 getPmat <- function(tmu,tv_ti_ratio,acgt){
+    #Returns the evolutionary substitution matrix  
     if (sum(acgt>=1)!=0 || sum(acgt<=0)!=0){
         write("The ACGT frequencies must be in the range 0 to 1",stderr())
         stop()       
@@ -87,6 +89,8 @@ metroDesc <- function(lpr,lol){
 }
 
 genOverHang <- function(la){
+    #Currently not used in the main code but could used to generate 
+    #overhangs like Philip
     r <- runif(1)
     i <- -1
     p <- 0
@@ -103,6 +107,7 @@ genOverHang <- function(la){
 }
 
 sampleHJ <- function(x,size,prob){
+    #Convenience function since sample wasn't good enough
     if (length(prob)==1){
         return(rep(x,size))
     }else {
@@ -112,6 +117,7 @@ sampleHJ <- function(x,size,prob){
 
 
 seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
+    #Returns the position specific probability of being in an overhang
     if (is.na(fo_only) || is.na(re_only)){
         write("Must give parameters to fo_only or re_only",stderr())
         stop()
@@ -125,7 +131,7 @@ seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
         #Only the forward part
         return(c(psum))
     }else if (re_only && fo_only){
-        write("Shouldn't call this function with foward and reverse only.",stderr())
+        write("Shouldn't call this function with forward and reverse only.",stderr())
         stop()
     }else if (re_only) {
         #The reverse part
@@ -137,6 +143,8 @@ seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
     }
 }
 
+#The following is an MC simulation code to mimic the 
+#nick frequency part in the model from Philip
 seqProbVecNuWithLengths<- cxxfunction( signature(
                                       I_la="numeric",
                                       I_la_disp="numeric",
@@ -250,7 +258,7 @@ pDam <- function(th,ded,des,la,nu,lin){
 }
 
 logLikFunOneBaseSlow <- function(Gen,S,Theta,deltad,deltas,laVec,nuVec,m,lin){
-    #This is the main workhorse of the program
+    #Calculates the log likelihood using R, a C++ version is available  
     ll <- 0
     for (i in 1:length(laVec)){
         #Get the damage probabilities
@@ -260,6 +268,8 @@ logLikFunOneBaseSlow <- function(Gen,S,Theta,deltad,deltas,laVec,nuVec,m,lin){
     return(ll)
 }
 
+#The same logic as in logLikFunOneBaseSlow except using a compiled code 
+#to do the hard work
 logLikFunOneBaseFast <- cxxfunction(signature(
                                       I_Gen="numeric",
                                       I_S="numeric",
@@ -320,8 +330,11 @@ for (int i = 0; i<laVec.size();i++){
 return(ret);
 ', plugin="RcppGSL",include="#include <gsl/gsl_sf_gamma.h>")
 
-logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
 
+
+logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
+    #Calculates the logLikelihood for all the bases by calling 
+    # logLikFunOneBaseFast for each base
     if (deltad<0 || deltad>1 || deltas<0 || deltas>1  ){
         return(-Inf)
     }
@@ -362,15 +375,19 @@ logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
 
 
 getParams <- function(cp){
+    #Utility function nice to update the MCMC iterations matrix 
     return(c(cp$Theta,cp$Rho,cp$DeltaD,cp$DeltaS,cp$Lambda,cp$LambdaRight,cp$LambdaDisp,cp$Nu))
 }
 
 plotRunningMedian <- function(dat,ylab,k=111){
+    #Running median of the MCMC iterations
     xlab = paste("Running median of iterations (W. size ",k,")")
     plot(runmed(dat,k),xlab=xlab,ylab=ylab,type="l")
 }
 
 plotEverything <- function(mcmcOut,hi=0,pl,thin=100){
+    #Plots the MCMC traceplot in the form of a running median and 
+    #histogram of the MCMC iterations
     if (sum(c(cu_pa$same_overhangs==FALSE,
                     cu_pa$fix_disp==FALSE,
                     cu_pa$fix_ti_tv==FALSE,
@@ -422,6 +439,7 @@ plotEverything <- function(mcmcOut,hi=0,pl,thin=100){
 }
 
 accRat <- function(da){
+    #A rough measure of the acceptance ratio 
     return(length(unique(da))/length(da))
 }
 
@@ -450,6 +468,8 @@ adjustPropVar <- function(mcmc,propVar){
 }
 
 runGibbs <- function(cu_pa,iter){
+    #Sampling over the conditional posterior distribution 
+    #for the parameters.
     esti <- matrix(nrow=iter,ncol=9)
     colnames(esti) <- c("Theta","Rho","DeltaD","DeltaS","Lambda","LambdaRight","LambdaDisp","Nu","LogLik")
     for (i in 1:iter){
@@ -570,6 +590,7 @@ simPredCheck <- function(da,output){
 }
 
 calcSampleStats <- function(da,X){
+    #Summary statistics of the posterior distributions
     return(data.frame(
                       x=1:nrow(da),
                       pos=da[,"Pos"],

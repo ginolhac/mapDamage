@@ -1,3 +1,4 @@
+#Functions to load the raw data
 sumTheChr <- function(da,co){
     #Sum up the columns for the different chromosomes
     return(tapply(da[[co]],da$Pos,sum))
@@ -45,6 +46,7 @@ getSeqLen <- function(pa){
 }
 
 readBaseFreqs <- function(fol){
+    #Get the nucleotide composition of the genome
     fil <- "dnacomp_genome.csv"
     dat <- read.csv(paste(fol,fil,sep=""),header=TRUE)
     return(c(dat$A,dat$C,dat$G,dat$T))

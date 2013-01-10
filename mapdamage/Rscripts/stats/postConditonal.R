@@ -1,3 +1,15 @@
+#The posterior conditional function utilized by the 
+# Gibbs sampler in function.R. They have all the 
+#same form maybe they should be implemented in a 
+#smarter way.
+
+#The basic structure is the following 
+
+#1. Get the old parameter 
+#2. Propose a jump
+#3. Accept it using the MH ratio
+#4. Return the old or new value based on the MH ratio
+
 updateTheta <- function(cp){
     old_lik  <- cp$old_lik+priorTheta(cp$Theta)
     theta_star <- proposeTheta(cp$Theta,1)

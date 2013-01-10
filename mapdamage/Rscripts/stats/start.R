@@ -1,3 +1,6 @@
+#Runs likelihood optimization in the beginning to 
+#start in a better place.
+
 logLikAllOptimize  <- function(x,cp){
     #Optimizer wrapper for the log likelihood function
     Theta      <- x["Theta"]       

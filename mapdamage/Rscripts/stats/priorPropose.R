@@ -1,3 +1,6 @@
+#Prior and proposal distributions for the parameter,
+#they are all uninformative.
+
 priorTheta <- function(x){
     return(dnorm(x=x,mean=1,sd=500,log=TRUE))
 }
