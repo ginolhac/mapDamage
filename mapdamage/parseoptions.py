@@ -113,8 +113,8 @@ def options():
             help="The overhangs are the same on both sides  [%default]", default=True, action="store_false")
     group3.add_option("", "--fix-nicks" , dest="fix_nicks", \
             help="Fix the nick frequency vector (Only C.T from the 5' end and G.A from the 3' end)  [%default]", default=False, action="store_true")
-    group3.add_option("", "--double_stranded", dest="double_stranded", \
-            help="Double stranded protocol [%default]", default=True, action="store_false")
+    group3.add_option("", "--single-stranded", dest="single_stranded", \
+            help="Single stranded protocol [%default]", default=False, action="store_true")
     group3.add_option("", "--seq-length", dest="seq_length", \
             help="How long sequence to use from each side [%default]", type = int, default=12, action="store")
     group3.add_option("--stats-only", dest="stats_only", help="Run only statistical estimation from a valid result folder", \

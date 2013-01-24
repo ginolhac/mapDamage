@@ -149,7 +149,10 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
                                      cu_pa$forward_only,
                                         cu_pa$nuSamples,
                                       cu_pa$ds_protocol)
-} else if (fix_nu){
+}else if (!cu_pa$ds_protocol){
+    #The single stranded protocol
+    cu_pa$nuVec <- rep(1,nrow(dat))
+}else if (fix_nu){
     #Ones at the 5' end and zeros at the 3' end
     if (cu_pa$forward_only){
         cu_pa$nuVec <- rep(1,nrow(dat))

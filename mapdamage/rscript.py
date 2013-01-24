@@ -115,7 +115,7 @@ def run_stats(opt):
          bool_to_int(opt.same_hangs),            \
          0,                                      \
          bool_to_int(opt.fix_nicks),             \
-         bool_to_int(opt.double_stranded),       \
+         bool_to_int(not opt.single_stranded),       \
          opt.seq_length,                         \
          opt.folder+"/",                         \
          construct_path("stats/"),             \
