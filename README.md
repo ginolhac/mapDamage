@@ -16,6 +16,8 @@ mapDamage2 is Python/R scripts that tracks and quantify DNA damage patterns amon
  - ggplot2 (>=0.9.2)
 
 Of note, the 5 R libraries are only required for the statistical estimation of DNA damages.
+seqtk is included in this package for fast computation of reference base composition. It is written by Heng Li
+and can be found [https://github.com/lh3/seqtk][here at github]
 
 ### Installation
 
@@ -96,7 +98,7 @@ For the plotting:
  - a pdf file, Fragmisincorporation\_plot.pdf that displays both fragmentation and misincorporation patterns
  - a pdf file, Length\_plot.pdf, that displays length distribution of singleton reads also per strand.  
 Cumulative frequencies of C>T at 5'-end and G>A at 3'-end are also displayed per strand.
- - misincorporation.txt, contains a table that compiles occurences for each type of mutations
+ - misincorporation.txt, contains a table that compiles occurrences for each type of mutations
  - 5pCtoT\_freq.txt, contains frequencies of Cytosine to Thymine mutations per position from the 5'-ends
  - 3pGtoA\_freq.txt, contains frequencies of Guanine to Adenine mutations per position from the 3'-ends
  - dnacomp.txt, contains a table that compiles base compositions.
@@ -109,8 +111,8 @@ For the statistic estimations:
  - Stats\_out\_MCMC\_trace.jpeg, picture that displays values contained in Stats\_out\_MCMC\_iter.csv
  - Stats\_out\_MCMC\_iter\_summ\_stat.csv, summary statistics for the 4 damage parameters and log(likelihood)
  - Stats\_out\_post\_pred.pdf, superposition of real misincorporation patterns and fitted model 
- - Stats\_out\_MCMC\_correct\_prob.csv, probalities of T and A to be damage-related according to read positions
- - Rescaled BAM file, where damage-related bases have downscaled quality scores. 
+ - Stats\_out\_MCMC\_correct\_prob.csv, probabilities of T and A to be damage-related according to read positions
+ - Rescaled BAM file, where damage-related bases have downscaled quality scores. See supplementary information for complete description.
 
 
 Usage
@@ -136,6 +138,7 @@ Usage
                             Downsample to a randomly selected fraction of the reads (if 0 < DOWNSAMPLE < 1), 
                             or a fixed number of randomly selected reads (if DOWNSAMPLE >= 1). By default, 
                             no downsampling is performed.
+	--downsample-seed   Seed value to use for downsampling. See documentation for py module 'random' for default behavior.
         -l LENGTH, --length=LENGTH
                             read length, in nucleotides to consider [70]
         -a AROUND, --around=AROUND
@@ -174,12 +177,14 @@ Usage
                             The overhangs are the same on both sides [True]
         --fix-nicks=FIX_NICKS
                             Fix the nick frequency vector nu else estimate it with GAM [False]
-        --double_stranded=DOUBLE_STRANDED
-                            Double stranded protocol [True]
+	--jukes-cantor	    Use Jukes Cantor instead of HKY85
+        --single_stranded=SINGLE_STRANDED
+                            Single stranded protocol [False]
         --seq-length=SEQ_LENGTH
                             How long sequence to use from each side [12]
         --stats-only        Run only statistical estimation from a valid result folder
         --rescale           Rescale the quality scores in the BAM file using the output from the statistical estimation
+	--rescale-only 	    Run only rescaling from a valid result folder
         --no-stats          Disabled statistical estimation, active by default
 
 Description of tables
