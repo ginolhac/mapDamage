@@ -64,9 +64,6 @@ same_overhangs <- as.logical(as.numeric(argsList[8]))# The overhangs are the sam
 nu_samples <- as.integer(argsList[9])                # Estimate the nu vector using the Briggs model (Should be similiar ammount to the number of sequences use this on your own risk....)
 fix_nu <- as.logical(as.numeric(argsList[10]))       # Set 1 at 5' end and 0 at 3' end or else estimates it with GAM
 ds_protocol <- as.logical(as.numeric(argsList[11]))  # Single stranded protocol C>T at both sides
-print("The ds protocol has been used")
-print(ds_protocol)
-print("yep")
 sub_length <- as.integer(argsList[12])               # How long sequence to use from each side 
 
 path_to_dat <- argsList[13]                          # Absolute path to the dataset
