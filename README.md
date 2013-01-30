@@ -41,16 +41,20 @@ then, $HOME/.local/bin must be in your PATH.
 2. Install the python package pysam 0.6
 Download the tarball archive:  
 > [http://code.google.com/p/pysam/downloads/list][]  
-and follow instructions in the INSTALL text file. It is important 
-installing the specific version pysam 0.6 since we had issues with
-the newer versions. It is recommend to check if the pysam installation
-seems okay before proceeding with
+Untar the downloaded tar file and follow instructions in the pysam-0.6/INSTALL text file.
+It is important installing the specific version pysam 0.6 since we had issues with  
+newer versions. It is recommend to check if the pysam installation seems okay 
+before proceeding with the following command
 > `python -c "import pysam"` 
 If nothing appears then proceed.
 
 
 3. To install R, follow the instructions available at (with installers/packages available 
 for all major operating systems) [http://www.r-project.org/][R].
+
+
+Note if steps 4-6 fail for some reason then it is possible to utilize mapDamage without 
+the statistical function.
 
 
 4. Install the missing R packages by running in a R console and selecting a CRAN mirror:
@@ -130,6 +134,26 @@ For the statistical estimation:
  - Stats\_out\_post\_pred.pdf, empirical misincorporation frequency and predictive intervals from the fitted model.
  - Stats\_out\_MCMC\_correct\_prob.csv, position specific probability of a C.T and G.A misincorporation is due to damage.
  - Rescaled BAM file, where likely post-mortem damaged bases have downscaled quality scores. 
+
+
+Examples and datasets
+---------------------
+A simple command line that would process the entire BAM file with plotting and statistic estimation is:
+
+    mapDamage -i mymap.bam -r myreference.fasta
+
+To run the plotting part with a new scale to fit lower levels of DNA damages, 0.1 as y-limit instead of 0.3 by default:
+
+     mapDamage -d results_mydata -y 0.1 --plot-only
+
+To run the statistic estimations using only the 5'-ends and with verbose output:
+
+     mapDamage -d results_mydata --forward --stats-only -v
+
+
+The original page with examples, datasets and result files is there:
+
+[http://geogenetics.ku.dk/publications/mapdamage/][]
 
 
 Usage
@@ -279,24 +303,6 @@ used by default:
 | positive values | reads, +1 to +25     | reference, +1 to +10 |
 
  
-Examples and datasets
----------------------
-A simple command line that would process the entire BAM file with plotting and statistic estimation is:
-
-    mapDamage -i mymap.bam -r myreference.fasta
-
-To run the plotting part with a new scale to fit lower levels of DNA damages, 0.1 as y-limit instead of 0.3 by default:
-
-     mapDamage -d results_mydata -y 0.1 --plot-only
-
-To run the statistic estimations using only the 5'-ends and with verbose output:
-
-     mapDamage -d results_mydata --forward --stats-only -v
-
-
-The original page with examples, datasets and result files is there:
-
-[http://geogenetics.ku.dk/publications/mapdamage/][]
 
 
 Citation
