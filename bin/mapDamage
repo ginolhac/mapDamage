@@ -135,8 +135,8 @@ def main():
     if options.rescale_only:
         if not options.quiet:
             print("Starting rescaling...")
-            mapdamage.rescale.rescale_qual(ref, options)
-            return 0
+        mapdamage.rescale.rescale_qual(ref, options)
+        return 0
 
     # open SAM/BAM file
     if options.filename == "-":
@@ -278,7 +278,7 @@ def main():
     if options.rescale:
         if not options.quiet:
             print("Starting rescaling...")
-            mapdamage.rescale.rescale_qual(ref, options)
+        mapdamage.rescale.rescale_qual(ref, options)
     
     # need the fasta reference still open for rescaling
     ref.close()
