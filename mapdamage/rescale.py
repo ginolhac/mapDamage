@@ -265,14 +265,9 @@ def rescale_qual(ref, options):
 
     Iterates through BAM file, makes a new BAM file with rescaled qualities.
     """
-    # open SAM/BAM file
+    # open SAM/BAM files
     bam = pysam.Samfile(options.filename)
-
-    # format the output filename
-    file_name = os.path.splitext(options.filename)[0]
-    out_file_name = os.path.basename(file_name)+"_rescaled.bam"
-
-    bam_out = pysam.Samfile(os.path.join(options.folder, out_file_name), "wb", template = bam)
+    bam_out = pysam.Samfile(options.rescale_out, "wb", template = bam)
     
     corr_prob = get_corr_prob(options.folder)
     

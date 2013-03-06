@@ -123,6 +123,8 @@ def options():
           default=False, action="store_true")
     group3.add_option("--rescale-only", dest="rescale_only", help="Run only rescaling from a valid result folder", \
           default=False, action="store_true")
+    group3.add_option("--rescale-out", dest="rescale_out", help="Write the rescaled BAM to this file", \
+          default=None, action="store")
     group3.add_option("--no-stats", help="Disabled statistical estimation, active by default", default=False, action="store_true")
 
     parser.add_option_group(group3)
@@ -188,6 +190,13 @@ def options():
     # check folder
     if not options.folder and options.filename:
         options.folder = "results_"+os.path.splitext(os.path.basename(options.filename))[0]
+
+    # check destination for rescaled bam
+    if not options.rescale_out:
+        basename = os.path.basename(options.filename[0])
+        with_ext = os.path.splitext(basename)[0] + ".rescaled.bam"
+        options.rescale_out = [os.path.join(options.folder, with_ext)]
+
     if os.path.isdir(options.folder):
         if not options.quiet and not options.plot_only:
             print("Warning, %s already exists" % options.folder)
