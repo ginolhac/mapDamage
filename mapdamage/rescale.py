@@ -268,9 +268,7 @@ def rescale_qual(ref, options):
     # open SAM/BAM files
     bam = pysam.Samfile(options.filename)
     bam_out = pysam.Samfile(options.rescale_out, "wb", template = bam)
-    
     corr_prob = get_corr_prob(options.folder)
-    
     subs = initialize_subs()
 
     for hit in bam:
@@ -289,5 +287,5 @@ def rescale_qual(ref, options):
     if not options.quiet:
         print("Done with rescaling.")
     if options.verbose:
-        print("Rescaled BAM: %s" % os.path.join(options.folder, out_file_name))
+        print("Rescaled BAM: %s" % os.path.join(options.folder, options.rescale_out))
 
