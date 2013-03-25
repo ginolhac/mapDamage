@@ -34,8 +34,9 @@ def plot(opt):
       opt.ymax, opt.folder, opt.title, __version__]
   code = subprocess.call(map(str, call))
 
-  if code == 0 and not opt.quiet:
-    print("pdf %s generated" % title)
+  if code == 0:
+    if not opt.quiet:
+      print("pdf %s generated" % title)
     return 0
   else:
     print("Error: plotting with R failed")
@@ -55,8 +56,9 @@ def opt_plots(opt):
   call = ["Rscript", script, flength, output, fmut, opt.length, \
       opt.title, __version__]
   code = subprocess.call(map(str, call))
-  if code == 0 and not opt.quiet:
-    print("additional pdf %s generated" % output)
+  if code == 0:
+    if not opt.quiet:
+      print("additional pdf %s generated" % output)
     return 0
   else:
     print("Error: plotting with R failed")
