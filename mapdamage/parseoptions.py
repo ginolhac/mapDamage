@@ -195,7 +195,7 @@ def options():
     if not options.rescale_out:
         basename = os.path.basename(options.filename[0])
         with_ext = os.path.splitext(basename)[0] + ".rescaled.bam"
-        options.rescale_out = [os.path.join(options.folder, with_ext)]
+        options.rescale_out = os.path.join(options.folder, with_ext)
 
     if os.path.isdir(options.folder):
         if not options.quiet and not options.plot_only:
