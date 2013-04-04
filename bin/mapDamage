@@ -88,7 +88,10 @@ def downsample_reads(bamfile, options):
 
 def main():
     options = mapdamage.parseoptions.options()
-    
+    if options == None:
+        sys.stderr.write("Option parsing failed, terminating the program\n")
+        return 1
+
     # make a logger for mapDamage
     map_logger = mapDamageLogger("root")
     map_logger.specialize(options.folder)
@@ -125,12 +128,12 @@ def main():
     # fetch all references and associated lengths in nucleotides
     try:
         ref = pysam.Fastafile(options.ref)
-    except IOError:
+    except IOError as e:
         # Couldn't open the reference file
         sys.stderr.write("Couldn't open the reference file "+options.ref+\
             " or there are permission problems writing the "+options.ref+".fai file\n")
-        return 1
-    
+        raise e
+
     # rescale the qualities
     if options.rescale_only:
         if not options.quiet:
