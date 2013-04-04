@@ -5,6 +5,9 @@ import subprocess
 from subprocess import CalledProcessError, check_call
 from mapdamage.version import __version__
 import mapdamage
+import logging
+import time
+
 
 def construct_path(name,folder="Rscripts"):
     """Construct a path to the mapdamage package data given the name"""
@@ -126,13 +129,21 @@ def run_stats(opt):
          int(opt.quiet),                         \
          int(opt.jukes_cantor),                       \
          opt.folder+"/acgt_ratio.csv"            \
-         ]  
+         ]
     arg = [str(i) for i in arg]
+
+    logger = logging.getLogger(__name__)
+    logger.info("Performing Bayesian estimates")
+    logger.debug("Call: %s" % (" ".join(arg),))
+    start_time = time.time()
+
     try:
         check_call(arg)
     except CalledProcessError:
-        print("\nThe Bayesian statistics program failed to finish\n")
+        logger.error("The Bayesian statistics program failed to finish")
         raise SystemError
+
+    logger.debug("Bayesian estimates completed in %f seconds" % (time.time() - start_time,))
     return 0
 
 

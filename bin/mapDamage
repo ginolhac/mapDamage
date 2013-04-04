@@ -3,7 +3,9 @@
 
 from __future__ import print_function
 
+import logging
 import random
+import time
 import sys
 import os
 
@@ -52,7 +54,6 @@ except ImportError, e:
 
 import pysam
 import mapdamage
-from mapdamage.logger import mapDamageLogger  
 
 def downsample_reads(bamfile, options):
     """
@@ -87,25 +88,26 @@ def downsample_reads(bamfile, options):
 
 
 def main():
+    start_time = time.time()
     options = mapdamage.parseoptions.options()
     if options == None:
         sys.stderr.write("Option parsing failed, terminating the program\n")
         return 1
 
-    # make a logger for mapDamage
-    map_logger = mapDamageLogger("root")
-    map_logger.specialize(options.folder)
+    logging.basicConfig(filename = os.path.join(options.folder, "Runtime_log.txt"),
+                        format   = '%(asctime)s\t%(levelname)s\t%(name)s: %(message)s',
+                        level    = logging.DEBUG)
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+    logging.getLogger().addHandler(handler)
 
-    # write the command line to the log 
-    map_logger.commandline()
-
-    if not options:
-        return 1
+    logger = logging.getLogger("main")
+    logger.info("Started with the command: " + " ".join(sys.argv))
 
     # plot using R if results folder already done
     if options.plot_only:
         if options.no_r:
-            sys.stderr.write("Cannot use plot damage patterns if R is missing, terminating the program\n")
+            logger.error("Cannot use plot damage patterns if R is missing, terminating the program")
             return 1
         else:
             mapdamage.rscript.plot(options)
@@ -116,10 +118,7 @@ def main():
     if options.stats_only:
         # does not work for very low damage levels
         if mapdamage.tables.dmg_freq_is_low(options.folder):
-            options.no_stats = True
-
-        if options.no_stats:
-            sys.stderr.write("Cannot use the Bayesian estimation, terminating the program\n")
+            logger.error("Cannot use the Bayesian estimation, terminating the program")
             return 1
         else:
             mapdamage.rscript.run_stats(options)
@@ -130,8 +129,8 @@ def main():
         ref = pysam.Fastafile(options.ref)
     except IOError as e:
         # Couldn't open the reference file
-        sys.stderr.write("Couldn't open the reference file "+options.ref+\
-            " or there are permission problems writing the "+options.ref+".fai file\n")
+        logger.error("Couldn't open the reference file "+options.ref+\
+            " or there are permission problems writing the "+options.ref+".fai file")
         raise e
 
     # rescale the qualities
@@ -246,6 +245,7 @@ def main():
 
     if not options.quiet:
         print("\tDone. %d reads read (%d unmapped)" % (counter, filtered))
+    logger.debug("BAM read in %f seconds" % (time.time() - start_time,))
 
     # close file handlers
     in_bam.close()
@@ -276,19 +276,18 @@ def main():
     # run the Bayesian estimation
     if not options.no_stats:
         mapdamage.rscript.run_stats(options)
-    
+
     # rescale the qualities
     if options.rescale:
-        if not options.quiet:
-            print("Starting rescaling...")
         mapdamage.rescale.rescale_qual(ref, options)
-    
+
     # need the fasta reference still open for rescaling
     ref.close()
-    
+
     # log the time it took
-    map_logger.finish()
-    
+    logger.info("Successful run")
+    logger.debug("Run completed in %f seconds" % (time.time() - start_time,))
+
     return 0
 
 
