@@ -319,6 +319,12 @@ Q: I got this error: could not find function "ggtitle"
 A: update your ggplot2 package to at least version 0.9.2 by running
 update.packages("ggplot2") and selecting a CRAN mirror
 
+Q: How to clone the development version from github?
+
+A: git clone https://github.com/ginolhac/mapDamage.git mapDamage
+   cd mapDamage
+   git submodule update --init
+
 
 Contact
 -------
