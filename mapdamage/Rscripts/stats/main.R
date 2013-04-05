@@ -54,7 +54,7 @@ if (forward_only){
 
 #Getting everything ready for the mutation model
 if (jukes_cantor){
-    acgt <- c(0.25,.25,0.25,0.25)
+    acgt <- c(0.25,0.25,0.25,0.25)
     fix_ti_tv <- TRUE
 }else {
     acgt <- readBaseFreqs(path_to_dat)

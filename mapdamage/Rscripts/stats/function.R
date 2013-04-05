@@ -38,7 +38,7 @@ getPmat <- function(tmu,tv_ti_ratio,acgt){
 
 jukesCantorPmat <- function(tmu){
     #Using the Juke-Cantor model
-    return(matrix(rep(1/4-exp(-tmu)/4,16),nrow=4,ncol=4)+diag(rep(exp(-tmu),4)))
+    return(matrix(rep(1/4-exp(-tmu)/4,16),nrow=4,ncol=4,dimnames=list(c("A","C","G","T"),c("A","C","G","T")))+diag(rep(exp(-tmu),4)))
 }
 
 qmatHKY85 <- function(tmu,tv_ti,acgt){
@@ -639,12 +639,12 @@ postPredCheck <- function(da,output,samples=10000){
     REsStats <- calcSampleStats(da,REs) 
     #Plotting the posterior predictive intervals
     plot(ggplot()+
-         geom_point(aes(x,mea,colour="C2T",aes_string="subs"),data=CTsStats)+
-         geom_point(aes(x,mea,colour="G2A"),data=GAsStats)+
-         geom_point(aes(x,mea,colour="Res"),data=REsStats)+
-         geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="C2T"),data=CTsStats)+
-         geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="G2A"),data=GAsStats)+
-         geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="Res"),data=REsStats)+
+         geom_point(aes(x,mea,colour="C->T",aes_string="subs"),data=CTsStats)+
+         geom_point(aes(x,mea,colour="G->A"),data=GAsStats)+
+         geom_point(aes(x,mea,colour="Others"),data=REsStats)+
+         geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="C->T"),data=CTsStats)+
+         geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="G->A"),data=GAsStats)+
+         geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="Others"),data=REsStats)+
          geom_line(aes(oneBased,C.T/C),color="red",data=data.frame(da))+
          geom_line(aes(oneBased,G.A/G),color="green",data=data.frame(da))+
          geom_line(aes(oneBased,((A.C+A.G+A.T)/A+(C.A+C.G)/C+(G.C+G.T)/G+(T.A+T.C+T.G)/T)/10),color="blue",data=data.frame(da))+
