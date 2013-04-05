@@ -5,6 +5,9 @@ import mapdamage
 import pysam
 import itertools
 import math
+import logging
+import time
+
 
 def phred_pval_to_char(pval):
     """Transforming error rate to ASCII character using the Phred scale"""
@@ -265,6 +268,10 @@ def rescale_qual(ref, options):
 
     Iterates through BAM file, makes a new BAM file with rescaled qualities.
     """
+    logger = logging.getLogger(__name__)
+    logger.info("Rescaling BAM: '%s' -> '%s'" % (options.filename, options.rescale_out))
+    start_time = time.time()
+
     # open SAM/BAM files
     bam = pysam.Samfile(options.filename)
     bam_out = pysam.Samfile(options.rescale_out, "wb", template = bam)
@@ -284,8 +291,5 @@ def rescale_qual(ref, options):
     bam_out.close()
     if not options.quiet:
         print_subs(subs)
-    if not options.quiet:
-        print("Done with rescaling.")
-    if options.verbose:
-        print("Rescaled BAM: %s" % os.path.join(options.folder, options.rescale_out))
 
+    logger.debug("Rescaling completed in %f seconds" % (time.time() - start_time,))

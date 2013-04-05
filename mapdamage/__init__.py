@@ -6,6 +6,5 @@ import mapdamage.align
 import mapdamage.tables
 import mapdamage.composition
 import mapdamage.rscript
-import mapdamage.logger
 import mapdamage.rescale
 import mapdamage.version
