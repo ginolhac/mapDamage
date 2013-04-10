@@ -681,7 +681,7 @@ writeMCMC <- function(out,filename){
     #Now calculate summary statistic of the posterior distributions
     mea <- apply(out$out[,parameters],2,mean)
     std <- apply(out$out[,parameters],2,sd)
-    qua <- apply(out$out[,parameters],2,quantile,seq(from=0,to=1,by=.05))
+    qua <- apply(out$out[,parameters],2,quantile,seq(from=0,to=1,by=.025))
     acc <- apply(out$out[,parameters],2,accRat)
     summStat <- rbind(mea,std,acc,qua)
     rownames(summStat)[1] <- "Mean" 

@@ -117,7 +117,7 @@ def run_stats(opt):
          bool_to_int(opt.forward),               \
          bool_to_int(opt.reverse),               \
          bool_to_int(opt.fix_disp),              \
-         bool_to_int(opt.same_hangs),            \
+         bool_to_int(not opt.diff_hangs),            \
          0,                                      \
          bool_to_int(opt.fix_nicks),             \
          bool_to_int(not opt.single_stranded),       \

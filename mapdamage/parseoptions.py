@@ -109,8 +109,8 @@ def options():
             help="Fix dispersion in the overhangs  [%default]", default=True,action="store_false")
     group3.add_option("", "--jukes-cantor", dest="jukes_cantor", \
             help="Use Jukes Cantor instead of HKY85  [%default]", default=False,action="store_true")
-    group3.add_option("", "--same-hangs", dest="same_hangs", \
-            help="The overhangs are the same on both sides  [%default]", default=True, action="store_false")
+    group3.add_option("", "--diff-hangs", dest="diff_hangs", \
+            help="The overhangs are different for 5' and 3'  [%default]", default=False, action="store_true")
     group3.add_option("", "--fix-nicks" , dest="fix_nicks", \
             help="Fix the nick frequency vector (Only C.T from the 5' end and G.A from the 3' end)  [%default]", default=False, action="store_true")
     group3.add_option("", "--single-stranded", dest="single_stranded", \
@@ -170,7 +170,7 @@ def options():
     if options.around < 0:
         parser.error('around (-a) must be a positive integrer')
     if options.ymax <= 0 or options.ymax > 1:
-        parser.error('ymax (-b) must be an integrer beetween 0 and 1')
+        parser.error('ymax (-b) must be an real number beetween 0 and 1')
     if options.readplot < 0:
         parser.error('readplot (-m) must be a positive integrer')
     if options.refplot < 0:
