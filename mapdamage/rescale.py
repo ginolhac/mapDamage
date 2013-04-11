@@ -279,10 +279,14 @@ def rescale_qual(ref, options):
     subs = initialize_subs()
 
     for hit in bam:
-        hit = rescale_qual_read(bam, hit, ref, corr_prob,subs)
-        if hit.is_paired:
+        if not hit.qual:
+            logger.warning("Cannot rescale base PHRED scores for read '%s'; no scores assigned." % hit.qname)
+        elif hit.is_paired:
             sys.stderr.write("Cannot rescale paired end reads in this versio\n")
             sys.exit(1)
+        else:
+            hit = rescale_qual_read(bam, hit, ref, corr_prob,subs)
+
         bam_out.write(hit)
     if (subs["TC-before"] != subs["TC-after"] or subs["AG-before"] != subs["AG-after"]):
         sys.exit("Qualities for T.C and A.G transitions shouln't change in the re scaling.")
