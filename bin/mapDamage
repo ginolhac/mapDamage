@@ -271,11 +271,11 @@ def main():
     if mapdamage.tables.dmg_freq_is_low(options.folder):
         options.no_stats = True
 
-    # before running the Bayesian estimation get the base composition
-    mapdamage.composition.get_base_comp(options.ref,os.path.join(options.folder,"dnacomp_genome.csv"))
-
+   
     # run the Bayesian estimation
     if not options.no_stats:
+        # before running the Bayesian estimation get the base composition
+        mapdamage.composition.get_base_comp(options.ref,os.path.join(options.folder,"dnacomp_genome.csv"))
         mapdamage.rscript.run_stats(options)
 
     # rescale the qualities

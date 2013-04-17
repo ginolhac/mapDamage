@@ -8,12 +8,11 @@ OPT.VERSION   <- args[6]
 
 MISMATCHES  <- c("C>T", "G>A")
 
-calculate.mutation.table <- function(filename, length){
+calculate.mutation.table <- function(filename){
 
     tbl <- read.table(file = filename, sep = "\t", header = TRUE, check.names = FALSE)
     tbl <- aggregate(tbl[, MISMATCHES], tbl[, c("End", "Std", "Pos")], sum)
-    
-    return(tbl[tbl$Pos <= length, ])
+    return(tbl)
 }
 
 
@@ -82,7 +81,7 @@ plot.length(lg, "Single-end read length distribution", "black")
 plot.lengthStd(lg, "Single-end read length per strand")
 
 # Misincorporation patterns
-mut <- calculate.mutation.table(OPT.MISINCORP, OPT.LENGTH)
+mut <- calculate.mutation.table(OPT.MISINCORP)
 
 par(mar = c(1, 2, 7, 1))
 plot.cumul.mutation(mut, "5p", "C>T", 2)
