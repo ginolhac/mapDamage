@@ -30,24 +30,23 @@ mapDamage2 was successfully tested on GNU/Linux and MacOSX environments.
 
 1. Install mapDamage:  
 Clone the repository from GitHub
-> `git clone https://github.com/ginolhac/mapDamage.git mapDamage`
+`git clone https://github.com/ginolhac/mapDamage.git mapDamage`
 go into the resulting folder
-> `cd mapDamage`  
+`cd mapDamage`  
 then clone the submodules.
-> `git submodule update --init`  
+`git submodule update --init`  
 Run the following command if you have administrator rights  
-> `sudo python setup.py install`  
+`sudo python setup.py install`  
 otherwise install it locally  
-> `python setup.py install --user`  
+`python setup.py install --user`  
 then, $HOME/.local/bin must be in your PATH.
 
 2. Install pysam 0.6:  
 Download the tarball archive for [pysam](http://code.google.com/p/pysam/downloads/list).
 Untar the downloaded tar file and follow instructions in the pysam-0.6/INSTALL text file.
-**It is important installing the specific version pysam 0.6 since we had issues with  
-newer versions.** It is recommend to check if the pysam installation seems okay 
-before proceeding with the following command
-> `python -c "import pysam"` 
+**It is important installing the specific version pysam 0.6 since we had issues with newer versions.**
+It is recommend to check if the pysam installation seems okay before proceeding with the following command
+`python -c "import pysam"` 
 If nothing appears then proceed.
 
 3. Install R:  
@@ -56,23 +55,23 @@ Follow the instructions available at [R project](http://www.r-project.org/)
 
 4. Install the R packages:  
 By running in a R console and selecting a CRAN mirror:
-> `install.packages("inline")`  
-> `install.packages("gam")`  
-> `install.packages("Rcpp")`  
-> `install.packages("ggplot2")` 
+`install.packages("inline")`  
+`install.packages("gam")`  
+`install.packages("Rcpp")`  
+`install.packages("ggplot2")` 
 
 
 5. Install the  GSL library [gsl](http://www.gnu.org/software/gsl/):  
 For Debian-based distros by the following. 
-> `sudo apt-get install libgsl0-dev`  
+`sudo apt-get install libgsl0-dev`  
 There should be a equivalent package for Mac using fink or macports.
 
 
 6. Install RcppGSL:  
 In a R session do the following
-> `install.packages("RcppGSL")`  
+`install.packages("RcppGSL")`
 If the installation of RcppGSL ended with an unsuccessfully then, download the tarball at [RcppGSL](http://cran.r-project.org/web/packages/RcppGSL/index.html) and install it with:  
-> `install.packages("RcppGSL_0.2.0.tar.gz")`
+`install.packages("RcppGSL_0.2.0.tar.gz")`
 
 Note that if steps 4-6 fail for some reason, then it is possible to utilize mapDamage without 
 the statistical function.
