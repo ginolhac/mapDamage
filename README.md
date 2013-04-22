@@ -30,7 +30,7 @@ mapDamage2 was successfully tested on GNU/Linux and MacOSX environments.
 
 1. Install mapDamage:  
 Clone the repository from GitHub  
-`git clone https://github.com/ginolhac/mapDamage.git mapDamage`
+`git clone https://github.com/ginolhac/mapDamage.git mapDamage`  
 go into the resulting folder  
 `cd mapDamage`  
 then clone the submodules.  
@@ -46,7 +46,7 @@ Download the tarball archive for [pysam](http://code.google.com/p/pysam/download
 Untar the downloaded tar file and follow instructions in the pysam-0.6/INSTALL text file.
 **It is important installing the specific version pysam 0.6 since we had issues with newer versions.**
 It is recommend to check if the pysam installation seems okay before proceeding with the following command  
-`python -c "import pysam"` 
+`python -c "import pysam"`  
 If nothing appears then proceed.
 
 3. Install R:  
@@ -69,7 +69,7 @@ There should be a equivalent package for Mac using fink or macports.
 
 6. Install RcppGSL:  
 In a R session do the following   
-`install.packages("RcppGSL")`
+`install.packages("RcppGSL")`  
 If the installation of RcppGSL ended with an unsuccessfully then, download the tarball at [RcppGSL](http://cran.r-project.org/web/packages/RcppGSL/index.html) and install it with:   
 `install.packages("RcppGSL_0.2.0.tar.gz")`
 
