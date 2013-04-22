@@ -29,11 +29,11 @@ and can be found at [here at github.](https://github.com/lh3/seqtk)
 mapDamage2 was successfully tested on GNU/Linux and MacOSX environments.
 
 1. Install mapDamage:  
-Clone the repository from GitHub
+Clone the repository from GitHub  
 `git clone https://github.com/ginolhac/mapDamage.git mapDamage`
-go into the resulting folder
+go into the resulting folder  
 `cd mapDamage`  
-then clone the submodules.
+then clone the submodules.  
 `git submodule update --init`  
 Run the following command if you have administrator rights  
 `sudo python setup.py install`  
@@ -45,7 +45,7 @@ then, $HOME/.local/bin must be in your PATH.
 Download the tarball archive for [pysam](http://code.google.com/p/pysam/downloads/list).
 Untar the downloaded tar file and follow instructions in the pysam-0.6/INSTALL text file.
 **It is important installing the specific version pysam 0.6 since we had issues with newer versions.**
-It is recommend to check if the pysam installation seems okay before proceeding with the following command
+It is recommend to check if the pysam installation seems okay before proceeding with the following command  
 `python -c "import pysam"` 
 If nothing appears then proceed.
 
@@ -54,7 +54,7 @@ Follow the instructions available at [R project](http://www.r-project.org/)
 (with installers/packages available for all major operating systems).
 
 4. Install the R packages:  
-By running in a R console and selecting a CRAN mirror:
+By running in a R console and selecting a CRAN mirror:  
 `install.packages("inline")`  
 `install.packages("gam")`  
 `install.packages("Rcpp")`  
@@ -62,15 +62,15 @@ By running in a R console and selecting a CRAN mirror:
 
 
 5. Install the  GSL library [gsl](http://www.gnu.org/software/gsl/):  
-For Debian-based distros by the following. 
+For Debian-based distros by the following.  
 `sudo apt-get install libgsl0-dev`  
 There should be a equivalent package for Mac using fink or macports.
 
 
 6. Install RcppGSL:  
-In a R session do the following
+In a R session do the following   
 `install.packages("RcppGSL")`
-If the installation of RcppGSL ended with an unsuccessfully then, download the tarball at [RcppGSL](http://cran.r-project.org/web/packages/RcppGSL/index.html) and install it with:  
+If the installation of RcppGSL ended with an unsuccessfully then, download the tarball at [RcppGSL](http://cran.r-project.org/web/packages/RcppGSL/index.html) and install it with:   
 `install.packages("RcppGSL_0.2.0.tar.gz")`
 
 Note that if steps 4-6 fail for some reason, then it is possible to utilize mapDamage without 
