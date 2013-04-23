@@ -279,7 +279,7 @@ users that reads should be trimmed if soft-clipped base frequencies is high.
 
 Example table below:
  
-    # table produced by mapDamage version 0.4.0
+    # table produced by mapDamage version 2.0
     # using mapped file hits_sort_mts.bam and NC_012920.fasta as reference file
     # Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads
     Chr	End	Std	Pos	A	C	G	T	Total
