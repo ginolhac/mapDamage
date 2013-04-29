@@ -221,9 +221,15 @@ def options():
         options.no_r = True
 
     if check_R_lib():
-        #Check for R libraries
+        # check for R libraries
         print("The Bayesian estimation has been disabled\n")
         options.no_stats = True
+        if options.stats_only:
+            sys.exit("Cannot use --stats-only with missing R libraries")
+        if options.rescale:
+            sys.exit("Cannot use --rescale with missing R libraries")
+        if options.rescale_only:
+            sys.exit("Cannot use --rescale-only with missing R libraries")
 
 
     return options

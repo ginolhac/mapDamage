@@ -24,8 +24,11 @@ def get_corr_prob(folder):
     position (one based)  -  CT  -  probability
                           -  GA  -  probability
     """
+    full_path = os.path.join(folder,"Stats_out_MCMC_correct_prob.csv")
+    if not os.path.isfile(full_path):
+        sys.exit("Missing file, the file \n\tStats_out_MCMC_correct_prob.csv\nshould be in the folder\n\t"+folder+"\nDid you run the MCMC estimates of the parameters?")
     try:
-        fi_handle = csv.DictReader(open(os.path.join(folder,"Stats_out_MCMC_correct_prob.csv")))
+        fi_handle = csv.DictReader(open(full_path))
         corr_prob = {}
         for line in fi_handle:
             if (corr_prob.has_key(line["Position"])):
