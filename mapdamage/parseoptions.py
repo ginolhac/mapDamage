@@ -192,7 +192,7 @@ def options():
         options.folder = "results_"+os.path.splitext(os.path.basename(options.filename))[0]
 
     # check destination for rescaled bam
-    if not options.rescale_out:
+    if not options.rescale_out and (options.rescale or options.rescale_only):
         # if there are mulitiple bam files to rescale then pick first one as 
         # the name of the rescaled file
         if isinstance(options.filename,list):
