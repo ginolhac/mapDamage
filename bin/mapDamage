@@ -55,36 +55,65 @@ except ImportError, e:
 import pysam
 import mapdamage
 
-def downsample_reads(bamfile, options):
+
+_BAM_UNMAPPED  = 0x4
+_BAM_SECONDARY = 0x100
+_BAM_FAILED_QC = 0x200
+_BAM_PCR_DUPE  = 0x400
+_BAM_CHIMERIC  = 0x800
+
+def _filter_reads(bamfile):
+    filtered_flags = _BAM_UNMAPPED | \
+      _BAM_SECONDARY | \
+      _BAM_FAILED_QC | \
+      _BAM_PCR_DUPE | \
+      _BAM_CHIMERIC
+
+    for read in bamfile:
+        if not (read.flag & filtered_flags):
+            yield read
+
+
+def _downsample_to_fraction(bamfile, options):
+    if options.verbose:
+        print("\tDownsampling %.2f fraction of the original file" % options.downsample)
+    assert options.downsample > 0, "Downsample fraction must be positive, not %s" % options.downsample
+
+    rand = random.Random(options.downsample_seed)
+    for read in _filter_reads(bamfile):
+        if rand.random() < options.downsample:
+            yield read
+
+
+def _downsample_to_fixed_number(bamfile, options):
+    if options.verbose:
+        print("\tDownsampling %d random reads from the original file" % options.downsample)
+
+    # use reservoir sampling
+    downsample_to = int(options.downsample)
+    rand = random.Random(options.downsample_seed)
+    sample = [None] * downsample_to
+    for (index, record) in enumerate(_filter_reads(bamfile)):
+        if index >= downsample_to:
+            index = rand.randint(0, index)
+            if index >= downsample_to:
+                continue
+        sample[index] = record
+    return filter(None, sample)
+
+
+def _read_bamfile(bamfile, options):
     """
     Takes a subset of the bamfile. Can use a approximate fraction of the
-    hits or specific number of reads using reservoir sampling. Returns 
+    hits or specific number of reads using reservoir sampling. Returns
     a list in the last case otherwise a iterator.
     """
     if options.downsample is None:
-        # no subsampling
-        return bamfile
-
-    rand = random.Random(options.downsample_seed)
-    if options.downsample < 1:
-        # use fraction of the reads
-        if options.verbose:
-            print("\tDownsampling %.2f fraction of the original file" % options.downsample)
-        assert options.downsample > 0, "Downsample fraction must be positive, not %s" % options.downsample
-        return (record for record in bamfile if rand.random() < options.downsample)
+        return _filter_reads(bamfile)
+    elif options.downsample < 1:
+        return _downsample_to_fraction(bamfile, options)
     else:
-        if options.verbose:
-            print("\tDownsampling %d random reads from the original file" % options.downsample)
-        # use reservoir sampling
-        sample = [None] * options.downsample
-        for (index, record) in enumerate(bamfile):
-            if index >= options.downsample:
-                index = rand.randint(0, index)
-                if index >= options.downsample:
-                    continue
-            sample[index] = record
-                
-        return filter(None, sample)
+        return _downsample_to_fixed_number(bamfile, options)
 
 
 def main():
@@ -184,15 +213,11 @@ def main():
             print("\tWriting alignments in '%s'" % ffasta)
         fhfasta = open(options.folder+"/"+ffasta,"w")
 
-    counter = filtered = 0
+    counter = 0
 
     # main loop
-    for read in downsample_reads(in_bam, options):
+    for read in _read_bamfile(in_bam, options):
         counter += 1
-
-        if read.is_unmapped:
-            filtered += 1
-            continue
 
         # external coordinates 5' and 3' , 0-based offset
         coordinate = mapdamage.align.get_coordinates(read)
@@ -242,10 +267,10 @@ def main():
 
         if options.verbose:
             if counter % 50000 == 0:
-                print("\t%10d reads processed (%d unmapped)" % (counter, filtered))
+                print("\t%10d filtered alignments processed" % (counter,))
 
-    if not options.quiet:
-        print("\tDone. %d reads read (%d unmapped)" % (counter, filtered))
+    if options.verbose:
+        print("\tDone. %d filtered alignments processed" % (counter,))
     logger.debug("BAM read in %f seconds" % (time.time() - start_time,))
 
     # close file handlers
