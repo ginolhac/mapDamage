@@ -10,18 +10,20 @@ readMapDamData <- function(folder,forward=1){
     fil <- "misincorporation.txt"
     raw_dat <- read.table(paste(folder,fil,sep=""),header=TRUE)
     if (forward==1){
-        raw_dat <- raw_dat[raw_dat$End=="5p" & raw_dat$Std=="+",]
+        raw_dat_plus <- raw_dat[raw_dat$End=="5p" & raw_dat$Std=="+",] 
+        raw_dat_minus <- raw_dat[raw_dat$End=="5p" & raw_dat$Std=="-",]
     } else {
-        raw_dat <- raw_dat[raw_dat$End=="3p" & raw_dat$Std=="-",]
+        raw_dat_plus <- raw_dat[raw_dat$End=="3p" & raw_dat$Std=="+",]
+        raw_dat_minus <- raw_dat[raw_dat$End=="3p" & raw_dat$Std=="-",] 
     }
-    dat <- matrix(nrow=max(raw_dat$Pos),ncol=length(colnames(raw_dat))-3)
-    colnames(dat) <- colnames(raw_dat)[c(-1,-2,-3)]
+    dat <- matrix(nrow=max(raw_dat_plus$Pos),ncol=length(colnames(raw_dat_plus))-3)
+    colnames(dat) <- colnames(raw_dat_plus)[c(-1,-2,-3)]
     dat[,"Pos"] <- seq(from=1,to=nrow(dat),by=1)
     if (forward!=1){
         dat[,"Pos"] <- - dat[,"Pos"]
     }
     for (i in colnames(raw_dat)[c(-1,-2,-3,-4)]){
-        dat[,i] <- sumTheChr(raw_dat,i)
+        dat[,i] <- sumTheChr(raw_dat_plus,i)+sumTheChr(raw_dat_minus,i)
     }
     return(dat)
 }
