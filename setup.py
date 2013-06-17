@@ -10,6 +10,9 @@ def compile_seqtk():
     old_wd = os.getcwd()
     new_wd = os.path.join(old_wd,"mapdamage","seqtk")
     os.chdir(new_wd)
+    if not os.path.isfile("seqtk.c"):
+        # check if the user has checked out the submodules
+        raise SystemExit("Did not find seqtk.c, did you install the submodule seqtk? (git submodule update --init)")
     if (os.path.isfile("seqtk")):
         os.system("rm seqtk")
     xs = os.system("make -f Makefile")
