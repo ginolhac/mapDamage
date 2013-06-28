@@ -188,11 +188,20 @@ def main():
         return 1
     elif not mapdamage.seq.compare_sequence_dicts(fai_lengths, reflengths):
         return 1
+    elif (len(reflengths) >= 1000) and not options.merge_reference_sequences:
+        print("WARNING: Alignment contains a large number of reference sequences (%i)!" % len(reflengths))
+        print("  This may lead to excessive memory/disk usage.")
+        print("  Consider using --merge-reference-sequences")
+        print()
+
+    refnames = in_bam.references
+    if options.merge_reference_sequences:
+        refnames = ['*']
 
     # for misincorporation patterns, record mismatches
-    misincorp = mapdamage.tables.initialize_mut(reflengths, options.length)
+    misincorp = mapdamage.tables.initialize_mut(refnames, options.length)
     # for fragmentation patterns, record base compositions
-    dnacomp =  mapdamage.tables.initialize_comp(reflengths, options.around, options.length)
+    dnacomp =  mapdamage.tables.initialize_comp(refnames, options.around, options.length)
     # for length distributions
     lgdistrib =  mapdamage.tables.initialize_lg()
 
@@ -248,6 +257,9 @@ def main():
             beforerev = mapdamage.seq.revcomp(after)
             after = mapdamage.seq.revcomp(before)
             before = beforerev
+
+        if options.merge_reference_sequences:
+            chrom = '*'
 
         # record soft clipping when present
         mapdamage.align.record_soft_clipping(read, misincorp[chrom], options.length)

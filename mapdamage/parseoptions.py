@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: ASCII -*-
 
 from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
 import os
@@ -56,6 +55,10 @@ def options():
                      type = float, default = None)
     group.add_option("--downsample-seed", help = "Seed value to use for downsampling. See documentation for py module 'random' for default behavior.",
                      type = int, default = None)
+    group.add_option("--merge-reference-sequences", help = "Ignore referece sequence names when tabulating reads (using '*' instead). "
+                     "Useful for alignments with a large number of reference sequnces, which may otherwise result in excessive "
+                     "memory or disk usage due to the number of tables generated.",
+                     default = False, action = "store_true")
     group.add_option("-l", "--length", dest="length", help="read length, in nucleotides to consider [%default]", \
             type = int, default=70,action="store")
     group.add_option("-a", "--around", dest="around", help="nucleotides to retrieve before/after reads [%default]", \
