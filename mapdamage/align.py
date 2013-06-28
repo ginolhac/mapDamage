@@ -85,15 +85,14 @@ def get_mis(read, seq, refseq, ref, length, tab, end):
   subtable = tab[ref][end][std]
 
   for (i, nt_seq, nt_ref) in itertools.izip(xrange(length), seq, refseq):
-    if nt_ref in subtable:
-      # record base composition in the reference, only A, C, G, T
-      subtable[nt_ref][i] += 1
+    if (nt_seq in "ACGT-") and (nt_ref in "ACGT-"):
+      if nt_ref != "-":
+        # record base composition in the reference, only A, C, G, T
+        subtable[nt_ref][i] += 1
 
-    # Most ref/seq pairs will be identical
-    if (nt_ref != nt_seq):
-      mut = "%s>%s" % (nt_ref, nt_seq)
-      # discard masked nucleotides
-      if mut in subtable:
+      # Most ref/seq pairs will be identical
+      if (nt_ref != nt_seq):
+        mut = "%s>%s" % (nt_ref, nt_seq)
         subtable[mut][i] += 1
 
 
