@@ -1,4 +1,6 @@
 #!/usr/bin/env python
-
-__version__ = "2.0.0"
+try:
+    from mapdamage._version import __version__
+except ImportError:
+    __version__ = "2.0-unknown"
 
