@@ -25,13 +25,11 @@ def compile_seqtk():
 def setup_version():
     try:
         version = subprocess.check_output(("git", "describe", "--always", "--tags", "--dirty"))
+        with open(os.path.join("mapdamage", "_version.py"), "w") as handle:
+            handle.write("#!/usr/bin/env python\n")
+            handle.write("__version__ = %r\n" % (version.strip(),))
     except (subprocess.CalledProcessError, OSError), error:
         raise SystemExit("Could not determine mapDamage version: %s" % (error,))
-
-    with open(os.path.join("mapDamage", "_version.py"), "w") as handle:
-        handle.write("#!/usr/bin/env python\n")
-        handle.write("__version__ = %r\n" % (version.strip(),))
-
 
 
 class compileInstall(DistutilsInstall):
