@@ -5,6 +5,7 @@ OPT.MISINCORP <- args[3]
 OPT.LENGTH    <- args[4]
 OPT.TITLE     <- args[5]
 OPT.VERSION   <- args[6]
+OPT.QUIET     <- args[7]
 
 MISMATCHES  <- c("C>T", "G>A")
 
@@ -62,32 +63,38 @@ plot.cumul.mutation <- function(tbl, end, mut, sid) {
           border = NA)
 }
 
-
-pdf(file = OPT.PDFOUT, title = paste("mapDamage-", OPT.VERSION, " plot"))
-par(oma = c(4,2,2,2), mar = c(1,2,1,2))
-layout(matrix(c(1,1,  # Title
-                2,3,  # lengths
-                4,5), # Cumulative mutation
-                3, 2, byrow = TRUE),
-       heights = c(3, 20, 20))
-
-# Plot title
-plot(0, type = "n", xaxt = "n", yaxt = "n", bty = "n", xlab = "", ylab = "")
-mtext(OPT.TITLE, 3, cex = 1.3)
-
-# Base compositions
 lg <- read.table(file = OPT.LGDIST, sep = "\t", header = TRUE, as.is = TRUE)
-plot.length(lg, "Single-end read length distribution", "black")
-plot.lengthStd(lg, "Single-end read length per strand")
+if(nrow(lg) == 0){
+    write("No length distributions are available, plotting length distribution only works for single-end reads", stderr())
+}else{
 
-# Misincorporation patterns
-mut <- calculate.mutation.table(OPT.MISINCORP)
-
-par(mar = c(1, 2, 7, 1))
-plot.cumul.mutation(mut, "5p", "C>T", 2)
-par(mar = c(1, 1, 7, 2))
-plot.cumul.mutation(mut, "3p", "G>A", 4)
-
-# graphics.off() calls dev.off() for all devices but doesn't return anything (avoid null device message)
-graphics.off()
-
+    pdf(file = OPT.PDFOUT, title = paste("mapDamage-", OPT.VERSION, sep=""))
+    par(oma = c(4,2,2,2), mar = c(1,2,1,2))
+    layout(matrix(c(1,1,  # Title
+                    2,3,  # lengths
+                    4,5), # Cumulative mutation
+                    3, 2, byrow = TRUE),
+           heights = c(3, 20, 20))
+    
+    # Plot title
+    plot(0, type = "n", xaxt = "n", yaxt = "n", bty = "n", xlab = "", ylab = "")
+    mtext(OPT.TITLE, 3, cex = 1.3)
+    
+    # Base compositions
+    plot.length(lg, "Single-end read length distribution", "black")
+    plot.lengthStd(lg, "Single-end read length per strand")
+    
+    # Misincorporation patterns
+    mut <- calculate.mutation.table(OPT.MISINCORP)
+    
+    par(mar = c(1, 2, 7, 1))
+    plot.cumul.mutation(mut, "5p", "C>T", 2)
+    par(mar = c(1, 1, 7, 2))
+    plot.cumul.mutation(mut, "3p", "G>A", 4)
+    
+    # graphics.off() calls dev.off() for all devices but doesn't return anything (avoid null device message)
+    graphics.off()
+    if(OPT.QUIET == 0){
+        cat(paste("additional", OPT.PDFOUT, "generated\n"))
+    }
+}

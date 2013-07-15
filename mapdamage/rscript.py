@@ -30,7 +30,7 @@ def plot(opt):
 
   fmut = opt.folder+"/"+"misincorporation.txt"
   fcomp = opt.folder+"/"+"dnacomp.txt"
-  title = opt.folder+"/"+"Fragmisincorporation_"+opt.title+".pdf"
+  title = opt.folder+"/"+"Fragmisincorporation_plot.pdf"
 
   script = construct_path("mapDamage.R") 
   call = ["Rscript", script, fcomp, title, opt.refplot, fmut, opt.readplot, \
@@ -53,15 +53,13 @@ def opt_plots(opt):
   
   fmut = opt.folder+"/"+"misincorporation.txt"
   flength = opt.folder+"/"+"lgdistribution.txt"
-  output = opt.folder+"/"+"Length_"+opt.title+".pdf"
+  output = opt.folder+"/"+"Length_plot.pdf"
 
   script = construct_path("lengths.R") 
   call = ["Rscript", script, flength, output, fmut, opt.length, \
-      opt.title, __version__]
+      opt.title, __version__, bool_to_int(opt.quiet)]
   code = subprocess.call(map(str, call))
   if code == 0:
-    if not opt.quiet:
-      print("additional pdf %s generated" % output)
     return 0
   else:
     print("Error: plotting with R failed")

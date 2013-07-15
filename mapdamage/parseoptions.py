@@ -90,8 +90,8 @@ def options():
           help="the number of reference nucleotides to consider for ploting base composition in the region located upstream "
           "and downstream of every read [%default]", type= int, default=10, action="store")
     group2.add_option("-t", "--title", dest="title", \
-          help="title used for both graph and filename [%default]", \
-          type="string", default="plot",action="store")
+          help="title used for plots [%default]", \
+          type="string", default="",action="store")
     parser.add_option_group(group2)
 
     # Then the plethora of optional options for the statistical estimation ..
@@ -189,6 +189,9 @@ def options():
     if options.forward and options.reverse:
         parser.error('Cannot use only forward end and only reverse end for the statistics')
 
+    # use filename as default for plot titles ifn not set
+    if options.title == "":
+        options.title = os.path.splitext(os.path.basename(options.filename))[0]
 
     # check folder
     if not options.folder and options.filename:
