@@ -36,7 +36,7 @@ plot.base.composition <- function(tbl, base, color, around, ylabels.at = c(), xl
   plot.axis <- function(yaxis.at) {
     axis(side = yaxis.at, labels = (yaxis.at == ylabels.at), line = 0, las = 2, cex.axis = 0.8)
     if ((yaxis.at == 2) && (yaxis.at == ylabels.at)) {
-      mtext("Frequency", side = 2, line = 2.5, cex = 0.7)
+      mtext("Frequency", side = 2, line = 2.5, cex = 0.6)
     }
   
     if (xlabels) {
@@ -118,6 +118,9 @@ plot.mutations <- function(end, axis.at, start.i, end.i, modifier) {
   plot(NA, xlim = c(start.i, end.i), ylim=c(0, OPT.YMAX), col="grey", lwd = 1, type = "l", xlab = "", ylab = "", axes = FALSE)
   axis(side = 1, labels = start.i:end.i, at = start.i:end.i, las = 2, cex.axis = 0.8)
   axis(side = axis.at, labels = TRUE, las = 2, cex.axis = 0.8)
+  if (end == "5p") {
+      mtext("Frequency", side = 2, line = 2.5, cex = 0.6)
+  }
   draw.open.rect(start.i, OPT.YMAX, end.i, -0.01, padding = 0.5)
   
   for (mismatch in MISMATCHES) {

@@ -189,9 +189,12 @@ def options():
     if options.forward and options.reverse:
         parser.error('Cannot use only forward end and only reverse end for the statistics')
 
-    # use filename as default for plot titles ifn not set
-    if options.title == "":
+    # use filename as default for plot titles if not set
+    if options.title == "" and options.filename:
         options.title = os.path.splitext(os.path.basename(options.filename))[0]
+    # for --plot-only, use the folder name, without results_ as title
+    if options.title == "" and not options.filename and options.folder:
+        options.title = os.path.splitext(os.path.basename(options.folder))[0].replace("results_", "")
 
     # check folder
     if not options.folder and options.filename:
