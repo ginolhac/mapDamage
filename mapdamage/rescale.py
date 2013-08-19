@@ -157,10 +157,23 @@ def qual_summary_subs(subs):
 def print_subs(subs):
     """Print the substition table"""
     print("\tThe expected substition frequencies before and after scaling using the scaled qualities as probalities:")
-    print("\tCT\t"+str(subs["CT-pvals_before"]/subs["C"])+"\t\t"+str(subs["CT-pvals"]/subs["C"]))
-    print("\tTC\t"+str(subs["TC-pvals"]/subs["T"])+"\t\t"+str(subs["TC-pvals"]/subs["T"]))
-    print("\tGA\t"+str(subs["GA-pvals_before"]/subs["G"])+"\t\t"+str(subs["GA-pvals"]/subs["G"]))
-    print("\tAG\t"+str(subs["AG-pvals"]/subs["A"])+"\t\t"+str(subs["AG-pvals"]/subs["A"]))
+    if subs["C"]!=0:
+        # the special case of no substitutions
+        print("\tCT\t"+str(subs["CT-pvals_before"]/subs["C"])+"\t\t"+str(subs["CT-pvals"]/subs["C"]))
+    else: 
+        print("\tCT\tNA\t\tNA")
+    if subs["T"]!=0:
+        print("\tTC\t"+str(subs["TC-pvals"]/subs["T"])+"\t\t"+str(subs["TC-pvals"]/subs["T"]))
+    else:
+        print("\tTC\tNA\t\tNA")
+    if subs["G"]!=0:
+        print("\tGA\t"+str(subs["GA-pvals_before"]/subs["G"])+"\t\t"+str(subs["GA-pvals"]/subs["G"]))
+    else:
+        print("\tGA\tNA\t\tNA")
+    if subs["A"]!=0:
+        print("\tAG\t"+str(subs["AG-pvals"]/subs["A"])+"\t\t"+str(subs["AG-pvals"]/subs["A"]))
+    else:
+        print("\tAG\tNA\t\tNA")
     print("\tQuality metrics before and after scaling")
     print("\tCT-Q0 \t"+str(subs["CT-before-Q0"])+"\t\t"+str(subs["CT-after-Q0"]))
     print("\tCT-Q10 \t"+str(subs["CT-before-Q10"])+"\t\t"+str(subs["CT-after-Q10"]))
@@ -261,7 +274,7 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False):
     return read
 
 
-def rescale_qual(ref, options):
+def rescale_qual(ref, options,debug=False):
     """    
     ref                a pysam fasta ref file
     bam_filename       name of a BAM/SAM file to read
