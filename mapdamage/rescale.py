@@ -42,7 +42,7 @@ def get_corr_prob(folder):
             fi_handle.line_num, e))
 
 
-def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length):
+def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length,direction="both"):
     """
     The position specific damaging correction, using the input 
     corr_prob dictionary holding the damage correcting values 
@@ -50,6 +50,7 @@ def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length):
     nt_ref nucleotide in the reference
     pos relative position from the 5' end 
     length length of the sequence
+    direction which end to consider the rescaling
     returns the correction probability for this particular set
     """
     if (pos == 0):
@@ -80,12 +81,20 @@ def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length):
     else:
         p3_corr = 0
 
-    if pos < abs(back_pos) :
-        # then we use the forward correction
+    if direction == "forward":
         return p5_corr
-    else :
-        # else the backward correction
-        return p3_corr
+    elif direction == "backward":
+        return p3_corr 
+    elif direction == "both":
+        if pos < abs(back_pos) :
+            # then we use the forward correction
+            return p5_corr
+        else :
+            # else the backward correction
+            return p3_corr
+    else:
+        # this should not happen
+        raise SystemExit("Abnormal direction in the rescaling procedure")
 
 def initialize_subs():
     """Initialize a substitution table, to track the expected substitution counts"""
@@ -187,7 +196,7 @@ def print_subs(subs):
     print("\tGA-Q40 \t"+str(subs["GA-before-Q40"])+"\t\t"+str(subs["GA-after-Q40"]))
     
 
-def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False):
+def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="both"):
     """
     bam              a pysam bam object
     read             a pysam read object
@@ -221,7 +230,7 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False):
     for (i, nt_seq, nt_ref, nt_qual) in itertools.izip(xrange(length_align), seq, refseq, qual):
         # rescale the quality according to the triplet position, 
         # pair of the reference and the sequence
-        pdam = 1 - corr_this_base(corr_prob, nt_seq, nt_ref, pos_on_read + 1, length_read)
+        pdam = 1 - corr_this_base(corr_prob, nt_seq, nt_ref, pos_on_read + 1, length_read,direction=direction)
         pseq = 1 - phred_char_to_pval(nt_qual)
         newp = pdam*pseq # this could be numerically unstable
         new_qual[pos_on_read] = phred_pval_to_char(1-newp)
@@ -284,22 +293,56 @@ def rescale_qual(ref, options,debug=False):
 
     Iterates through BAM file, makes a new BAM file with rescaled qualities.
     """
-    logger = logging.getLogger(__name__)
-    logger.info("Rescaling BAM: '%s' -> '%s'" % (options.filename, options.rescale_out))
+    if not debug:
+        # no need to log when unit testing
+        logger = logging.getLogger(__name__)
+        logger.info("Rescaling BAM: '%s' -> '%s'" % (options.filename, options.rescale_out))
     start_time = time.time()
 
     # open SAM/BAM files
     bam = pysam.Samfile(options.filename)
-    bam_out = pysam.Samfile(options.rescale_out, "wb", template = bam)
+    if debug:
+        write_mode = "wh"
+    else:
+        write_mode = "wb"
+    bam_out = pysam.Samfile(options.rescale_out,write_mode, template = bam)
     corr_prob = get_corr_prob(options.folder)
     subs = initialize_subs()
+    first_pair = True
 
     for hit in bam:
-        if not hit.qual:
+        if not hit.qual and not debug:
             logger.warning("Cannot rescale base PHRED scores for read '%s'; no scores assigned." % hit.qname)
-        elif hit.is_paired:
-            sys.stderr.write("Cannot rescale paired end reads in this versio\n")
-            sys.exit(1)
+        elif hit.is_paired: 
+            if first_pair and not debug:
+                # assuming the ends are non-overlapping 
+                logger.warning("Assuming the pairs are non-overlapping, facing inwards and correctly paired")
+                first_pair=False
+            #5p --------------> 3p
+            #3p <-------------- 5p
+            # pair 1 (inwards)
+            #5p ----> 
+            #             <---- 5p
+            # pair 2 (outwards)
+            #             ----> 3p
+            #3p <----         
+            #     A         B
+            # Correct outwards pairs from the 3p and inwards pairs with the 5p end
+            if ((not hit.is_reverse) and hit.mate_is_reverse and (hit.pnext>hit.pos)):
+                # the inwards case mate A
+                hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="forward")
+            elif (hit.is_reverse and (not hit.mate_is_reverse) and (hit.pnext<hit.pos)):
+                # the inwards case mate B
+                hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="forward")
+            elif (hit.is_reverse and (not hit.mate_is_reverse) and (hit.pnext>hit.pos)): 
+                # the outwards case mate A
+                hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="backward")
+            elif ((not hit.is_reverse) and hit.mate_is_reverse and (hit.pnext<hit.pos)): 
+                # the outwards case mate B
+                hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="backward")
+            else:
+                # cannot do much with conflicting pairing information
+                logger.warning("Cannot rescale base PHRED scores for read '%s'; Not a proper pair." % hit.qname)
         else:
             hit = rescale_qual_read(bam, hit, ref, corr_prob,subs)
 
@@ -311,5 +354,5 @@ def rescale_qual(ref, options,debug=False):
     bam_out.close()
     if not options.quiet:
         print_subs(subs)
-
-    logger.debug("Rescaling completed in %f seconds" % (time.time() - start_time,))
+    if not debug:
+        logger.debug("Rescaling completed in %f seconds" % (time.time() - start_time,))
