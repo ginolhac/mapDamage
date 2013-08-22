@@ -4,5 +4,5 @@ r001	163	ref	1	30	3M	=	7	9	CGA	III
 r001	83	ref	7	30	3M	=	1	-9	CGA	III
 r002	163	ref	1	30	3M	=	7	9	TGA	!II
 r002	83	ref	7	30	3M	=	1	-9	CAA	I5I
-r003	83	ref	1	30	3M	=	7	9	TGA	!II
-r003	163	ref	7	30	3M	=	1	-9	CAA	I+I
+r003	83	ref	1	30	3M	=	7	9	TGA	III
+r003	163	ref	7	30	3M	=	1	-9	CAA	III

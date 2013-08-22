@@ -34,7 +34,7 @@ class testPairedFile(unittest.TestCase):
         #r001 83 ref 7 30 3M = 1 -9 TCG III
         #r002 163 ref 1 30 3M = 7 9 TGA III #With one dam subs
         #r002 83 ref 7 30 3M = 1 -9 CAA III
-        #r003 83 ref 1 30 3M = 7 9 TGA III #The reverse complement
+        #r003 83 ref 1 30 3M = 7 9 TGA III #The reverse complement, should not rescale
         #r003 163 ref 7 30 3M = 1 -9 CAA III
         # 
         #hand calculated the correct rescaled sam file in pe_rescaled_correct.sam

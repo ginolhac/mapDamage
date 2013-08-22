@@ -309,46 +309,44 @@ def rescale_qual(ref, options,debug=False):
     corr_prob = get_corr_prob(options.folder)
     subs = initialize_subs()
     first_pair = True
+    number_of_non_proper_pairs = 0
 
     for hit in bam:
         if not hit.qual and not debug:
             logger.warning("Cannot rescale base PHRED scores for read '%s'; no scores assigned." % hit.qname)
-        elif hit.is_paired: 
+        elif hit.is_paired : 
             if first_pair and not debug:
                 # assuming the ends are non-overlapping 
-                logger.warning("Assuming the pairs are non-overlapping, facing inwards and correctly paired")
+                logger.warning("Warning! Assuming the pairs are non-overlapping, facing inwards and correctly paired.")
                 first_pair=False
             #5p --------------> 3p
             #3p <-------------- 5p
             # pair 1 (inwards)
             #5p ----> 
             #             <---- 5p
-            # pair 2 (outwards)
+            #     A         B
+            # pair 2 (outwards), this happens if the reference is RC this is not supported 
             #             ----> 3p
             #3p <----         
             #     A         B
             # Correct outwards pairs from the 3p and inwards pairs with the 5p end
-            if ((not hit.is_reverse) and hit.mate_is_reverse and (hit.pnext>hit.pos)):
+            if ((not hit.is_reverse) and hit.mate_is_reverse and (hit.pnext>hit.pos) and hit.tid==hit.mrnm):
                 # the inwards case mate A
                 hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="forward")
-            elif (hit.is_reverse and (not hit.mate_is_reverse) and (hit.pnext<hit.pos)):
+            elif (hit.is_reverse and (not hit.mate_is_reverse) and (hit.pnext<hit.pos) and hit.tid==hit.mrnm):
                 # the inwards case mate B
                 hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="forward")
-            elif (hit.is_reverse and (not hit.mate_is_reverse) and (hit.pnext>hit.pos)): 
-                # the outwards case mate A
-                hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="backward")
-            elif ((not hit.is_reverse) and hit.mate_is_reverse and (hit.pnext<hit.pos)): 
-                # the outwards case mate B
-                hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="backward")
             else:
+                number_of_non_proper_pairs += 1
                 # cannot do much with conflicting pairing information
-                logger.warning("Cannot rescale base PHRED scores for read '%s'; Not a proper pair." % hit.qname)
         else:
             hit = rescale_qual_read(bam, hit, ref, corr_prob,subs)
 
         bam_out.write(hit)
+    if  number_of_non_proper_pairs!=0 and not debug:
+        logger.warning("Number of non-rescaled reads due to improper pairing:  %d" % number_of_non_proper_pairs)
     if (subs["TC-before"] != subs["TC-after"] or subs["AG-before"] != subs["AG-after"]):
-        sys.exit("Qualities for T.C and A.G transitions shouln't change in the re scaling.")
+        sys.exit("Qualities for T.C and A.G transitions should not change in the rescaling, please contact the authors.")
     qual_summary_subs(subs)
     bam.close()
     bam_out.close()
