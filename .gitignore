@@ -1,2 +1,14 @@
-mapdamage/_version.py
+*.swp
+.\#*
+\#*
+*~
+*.py[cod]
+
+MANIFEST
+
+# Packages
+dist
 build
+sdist
+
+mapdamage/_version.py
