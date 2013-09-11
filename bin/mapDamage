@@ -150,6 +150,8 @@ def main():
             logger.error("Cannot use the Bayesian estimation, terminating the program")
             return 1
         else:
+            # before running the Bayesian estimation get the base composition
+            mapdamage.composition.get_base_comp(options.ref,os.path.join(options.folder,"dnacomp_genome.csv"))
             mapdamage.rscript.run_stats(options)
             return 0
     
