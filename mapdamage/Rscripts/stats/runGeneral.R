@@ -1,6 +1,14 @@
 #! /usr/bin/Rscript
 #Parses the command line arguments and calls the main program
 
+#Enable full backtraces on errors
+on_error <- function(e)
+  {
+    traceback(2)
+    quit(status = 1)
+  }
+options(error = on_error)
+
 rm(list=ls())
 graphics.off()
 

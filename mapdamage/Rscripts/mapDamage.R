@@ -1,4 +1,12 @@
 # R script mapdamage
+# Enable full backtraces on errors
+on_error <- function(e)
+  {
+    traceback(2)
+    quit(status = 1)
+  }
+options(error = on_error)
+
 
 NUCLEOTIDES <- c("A", "C", "G", "T", "Total")
 MISMATCHES  <- c("A>C", "A>G", "A>T", "C>A", "C>G", "C>T", "G>A", "G>C", "G>T", "T>A", "T>C", "T>G")

@@ -1,3 +1,12 @@
+# Enable full backtraces on errors
+on_error <- function(e)
+  {
+    traceback(2)
+    quit(status = 1)
+  }
+options(error = on_error)
+
+
 args <- commandArgs(trailingOnly = TRUE)
 OPT.LGDIST    <- args[1]
 OPT.PDFOUT    <- args[2]
