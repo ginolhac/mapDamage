@@ -126,7 +126,8 @@ def run_stats(opt):
          int(opt.verbose),                       \
          int(opt.quiet),                         \
          int(opt.jukes_cantor),                       \
-         opt.folder+"/acgt_ratio.csv"            \
+         opt.folder+"/acgt_ratio.csv",            \
+         int(opt.use_raw_nick_freq)                   \
          ]
     arg = [str(i) for i in arg]
 

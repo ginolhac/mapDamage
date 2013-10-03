@@ -91,7 +91,8 @@ cu_pa <- list(
               acgt = acgt,
               old_lik=-Inf,
               verbose=verbose,
-              quiet=quiet
+              quiet=quiet,
+              use_raw_nick_freq = use_raw_nick_freq
               )
 
 if (nu_samples!=0){
@@ -177,10 +178,20 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
     } else {
         #The substitutes seem to be okay estimate the nick frequency using GAM 
         if (cu_pa$forward_only || cu_pa$reverse_only){
-            cu_pa$nuVec  <- predict(gam(te~s(1:(cu_pa$m))))
+            if (cu_pa$use_raw_nick_freq){
+                #Use the frequency
+                cu_pa$nuVec <- te
+            }else{
+                #Use a smoother
+                cu_pa$nuVec  <- predict(gam(te~s(1:(cu_pa$m))))
+            }
         }else {
-            cu_pa$nuVec  <- c(predict(gam(te[1:(cu_pa$m/2)]~s(1:(cu_pa$m/2)))),
-                              predict(gam(te[(cu_pa$m/2+1):cu_pa$m]~s(1:(cu_pa$m/2)))))
+            if (cu_pa$use_raw_nick_freq){
+                cu_pa$nuVec  <- c(te[1:(cu_pa$m/2)],te[(cu_pa$m/2+1):cu_pa$m])
+            }else{
+                cu_pa$nuVec  <- c(predict(gam(te[1:(cu_pa$m/2)]~s(1:(cu_pa$m/2)))),
+                                  predict(gam(te[(cu_pa$m/2+1):cu_pa$m]~s(1:(cu_pa$m/2)))))
+            }
         }
         #This shouldn't happen but for sanity check
         cu_pa$nuVec[cu_pa$nuVec>1] <- 1

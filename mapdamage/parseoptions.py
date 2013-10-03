@@ -116,6 +116,8 @@ def options():
             help="The overhangs are different for 5' and 3'  [%default]", default=False, action="store_true")
     group3.add_option("", "--fix-nicks" , dest="fix_nicks", \
             help="Fix the nick frequency vector (Only C.T from the 5' end and G.A from the 3' end)  [%default]", default=False, action="store_true")
+    group3.add_option("", "--use-raw-nick-freq" , dest="use_raw_nick_freq", \
+            help="Use the raw nick frequency vector without smoothing  [%default]", default=False, action="store_true")
     group3.add_option("", "--single-stranded", dest="single_stranded", \
             help="Single stranded protocol [%default]", default=False, action="store_true")
     group3.add_option("", "--seq-length", dest="seq_length", \
@@ -228,6 +230,10 @@ def options():
     if not whereis('Rscript'):
         print("Warning, Rscript is not in your PATH, plotting is disabled")
         options.no_r = True
+
+    # check the nick frequencies options
+    if (options.use_raw_nick_freq + options.fix_nicks + options.single_stranded)>1:
+        parser.error("The options --use-raw-nick-freq, --fix-nicks and --single-stranded are mutually exclusive.")
 
     if check_R_lib():
         # check for R libraries
