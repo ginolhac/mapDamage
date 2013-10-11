@@ -143,9 +143,9 @@ def options():
 
     # check general arguments
     if not (options.plot_only or options.stats_only) and not options.filename:
-        parser.error('SAM/BAM file not given')
-    if not (options.plot_only or options.stats_only) and not options.ref:
-        parser.error('Reference file not given')
+        parser.error('SAM/BAM file not given (-i)')
+    if not (options.plot_only or options.ref):
+        parser.error('Reference file not given (-r)')
     if not options.plot_only and not options.stats_only:
         if not file_exist(options.filename) or not file_exist(options.ref):
             return None

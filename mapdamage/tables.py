@@ -64,8 +64,7 @@ def print_lg(tab, opt, out):
   out.write("Std\tLength\tOccurences \n")
   for std in tab:
     for i in tab[std]:
-      # write Length in 1-base offset
-      out.write("%s\t%d\t%d\n" % (std, i+1, tab[std][i]))
+      out.write("%s\t%d\t%d\n" % (std, i, tab[std][i]))
 
 
 def check_table_and_warn_if_dmg_freq_is_low(folder):

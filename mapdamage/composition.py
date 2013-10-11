@@ -47,8 +47,8 @@ def get_base_comp(filename,destination=False):
             bases["C"] = bases["C"] + int(tabs[3])
             bases["G"] = bases["G"] + int(tabs[4])
             bases["T"] = bases["T"] + int(tabs[5])
-    except (OSError, ValueError):
-        sys.stderr.write("Error: Seqtk failed\n")
+    except (OSError, ValueError), error:
+        sys.stderr.write("Error: Seqtk failed: %s\n" % (error,))
         sys.exit(1)
     # get the base frequencies
     ba_su = sum(bases.values())

@@ -230,7 +230,7 @@ def main():
     for read in _read_bamfile(in_bam, options):
         counter += 1
 
-        # external coordinates 5' and 3' , 0-based offset
+        # external coordinates 5' and 3' , 3' is 1-based offset
         coordinate = mapdamage.align.get_coordinates(read)
         # record aligned length for single-end reads
         lgdistrib = mapdamage.seq.record_lg(read, coordinate, lgdistrib)
