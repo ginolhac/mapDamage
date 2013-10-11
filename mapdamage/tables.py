@@ -68,7 +68,7 @@ def print_lg(tab, opt, out):
       out.write("%s\t%d\t%d\n" % (std, i+1, tab[std][i]))
 
 
-def dmg_freq_is_low(folder):
+def check_table_and_warn_if_dmg_freq_is_low(folder):
   """ Returns true if the damage frequencies are too low to allow
   Bayesian estimation of DNA damages, i.e < 1% at first position.
   """
@@ -91,8 +91,7 @@ def dmg_freq_is_low(folder):
         return True
 
   if total < 0.01:
-    print("Warning: DNA damage levels are too low, bayesian computation cannot be performed (%f < 0.01)\n" % total)
-    return True
+    print("Warning: DNA damage levels are too low, the Bayesian computation should not be performed (%f < 0.01)\n" % total)
 
   return False
 

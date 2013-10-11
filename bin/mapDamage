@@ -306,8 +306,8 @@ def main():
         mapdamage.rscript.plot(options)
         mapdamage.rscript.opt_plots(options)
 
-    # does not work for very low damage levels
-    if mapdamage.tables.dmg_freq_is_low(options.folder):
+    # raises a warning for very low damage levels
+    if mapdamage.tables.check_table_and_warn_if_dmg_freq_is_low(options.folder):
         options.no_stats = True
 
    
