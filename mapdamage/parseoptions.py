@@ -131,6 +131,7 @@ def options():
     group3.add_option("--rescale-out", dest="rescale_out", help="Write the rescaled BAM to this file", \
           default=None, action="store")
     group3.add_option("--no-stats", help="Disabled statistical estimation, active by default", default=False, action="store_true")
+    group3.add_option("--check-R-packages", help="Check if the R modules are working", default=False, action="store_true")
 
     parser.add_option_group(group3)
 
@@ -140,6 +141,14 @@ def options():
     # check python version
     if not check_py_version():
         return None
+    
+    # if the user wants to check the R packages then do that before the option parsing 
+    if options.check_R_packages:
+        if check_R_lib():
+            sys.exit("")
+        else:
+            print("All R packages are present")
+            return 0
 
     # check general arguments
     if not (options.plot_only or options.stats_only) and not options.filename:
