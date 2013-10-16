@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
@@ -122,9 +122,6 @@ def main():
     if options == None:
         sys.stderr.write("Option parsing failed, terminating the program\n")
         return 1
-    elif options == 0:
-        # terminate early do nothing
-        return 0
 
     logging.basicConfig(filename = os.path.join(options.folder, "Runtime_log.txt"),
                         format   = '%(asctime)s\t%(levelname)s\t%(name)s: %(message)s',
@@ -149,7 +146,7 @@ def main():
     # run the Bayesian estimation if the matrix construction is done
     if options.stats_only:
         # does not work for very low damage levels
-        if mapdamage.tables.dmg_freq_is_low(options.folder):
+        if mapdamage.tables.check_table_and_warn_if_dmg_freq_is_low(options.folder):
             logger.error("Cannot use the Bayesian estimation, terminating the program")
             return 1
         else:

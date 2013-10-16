@@ -141,14 +141,14 @@ def options():
     # check python version
     if not check_py_version():
         return None
-    
+
     # if the user wants to check the R packages then do that before the option parsing 
     if options.check_R_packages:
         if check_R_lib():
-            sys.exit("")
+            sys.exit(1)
         else:
             print("All R packages are present")
-            return 0
+            sys.exit(0)
 
     # check general arguments
     if not (options.plot_only or options.stats_only) and not options.filename:
