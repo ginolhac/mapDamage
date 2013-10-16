@@ -114,7 +114,7 @@ def run_stats(opt):
          opt.iter,                               \
          bool_to_int(opt.forward),               \
          bool_to_int(opt.reverse),               \
-         bool_to_int(opt.fix_disp),              \
+         bool_to_int(not opt.var_disp),              \
          bool_to_int(not opt.diff_hangs),            \
          0,                                      \
          bool_to_int(opt.fix_nicks),             \

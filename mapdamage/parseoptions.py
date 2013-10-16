@@ -108,8 +108,8 @@ def options():
             help="Using only the 5' end of the seqs  [%default]", default=False, action="store_true")
     group3.add_option("", "--reverse", dest="reverse", \
             help="Using only the 3' end of the seqs  [%default]", default=False, action="store_true")
-    group3.add_option("", "--fix-disp", dest="fix_disp", \
-            help="Fix dispersion in the overhangs  [%default]", default=True,action="store_false")
+    group3.add_option("", "--var-disp", dest="var_disp", \
+            help="Variable dispersion in the overhangs  [%default]", default=False,action="store_true")
     group3.add_option("", "--jukes-cantor", dest="jukes_cantor", \
             help="Use Jukes Cantor instead of HKY85  [%default]", default=False,action="store_true")
     group3.add_option("", "--diff-hangs", dest="diff_hangs", \
@@ -137,7 +137,7 @@ def options():
 
     #Parse the arguments
     (options, args) = parser.parse_args()
-
+    
     # check python version
     if not check_py_version():
         return None
