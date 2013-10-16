@@ -146,7 +146,7 @@ def main():
     # run the Bayesian estimation if the matrix construction is done
     if options.stats_only:
         # does not work for very low damage levels
-        if mapdamage.tables.dmg_freq_is_low(options.folder):
+        if mapdamage.tables.check_table_and_warn_if_dmg_freq_is_low(options.folder):
             logger.error("Cannot use the Bayesian estimation, terminating the program")
             return 1
         else:
