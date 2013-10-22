@@ -53,7 +53,6 @@ except ImportError, e:
     sys.exit(1)
 
 import pysam
-import mapdamage
 
 
 _BAM_UNMAPPED  = 0x4
@@ -115,9 +114,37 @@ def _read_bamfile(bamfile, options):
     else:
         return _downsample_to_fixed_number(bamfile, options)
 
+def _check_mm_option():
+    """
+    As the user can override the system wide mapdamage modules with 
+    the --mapdamage-modules, it has to happen before option parsing 
+    in mapdamage.parseoptions
+    """
+    path_to_mm = None
+    for nr,arg in zip(xrange(len(sys.argv)),sys.argv):
+        if arg == "--mapdamage-modules":
+            try:
+                path_to_mm = sys.argv[nr+1] 
+                break
+            except IndexError as e:
+                raise SystemExit("Must specify a path to --mapdamage-modules")
+    if path_to_mm != None:
+        if not os.path.isdir(path_to_mm):
+            raise SystemExit("The --mapdamage-modules options must be a valid path")
+        if not os.path.isdir(os.path.join(path_to_mm,"mapdamage")):
+            raise SystemExit("The --mapdamage-modules path must contain the mapdamage module")
+    return path_to_mm
+
 
 def main():
     start_time = time.time()
+
+    # the user can override the system wide mapdamage modules
+    path_to_mm = _check_mm_option()
+    if path_to_mm != None:
+        sys.path.insert(0,path_to_mm)
+    import mapdamage
+
     options = mapdamage.parseoptions.options()
     if options == None:
         sys.stderr.write("Option parsing failed, terminating the program\n")
