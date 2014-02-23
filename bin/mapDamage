@@ -178,7 +178,13 @@ def main():
             return 1
         else:
             # before running the Bayesian estimation get the base composition
-            mapdamage.composition.get_base_comp(options.ref,os.path.join(options.folder,"dnacomp_genome.csv"))
+            path_to_basecomp = os.path.join(options.folder,"dnacomp_genome.csv")
+            if os.path.isfile(path_to_basecomp):
+                #Try to read the base composition file
+                mapdamage.composition.read_base_comp(path_to_basecomp)
+            else:
+                #Construct the base composition file
+                mapdamage.composition.get_base_comp(options.ref,path_to_basecomp)
             mapdamage.rscript.run_stats(options)
             return 0
     

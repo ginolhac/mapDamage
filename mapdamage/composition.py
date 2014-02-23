@@ -63,3 +63,22 @@ def get_base_comp(filename,destination=False):
         fo.write(",".join(alp)+"\n")
         fo.write(",".join(vals)+"\n")
         fo.close()
+
+def read_base_comp(filename):
+    """
+    Read the base compition from a file created by get_base_comp
+    """
+    fh = open(filename)
+    first_line = True
+    for li in fh:
+        li = li.rstrip()
+        lp = li.split()
+        if first_line:
+            header = lp
+            first_line = False 
+        else:
+            body = lp
+    bases = {}
+    for ba,per in zip(header,body):
+        bases[ba] = per
+    return bases
