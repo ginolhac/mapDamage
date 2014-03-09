@@ -92,7 +92,8 @@ cu_pa <- list(
               old_lik=-Inf,
               verbose=verbose,
               quiet=quiet,
-              use_raw_nick_freq = use_raw_nick_freq
+              use_raw_nick_freq = use_raw_nick_freq,
+              use_bw_theme = use_bw_theme
               )
 
 if (nu_samples!=0){

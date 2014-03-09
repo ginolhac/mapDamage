@@ -122,6 +122,8 @@ def options():
             help="Use the raw nick frequency vector without smoothing  [%default]", default=False, action="store_true")
     group3.add_option("", "--single-stranded", dest="single_stranded", \
             help="Single stranded protocol [%default]", default=False, action="store_true")
+    group3.add_option("", "--theme-bw", dest="theme_bw", \
+            help="Use black and white theme in post. pred. plot [%default]", default=False, action="store_true")
     group3.add_option("", "--seq-length", dest="seq_length", \
             help="How long sequence to use from each side [%default]", type = int, default=12, action="store")
     group3.add_option("--stats-only", dest="stats_only", help="Run only statistical estimation from a valid result folder", \

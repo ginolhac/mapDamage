@@ -83,6 +83,7 @@ quiet <- as.logical(as.numeric(argsList[17]))
 jukes_cantor <- as.logical(as.numeric(argsList[18])) # Fix the transition and transversion ratio and acgt frequencies are equal
 path_to_acgt <- argsList[19] 
 use_raw_nick_freq <- as.logical(as.numeric(argsList[20]))
+use_bw_theme <- as.logical(as.numeric(argsList[21]))
 
 
 #######################################################

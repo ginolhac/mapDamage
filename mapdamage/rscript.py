@@ -127,7 +127,8 @@ def run_stats(opt):
          int(opt.quiet),                         \
          int(opt.jukes_cantor),                       \
          opt.folder+"/acgt_ratio.csv",            \
-         int(opt.use_raw_nick_freq)                   \
+         int(opt.use_raw_nick_freq),                   \
+         int(opt.theme_bw)                   \
          ]
     arg = [str(i) for i in arg]
 

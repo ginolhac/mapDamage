@@ -638,7 +638,7 @@ postPredCheck <- function(da,output,samples=10000){
     GAsStats <- calcSampleStats(da,GAs)
     REsStats <- calcSampleStats(da,REs) 
     #Plotting the posterior predictive intervals
-    plot(ggplot()+
+    p <- ggplot()+
          geom_point(aes(x,mea,colour="C->T",aes_string="subs"),data=CTsStats)+
          geom_point(aes(x,mea,colour="G->A"),data=GAsStats)+
          geom_point(aes(x,mea,colour="Others"),data=REsStats)+
@@ -653,7 +653,10 @@ postPredCheck <- function(da,output,samples=10000){
          scale_x_continuous(breaks=bres,labels=labs)+
          labs(colour = "Subs. type")+
          ggtitle("Posterior prediction intervals")
-         )
+    if (output$cu_pa$use_bw_theme){
+        p <- p+theme_bw()
+    }
+    plot(p)
     #The correcting probabilities 
     coProbs <- cbind(da[,"Pos"],apply(C2TProbs,1,mean),apply(G2AProbs,1,mean))
     colnames(coProbs) <- c("Position","C.T","G.A")
