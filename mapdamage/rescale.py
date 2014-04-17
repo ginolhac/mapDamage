@@ -312,7 +312,9 @@ def rescale_qual(ref, options,debug=False):
     number_of_non_proper_pairs = 0
 
     for hit in bam:
-        if not hit.qual and not debug:
+        if hit.is_unmapped:
+            pass
+        elif not hit.qual and not debug:
             logger.warning("Cannot rescale base PHRED scores for read '%s'; no scores assigned." % hit.qname)
         elif hit.is_paired : 
             if first_pair and not debug:
