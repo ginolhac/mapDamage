@@ -145,6 +145,14 @@ def main():
         sys.path.insert(0,path_to_mm)
     import mapdamage
 
+    fpath_seqtk = mapdamage.rscript.construct_path("seqtk", folder="seqtk")
+    if not (os.path.isfile(fpath_seqtk) and os.access(fpath_seqtk, os.X_OK)):
+        sys.stderr.write("Seqtk executable not accessible; mapDamage has not\n"
+                         "been intalled properly or current user does not\n"
+                         "sufficient permissions. Expected executable at\n   "
+                         "'%s'\n" % (fpath_seqtk,))
+        return 1
+
     options = mapdamage.parseoptions.options()
     if options == None:
         sys.stderr.write("Option parsing failed, terminating the program\n")
