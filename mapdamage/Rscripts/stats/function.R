@@ -379,10 +379,9 @@ getParams <- function(cp){
     return(c(cp$Theta,cp$Rho,cp$DeltaD,cp$DeltaS,cp$Lambda,cp$LambdaRight,cp$LambdaDisp,cp$Nu))
 }
 
-plotRunningMedian <- function(dat,ylab,k=111){
+plotTrace<- function(dat,main,k=111){
     #Running median of the MCMC iterations
-    xlab = paste("Running median of iterations (W. size ",k,")")
-    plot(runmed(dat,k),xlab=xlab,ylab=ylab,type="l")
+    plot(1:length(dat),dat,xlab="Iteration",ylab="",main=main,type="l")
 }
 
 plotEverything <- function(mcmcOut,hi=0,pl,thin=100){
@@ -399,41 +398,41 @@ plotEverything <- function(mcmcOut,hi=0,pl,thin=100){
     }
     par(mfrow=c(3,2+a_extra_row))
     if(hi){
-        hist(mcmcOut$out[,"Theta"],main="Theta",xlab="",freq=FALSE)
+        hist(mcmcOut$out[,"Theta"],main=expression(theta),xlab="",freq=FALSE)
         if (!mcmcOut$cu_pa$fix_ti_tv){
-            hist(mcmcOut$out[,"Rho"],main="Rho",xlab="",freq=FALSE)
+            hist(mcmcOut$out[,"Rho"],main=expression(rho),xlab="",freq=FALSE)
         }
-        hist(mcmcOut$out[,"DeltaD"],main="DeltaD",xlab="",freq=FALSE)
-        hist(mcmcOut$out[,"DeltaS"],main="DeltaS",xlab="",freq=FALSE)
-        hist(mcmcOut$out[,"Lambda"],main="Lambda",xlab="",freq=FALSE)
+        hist(mcmcOut$out[,"DeltaD"],main=expression(delta[d]),xlab="",freq=FALSE)
+        hist(mcmcOut$out[,"DeltaS"],main=expression(delta[s]),xlab="",freq=FALSE)
+        hist(mcmcOut$out[,"Lambda"],main=expression(lambda),xlab="",freq=FALSE)
         if (!mcmcOut$cu_pa$same_overhangs){
-            hist(mcmcOut$out[,"LambdaRight"],main="LambdaRight",xlab="",freq=FALSE)
+            hist(mcmcOut$out[,"LambdaRight"],main=expression(lambda[r]),xlab="",freq=FALSE)
         }
         if (!mcmcOut$cu_pa$fix_disp){
-            hist(mcmcOut$out[,"LambdaDisp"],main="LambdaDisp",xlab="",freq=FALSE)
+            hist(mcmcOut$out[,"LambdaDisp"],main=expression(sigma[lambda]),xlab="",freq=FALSE)
         }
         if (mcmcOut$cu_pa$nuSamples!=0){
-            hist(mcmcOut$out[,"Nu"],main="Nu",xlab="",freq=FALSE)
+            hist(mcmcOut$out[,"Nu"],main=expression(nu),xlab="",freq=FALSE)
         }
         hist(mcmcOut$out[,"LogLik"],main="LogLik",xlab="",freq=FALSE)
     }else {
-        plotRunningMedian(mcmcOut$out[,"Theta"],ylab="Theta")
+        plotTrace(mcmcOut$out[,"Theta"],main=expression(theta))
         if (!mcmcOut$cu_pa$fix_ti_tv){
-            plotRunningMedian(mcmcOut$out[,"Rho"],ylab="Rho")
+            plotTrace(mcmcOut$out[,"Rho"],main=expression(theta))
         }
-        plotRunningMedian(mcmcOut$out[,"DeltaD"],ylab="DeltaD")
-        plotRunningMedian(mcmcOut$out[,"DeltaS"],ylab="DeltaS")
-        plotRunningMedian(mcmcOut$out[,"Lambda"],ylab="Lambda")
+        plotTrace(mcmcOut$out[,"DeltaD"],main=expression(delta[d]))
+        plotTrace(mcmcOut$out[,"DeltaS"],main=expression(delta[s]))
+        plotTrace(mcmcOut$out[,"Lambda"],main=expression(lambda))
         if (!mcmcOut$cu_pa$same_overhangs){
-            plotRunningMedian(mcmcOut$out[,"LambdaRight"],ylab="LambdaRight")
+            plotTrace(mcmcOut$out[,"LambdaRight"],main=expression(lambda[r]))
         }
         if (!mcmcOut$cu_pa$fix_disp){
-            plotRunningMedian(mcmcOut$out[,"LambdaDisp"],ylab="LambdaDisp")
+            plotTrace(mcmcOut$out[,"LambdaDisp"],main=expression(sigma[lambda]))
         }
         if (mcmcOut$cu_pa$nuSamples!=0){
-            plotRunningMedian(mcmcOut$out[,"Nu"],ylab="Nu")
+            plotTrace(mcmcOut$out[,"Nu"],main=expression(nu))
         }
-        plotRunningMedian(mcmcOut$out[,"LogLik"],ylab="LogLik")
+        plotTrace(mcmcOut$out[,"LogLik"],main="LogLik")
     }
     par(mfrow=c(1,1))
 }
