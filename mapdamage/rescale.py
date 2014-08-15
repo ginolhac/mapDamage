@@ -209,6 +209,9 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
     Iterates through the read and reference, rescales the quality 
     according to corr_prob
     """
+    if not debug:
+        # no need to log when unit testing
+        logger = logging.getLogger(__name__)
     raw_seq = read.query
     # external coordinates 5' and 3' , 0-based offset
     coordinate = mapdamage.align.get_coordinates(read)
@@ -233,11 +236,15 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
         pdam = 1 - corr_this_base(corr_prob, nt_seq, nt_ref, pos_on_read + 1, length_read,direction=direction)
         pseq = 1 - phred_char_to_pval(nt_qual)
         newp = pdam*pseq # this could be numerically unstable
-        new_qual[pos_on_read] = phred_pval_to_char(1-newp)
-        record_subs(subs,nt_seq,nt_ref,nt_qual,new_qual[pos_on_read],newp)
-        if nt_seq != "-":
-            pos_on_read += 1
-    # done with the aligned portion of the read 
+        if pos_on_read < length_read:
+            new_qual[pos_on_read] = phred_pval_to_char(1-newp)
+            record_subs(subs,nt_seq,nt_ref,nt_qual,new_qual[pos_on_read],newp)
+            if nt_seq != "-":
+                pos_on_read += 1
+            # done with the aligned portion of the read 
+        else:
+            logger.warning("Warning: The aligment of the read is longer than the actual read %s",(read.qname))
+            break
     new_qual = "".join(new_qual)
 
     if read.is_reverse:
