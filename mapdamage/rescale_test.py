@@ -43,5 +43,16 @@ class testPairedFile(unittest.TestCase):
         rescale.rescale_qual(ref,options,debug=True)
         self.assertTrue(filecmp.cmp("rescale_test/pe_test/pe_rescaled.sam","rescale_test/pe_test/pe_rescaled_correct.sam"))
 
+class testCases(unittest.TestCase):
+    """Various cases that failed"""
+    def test_longalignshortread(self):
+        """Check if fails on an aligment longer than the read"""
+        prefix="rescale_test/long_align/"
+        options = mock_options(prefix+"pe.sam",prefix+"pe_out.sam",prefix+"pe_output/")
+        ref = pysam.Fastafile("rescale_test/pe_test/ref.fa")
+        rescale.rescale_qual(ref,options,debug=True)
+        #Should run without an error
+        self.assertTrue(True)
+
 if  __name__=='__main__':
     unittest.main()

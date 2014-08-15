@@ -243,7 +243,8 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
                 pos_on_read += 1
             # done with the aligned portion of the read 
         else:
-            logger.warning("Warning: The aligment of the read is longer than the actual read %s",(read.qname))
+            if not debug:
+                logger.warning("Warning: The aligment of the read is longer than the actual read %s",(read.qname))
             break
     new_qual = "".join(new_qual)
 
@@ -257,7 +258,8 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
         # the same backwards
         new_qual = new_qual + read.qual[-read.cigar[-1][1]:]
 
-    if debug:
+    if False:
+        #FIXME move me to the unittest
         print ""
         print "ref-"+refseq 
         print "seq-"+seq
@@ -341,15 +343,15 @@ def rescale_qual(ref, options,debug=False):
             # Correct outwards pairs from the 3p and inwards pairs with the 5p end
             if ((not hit.is_reverse) and hit.mate_is_reverse and (hit.pnext>hit.pos) and hit.tid==hit.mrnm):
                 # the inwards case mate A
-                hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="forward")
+                hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="forward",debug=debug)
             elif (hit.is_reverse and (not hit.mate_is_reverse) and (hit.pnext<hit.pos) and hit.tid==hit.mrnm):
                 # the inwards case mate B
-                hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="forward")
+                hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,direction="forward",debug=debug)
             else:
                 number_of_non_proper_pairs += 1
                 # cannot do much with conflicting pairing information
         else:
-            hit = rescale_qual_read(bam, hit, ref, corr_prob,subs)
+            hit = rescale_qual_read(bam, hit, ref, corr_prob,subs,debug=debug)
 
         bam_out.write(hit)
     if  number_of_non_proper_pairs!=0 and not debug:
