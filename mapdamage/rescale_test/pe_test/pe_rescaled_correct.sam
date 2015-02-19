@@ -1,8 +1,8 @@
 @HD	VN:1.5	SO:coordinate
 @SQ	SN:ref	LN:9
-r001	163	ref	1	30	3M	=	7	9	CGA	III
-r001	83	ref	7	30	3M	=	1	-9	CGA	III
-r002	163	ref	1	30	3M	=	7	9	TGA	!II
-r002	83	ref	7	30	3M	=	1	-9	CAA	I5I
+r001	163	ref	1	30	3M	=	7	9	CGA	III	MR:f:0
+r001	83	ref	7	30	3M	=	1	-9	CGA	III	MR:f:0
+r002	163	ref	1	30	3M	=	7	9	TGA	!II	MR:f:0.9
+r002	83	ref	7	30	3M	=	1	-9	CAA	I5I	MR:f:0.009
 r003	83	ref	1	30	3M	=	7	9	TGA	III
 r003	163	ref	7	30	3M	=	1	-9	CAA	III

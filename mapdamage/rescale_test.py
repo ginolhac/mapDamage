@@ -30,11 +30,11 @@ class testPairedFile(unittest.TestCase):
         # The sam file looks like this
         #@HD VN:1.5 SO:coordinate
         #@SQ SN:ref LN:9
-        #r001 163 ref 1 30 3M = 7 9 CGA III #the normal ones
-        #r001 83 ref 7 30 3M = 1 -9 TCG III
-        #r002 163 ref 1 30 3M = 7 9 TGA III #With one dam subs
-        #r002 83 ref 7 30 3M = 1 -9 CAA III
-        #r003 83 ref 1 30 3M = 7 9 TGA III #The reverse complement, should not rescale
+        #r001 163 ref 1 30 3M = 7 9 CGA III MR:f:0 #the normal ones
+        #r001 83 ref 7 30 3M = 1 -9 TCG III MR:f:0
+        #r002 163 ref 1 30 3M = 7 9 TGA III MR:f:0.9 #With one dam subs
+        #r002 83 ref 7 30 3M = 1 -9 CAA III MR:f:0.009
+        #r003 83 ref 1 30 3M = 7 9 TGA III #The reverse complement, should not rescale (thus no flags)
         #r003 163 ref 7 30 3M = 1 -9 CAA III
         # 
         #hand calculated the correct rescaled sam file in pe_rescaled_correct.sam
@@ -52,7 +52,6 @@ class testCases(unittest.TestCase):
         ref = pysam.Fastafile("rescale_test/pe_test/ref.fa")
         rescale.rescale_qual(ref,options,debug=True)
         #Should run without an error
-        self.assertTrue(True)
 
 if  __name__=='__main__':
     unittest.main()

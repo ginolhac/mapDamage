@@ -230,14 +230,23 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
         qual = qual[::-1]
     new_qual = [-100]*length_read
     pos_on_read = 0
+    number_of_rescaled_bases = 0.0
     for (i, nt_seq, nt_ref, nt_qual) in itertools.izip(xrange(length_align), seq, refseq, qual):
         # rescale the quality according to the triplet position, 
         # pair of the reference and the sequence
-        pdam = 1 - corr_this_base(corr_prob, nt_seq, nt_ref, pos_on_read + 1, length_read,direction=direction)
-        pseq = 1 - phred_char_to_pval(nt_qual)
-        newp = pdam*pseq # this could be numerically unstable
+        if ((nt_seq == "T" and nt_ref =="C") or (nt_seq == "A" and nt_ref =="G")):
+            # need to rescale this subs.
+            pdam = 1 - corr_this_base(corr_prob, nt_seq, nt_ref, pos_on_read + 1, length_read,direction=direction)
+            pseq = 1 - phred_char_to_pval(nt_qual)
+            newp = pdam*pseq # this could be numerically unstable
+            newq = phred_pval_to_char(1-newp)
+            number_of_rescaled_bases += 1-pdam
+        else:
+            # don't rescale, other bases
+            newp = 1 - phred_char_to_pval(nt_qual)
+            newq = nt_qual 
         if pos_on_read < length_read:
-            new_qual[pos_on_read] = phred_pval_to_char(1-newp)
+            new_qual[pos_on_read] = newq 
             record_subs(subs,nt_seq,nt_ref,nt_qual,new_qual[pos_on_read],newp)
             if nt_seq != "-":
                 pos_on_read += 1
@@ -250,7 +259,6 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
 
     if read.is_reverse:
         new_qual = new_qual[::-1]
-
     if (read.cigar[0][0] == 4):
         # check for soft clipping at forward end 
         new_qual = read.qual[0:read.cigar[0][1]] + new_qual
@@ -258,37 +266,14 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
         # the same backwards
         new_qual = new_qual + read.qual[-read.cigar[-1][1]:]
 
-    if False:
-        #FIXME move me to the unittest
-        print ""
-        print "ref-"+refseq 
-        print "seq-"+seq
-        print "   -"+"          |         |         |         |         |         |         |"
-        print "x10-"+"          1         2         3         4         5         6         7"
-        print "Is reverse"+str(read.is_reverse)
-        print ""
-        if (refseq != seq):
-            print "Reference and the sequence are not the same"
-            print [i for i, (left, right) in enumerate(zip(refseq, seq)) if left != right]
-            print ""
-        if read.is_reverse:
-            print "rea-"+read.qual[::-1]
-        else:
-            print "rea-"+read.qual
-        if read.is_reverse:
-            print "new-"+new_qual[::-1]
-        else:
-            print "new-"+new_qual
-        if (read.qual != new_qual):
-            print "   -"+"          |         |         |         |         |         |         |"
-            print "x10-"+"          1         2         3         4         5         6         7"
-            print "New and old qual are not the same"
-            print [i for i, (left, right) in enumerate(zip(read.qual, new_qual)) if left != right]
-        print ""
-        print ""
-    # done
-    read.qual = new_qual 
-
+    read.qual = new_qual
+    # truncate this to 5 digits
+    number_of_rescaled_bases = float("%.5f" % number_of_rescaled_bases)
+    # check if the read has a MR tag 
+    for tag in read.tags:
+        if tag[0] == "MR":
+            raise SystemExit("Read: %s already has a MR tag, can't rescale" % (read))
+    read.tags = read.tags + [("MR:f",number_of_rescaled_bases)]
     return read
 
 
