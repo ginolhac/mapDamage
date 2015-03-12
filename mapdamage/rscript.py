@@ -139,9 +139,9 @@ def run_stats(opt):
 
     try:
         check_call(arg)
-    except CalledProcessError:
+    except CalledProcessError as e:
         logger.error("The Bayesian statistics program failed to finish")
-        raise SystemError
+        raise e
 
     logger.debug("Bayesian estimates completed in %f seconds" % (time.time() - start_time,))
     return 0
