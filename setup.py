@@ -23,6 +23,10 @@ def compile_seqtk():
 
 
 def setup_version():
+    if not os.path.exists(".git"):
+        # Release version, no .git folder
+        return
+
     try:
         version = subprocess.check_output(("git", "describe", "--always", "--tags", "--dirty"))
         with open(os.path.join("mapdamage", "_version.py"), "w") as handle:
