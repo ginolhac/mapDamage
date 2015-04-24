@@ -12,8 +12,7 @@ def compile_seqtk():
     new_wd = os.path.join(old_wd,"mapdamage","seqtk")
     os.chdir(new_wd)
     if not os.path.isfile("seqtk.c"):
-        # check if the user has checked out the submodules
-        raise SystemExit("Did not find seqtk.c, did you install the submodule seqtk? (git submodule update --init)")
+        raise SystemExit("Cannot find seqtk.c")
     if (os.path.isfile("seqtk")):
         os.system("rm seqtk")
     xs = os.system("make -f Makefile")
@@ -58,9 +57,9 @@ setup(
     name='mapdamage',
     version='2.0',
     author='Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson',
-    author_email='aginolhac@snm.ku.dk, MSchubert@snm.ku.dk, jonsson.hakon@gmail.com',
+    author_email='MSchubert@snm.ku.dk, jonsson.hakon@gmail.com',
     packages=['mapdamage'],
-    package_data={'mapdamage': ['Rscripts/*.R','Rscripts/stats/*.R','seqtk/seqtk']},
+    package_data={'mapdamage': ['Rscripts/*.R','Rscripts/stats/*.R','seqtk/seqtk.c']},
     scripts=['bin/mapDamage'],
     url='https://github.com/ginolhac/mapDamage',
     license='LICENSE.txt',
