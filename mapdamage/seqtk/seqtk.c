@@ -241,6 +241,7 @@ int stk_comp(int argc, char *argv[])
 	}
 	free(dummy.a);
 	kseq_destroy(seq);
+	stk_reg_destroy(h);
 	gzclose(fp);
 	return 0;
 }
