@@ -59,7 +59,7 @@ setup(
     author='Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson',
     author_email='MSchubert@snm.ku.dk, jonsson.hakon@gmail.com',
     packages=['mapdamage'],
-    package_data={'mapdamage': ['Rscripts/*.R','Rscripts/stats/*.R','seqtk/seqtk.c']},
+    package_data={'mapdamage': ['Rscripts/*.R','Rscripts/stats/*.R','seqtk/seqtk']},
     scripts=['bin/mapDamage'],
     url='https://github.com/ginolhac/mapDamage',
     license='LICENSE.txt',
