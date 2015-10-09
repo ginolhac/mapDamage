@@ -46,7 +46,7 @@ class compileInstall(DistutilsInstall):
         files = self.get_outputs()
         for fi in files:
             if fi.endswith("seqtk/seqtk"):
-                os.chmod(fi,755)
+                os.chmod(fi,0755)
 
 
 
