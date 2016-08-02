@@ -12,7 +12,7 @@ Mapdamage is developed at the [Centre for GeoGenetics](http://geogenetics.ku.dk/
 ### Web interface
 
 Anna Kostikova from [insideDNA](https://insidedna.me) implemented a web interface for mapDamage.  
-Users can adjust the cloud ressources in terms of RAM/CPU to perform their analysis. She wrote a [tutorial](https://insidedna.me/tutorials/view/Analysis-ancient-DNA-samples-using-mapDamage) explaining how to use this [web interface](https://insidedna.me/app#/tools/100648/)
+Users can adjust the cloud ressources in terms of RAM/CPU to perform their analysis. She wrote a [tutorial](https://insidedna.me/tutorials/view/Analysis-ancient-DNA-samples-using-mapDamage) explaining how to use this [web interface (sign up required)](https://insidedna.me/app#/tools/100648/)
 
 
 ### Citation
