@@ -17,7 +17,7 @@ def phred_char_to_pval(ch):
     """Transforming ASCII character in the Phred scale to the error rate"""
     return 10**(-(float(ord(ch))-float(33))/10)
 
-def get_corr_prob(folder):
+def get_corr_prob(folder, rescale_length_5p, rescale_length_3p):
     """
     Reads the damage probability correction file, returns a 
     dictionary with this structure 
@@ -36,6 +36,12 @@ def get_corr_prob(folder):
                     (folder, fi_handle.line_num, corr_prob[line["Position"]]))
             else:
                 corr_prob[int(line["Position"])] = {'C.T':float(line["C.T"]), 'G.A':float(line["G.A"])}
+
+        # Exclude probabilities for positions outside of user-specified region
+        for key in corr_prob.keys():
+            if key < -rescale_length_3p or key > rescale_length_5p:
+                corr_prob.pop(key)
+
         return corr_prob
     except csv.Error as e:
         sys.exit('File %s, line %d: %s' % (os.path.join(folder,"Stats_out_MCMC_correct_prob.csv"), \
@@ -300,7 +306,9 @@ def rescale_qual(ref, options,debug=False):
     else:
         write_mode = "wb"
     bam_out = pysam.Samfile(options.rescale_out,write_mode, template = bam)
-    corr_prob = get_corr_prob(options.folder)
+    corr_prob = get_corr_prob(options.folder,
+                              rescale_length_5p=options.rescale_length_5p,
+                              rescale_length_3p=options.rescale_length_3p)
     subs = initialize_subs()
     first_pair = True
     number_of_non_proper_pairs = 0

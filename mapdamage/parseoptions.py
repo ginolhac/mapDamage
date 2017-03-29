@@ -128,20 +128,27 @@ def options():
             help="How long sequence to use from each side [%default]", type = int, default=12, action="store")
     group3.add_option("--stats-only", dest="stats_only", help="Run only statistical estimation from a valid result folder", \
           default=False, action="store_true")
-    group3.add_option("--rescale", dest="rescale", help="Rescale the quality scores in the BAM file using the output from the statistical estimation", \
-          default=False, action="store_true")
-    group3.add_option("--rescale-only", dest="rescale_only", help="Run only rescaling from a valid result folder", \
-          default=False, action="store_true")
-    group3.add_option("--rescale-out", dest="rescale_out", help="Write the rescaled BAM to this file", \
-          default=None, action="store")
     group3.add_option("--no-stats", help="Disabled statistical estimation, active by default", default=False, action="store_true")
     group3.add_option("--check-R-packages", help="Check if the R modules are working", default=False, action="store_true")
-
     parser.add_option_group(group3)
+
+    group4 = OptionGroup(parser,"Options for rescaling of BAM files")
+    group4.add_option("--rescale", dest="rescale", help="Rescale the quality scores in the BAM file using the output from the statistical estimation",
+          default=False, action="store_true")
+    group4.add_option("--rescale-only", dest="rescale_only", help="Run only rescaling from a valid result folder",
+          default=False, action="store_true")
+    group4.add_option("--rescale-out", dest="rescale_out", help="Write the rescaled BAM to this file",
+          default=None, action="store")
+    group4.add_option("--rescale-length-5p", dest="rescale_length_5p",
+                      help="How many bases to rescale at the 5' termini; defaults to --seq-length.", type=int, action="store")
+    group4.add_option("--rescale-length-3p", dest="rescale_length_3p",
+                      help="How many bases to rescale at the 5' termini; defaults to --seq-length.", type=int, action="store")
+    parser.add_option_group(group4)
+
 
     #Parse the arguments
     (options, args) = parser.parse_args()
-    
+
     # check python version
     if not check_py_version():
         return None
@@ -238,6 +245,17 @@ def options():
             sys.stderr.write("Error, %s does not exist while plot/stats/rescale only was used\n" % options.folder)
             return None
 
+    if options.rescale_length_3p is None:
+        options.rescale_length_3p = options.seq_length
+    elif not (0 <= options.rescale_length_3p <= options.seq_length):
+        parser.error("--rescale-length-3p must be less than or equal to "
+                     "--seq-length and greater than zero")
+
+    if options.rescale_length_5p is None:
+        options.rescale_length_5p = options.seq_length
+    elif not (0 <= options.rescale_length_5p <= options.seq_length):
+        parser.error("--rescale-length-5p must be less than or equal to "
+                     "--seq-length and greater than zero")
 
     # check if the Rscript executable is present on the system
     if not whereis('Rscript'):
