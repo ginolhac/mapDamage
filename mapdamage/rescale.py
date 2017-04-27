@@ -275,11 +275,12 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
     read.qual = new_qual
     # truncate this to 5 digits
     number_of_rescaled_bases = float("%.5f" % number_of_rescaled_bases)
-    # check if the read has a MR tag 
-    for tag in read.tags:
-        if tag[0] == "MR":
-            raise SystemExit("Read: %s already has a MR tag, can't rescale" % (read))
-    read.tags = read.tags + [("MR:f",number_of_rescaled_bases)]
+
+    if read.has_tag("MR"):
+        raise SystemExit("Read: %s already has a MR tag, can't rescale" % read)
+
+    read.set_tag("MR", number_of_rescaled_bases, 'f')
+
     return read
 
 

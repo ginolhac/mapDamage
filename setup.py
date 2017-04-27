@@ -55,7 +55,7 @@ class compileInstall(DistutilsInstall):
 setup(
     cmdclass={'install': compileInstall},
     name='mapdamage',
-    version='2.0.7',
+    version='2.0.8',
     author='Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson',
     author_email='MSchubert@snm.ku.dk, jonsson.hakon@gmail.com',
     packages=['mapdamage'],
