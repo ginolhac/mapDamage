@@ -145,7 +145,7 @@ seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
 
 #The following is an MC simulation code to mimic the 
 #nick frequency part in the model from Philip
-seqProbVecNuWithLengths<- cxxfunction( signature(
+seqProbVecNuWithLengths<- cxxfunction(methods::signature(
                                       I_la="numeric",
                                       I_la_disp="numeric",
                                       I_nu="numeric",
@@ -270,7 +270,7 @@ logLikFunOneBaseSlow <- function(Gen,S,Theta,deltad,deltas,laVec,nuVec,m,lin){
 
 #The same logic as in logLikFunOneBaseSlow except using a compiled code 
 #to do the hard work
-logLikFunOneBaseFast <- cxxfunction(signature(
+logLikFunOneBaseFast <- cxxfunction(methods::signature(
                                       I_Gen="numeric",
                                       I_S="numeric",
                                       I_Theta="numeric",
