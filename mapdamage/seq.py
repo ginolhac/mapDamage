@@ -63,6 +63,12 @@ def read_fasta_index(filename):
         print_err("Column 2 in FASTA index did not contain a number, found '%s':" % ref[1], filename, line)
         return None
 
+  if not fai:
+    sys.stderr.write("Error: Index for %r does contain any sequences.\n" % (filename,))
+    sys.stderr.write("       Please ensure that FASTA file is valid, and\n")
+    sys.stderr.write("       re-index file using 'samtool faidx'.\n")
+    return None
+
   return fai
 
 
