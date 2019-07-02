@@ -31,5 +31,5 @@ http://bioinformatics.oxfordjournals.org/content/27/15/2153](http://bioinformati
 
 ### Contact
 Please report bugs and suggest possible improvements to Aurélien Ginolhac, Mikkel Schubert or Hákon Jónsson by email:
-aginolhac at snm.ku.dk, MSchubert at snm.ku.dk or jonsson.hakon at gmail.com.
+aginolhac at snm.ku.dk, mikkelsch at gmail.com or jonsson.hakon at gmail.com.
 
