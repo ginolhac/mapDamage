@@ -33,20 +33,20 @@ draw.open.rect <- function(xleft, ybottom, xright, ytop, padding = 0) {
   } else {
     xpoints <- c(xright, xleft - padding, xleft - padding, xright)
   }
-    
+
   lines(xpoints, c(ytop, ytop, ybottom, ybottom), col = "darkgrey")
 }
 
 
 plot.base.composition <- function(tbl, base, color, around, ylabels.at = c(), xlabels = FALSE) {
   xcoords <- c(-around:-1, 1:around)
-  
+
   plot.axis <- function(yaxis.at) {
     axis(side = yaxis.at, labels = (yaxis.at == ylabels.at), line = 0, las = 2, cex.axis = 0.8)
     if ((yaxis.at == 2) && (yaxis.at == ylabels.at)) {
       mtext("Frequency", side = 2, line = 2.5, cex = 0.6)
     }
-  
+
     if (xlabels) {
       axis(side = 1, labels = xcoords, at = xcoords, las = 2, cex.axis = 0.6)
     } else {
@@ -64,7 +64,7 @@ plot.base.composition <- function(tbl, base, color, around, ylabels.at = c(), xl
 
     ycoords <- NULL
     for (i in xcoords) {
-      ycoords <- append(ycoords, mean(subtbl[(subtbl$Pos==i), base]/subtbl$Total[(subtbl$Pos==i)],na.rm=T)) 
+      ycoords <- append(ycoords, mean(subtbl[(subtbl$Pos==i), base]/subtbl$Total[(subtbl$Pos==i)],na.rm=T))
     }
     points(xcoords, ycoords, pch = 20, col = color, type = "b")
   }
@@ -80,7 +80,7 @@ plot.base.composition <- function(tbl, base, color, around, ylabels.at = c(), xl
   plot.frequencies("3p")
   plot.axis(4)
   draw.open.rect(-around, 0, 0, 0.5)
-  
+
   par(mar = c(1, 2, 1, 2))
 }
 
@@ -103,8 +103,8 @@ calculate.mutation.table <- function(filename, length)
 
 write.mutation.table <- function(tbl, end, mismatch, filename)
   {
-    columns <- c("pos", sprintf("5p%s", mismatch))
-    tbl[is.na(tbl)] <- 0 # Python doesn't like NAs  
+    columns <- c("pos", sprintf("%s%s", end, mismatch))
+    tbl[is.na(tbl)] <- 0 # Python doesn't like NAs
     write.table(tbl[tbl$End == end, c("Pos", mismatch)],
                 row.names = FALSE, col.names = columns,
                 sep = "\t", quote = FALSE,
@@ -117,12 +117,12 @@ plot.mutations <- function(end, axis.at, start.i, end.i, modifier) {
     subtable <- tbl[tbl$End == end, c("Pos", mismatches)]
     rates    <- rowSums(subtable) - subtable$Pos
     subtable <- aggregate(list(Rate = rates), list(Pos = subtable$Pos), sum)
-    
+
     lines(subtable$Pos * modifier, subtable$Rate,
           xlim = c(1, OPT.LENGTH), ylim = c(0, OPT.YMAX),
           col = color, lwd = width)
   }
-  
+
   plot(NA, xlim = c(start.i, end.i), ylim=c(0, OPT.YMAX), col="grey", lwd = 1, type = "l", xlab = "", ylab = "", axes = FALSE)
   axis(side = 1, labels = start.i:end.i, at = start.i:end.i, las = 2, cex.axis = 0.8)
   axis(side = axis.at, labels = TRUE, las = 2, cex.axis = 0.8)
@@ -130,11 +130,11 @@ plot.mutations <- function(end, axis.at, start.i, end.i, modifier) {
       mtext("Frequency", side = 2, line = 2.5, cex = 0.6)
   }
   draw.open.rect(start.i, OPT.YMAX, end.i, -0.01, padding = 0.5)
-  
+
   for (mismatch in MISMATCHES) {
     do.plot(mut, end, modifier, mismatch, "grey", 1)
   }
-  
+
   do.plot(mut, end, modifier, CLIPPING,   "orange", 1)
   do.plot(mut, end, modifier, DELETIONS,  "green", 1)
   do.plot(mut, end, modifier, INSERTIONS, "purple", 1)
