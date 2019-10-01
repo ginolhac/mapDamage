@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import itertools
 import mapdamage
 
@@ -16,11 +14,11 @@ import mapdamage
 #X 8 sequence mismatch
 
 
-def get_coordinates(read):  
+def get_coordinates(read):
   """ return external coordinates of aligned read bases """
   fivep = read.aend if read.is_reverse else read.pos
   threep = read.pos if read.is_reverse else read.aend
-  
+
   return fivep, threep
 
 
@@ -41,9 +39,9 @@ def get_around(coord, chrom, reflengths, length, ref):
 
 
 def align(cigarlist, seq, ref):
-  """ insert gaps according to the cigar string 
-  deletion: gaps to be inserted into read sequences, 
-  insertions: gaps to be inserted into reference sequence """  
+  """ insert gaps according to the cigar string
+  deletion: gaps to be inserted into read sequences,
+  insertions: gaps to be inserted into reference sequence """
   lref = list(ref)
   for nbr, idx in parse_cigar(cigarlist, 1):
     lref[idx:idx] = ["-"] * nbr
@@ -56,9 +54,9 @@ def align(cigarlist, seq, ref):
 
 
 def align_with_qual(cigarlist, seq, qual, threshold, ref):
-  """ insert gaps according to the cigar string 
-  deletion: gaps to be inserted into read sequences and qualities, 
-  insertions: gaps to be inserted into reference sequence """  
+  """ insert gaps according to the cigar string
+  deletion: gaps to be inserted into read sequences and qualities,
+  insertions: gaps to be inserted into reference sequence """
   lref = list(ref)
   for nbr, idx in parse_cigar(cigarlist, 1):
     lref[idx:idx] = ["-"] * nbr
@@ -84,7 +82,7 @@ def get_mis(read, seq, refseq, ref, length, tab, end):
   std = '-' if read.is_reverse else '+'
   subtable = tab[ref][end][std]
 
-  for (i, nt_seq, nt_ref) in itertools.izip(xrange(length), seq, refseq):
+  for (i, nt_seq, nt_ref) in zip(range(length), seq, refseq):
     if (nt_seq in "ACGT-") and (nt_ref in "ACGT-"):
       if nt_ref != "-":
         # record base composition in the reference, only A, C, G, T
@@ -106,7 +104,7 @@ def parse_cigar(cigarlist, ope):
   for operation, length in cigarlist:
     if operation == ope:
         coordinate.append([length, tlength])
-    if operation in oplist: 
+    if operation in oplist:
         tlength += length
   return coordinate
 
@@ -127,8 +125,3 @@ def record_soft_clipping(read, tab, length):
       end = '5p' if read.is_reverse else '3p'
 
     update_table(end, strand, nbases)
-
-
-
-
-

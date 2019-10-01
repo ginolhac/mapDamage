@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 import subprocess
 from subprocess import CalledProcessError, check_call
@@ -15,8 +13,8 @@ def construct_path(name,folder="Rscripts"):
 
 def plot(opt):
   """
-  Calls the R script to make the plots, takes in the arguments 
-  from parameter processing 
+  Calls the R script to make the plots, takes in the arguments
+  from parameter processing
   """
   # comp<-args[1]
   # pdfout<-args[2]
@@ -32,33 +30,33 @@ def plot(opt):
   fcomp = opt.folder+"/"+"dnacomp.txt"
   title = opt.folder+"/"+"Fragmisincorporation_plot.pdf"
 
-  script = construct_path("mapDamage.R") 
+  script = construct_path("mapDamage.R")
   call = ["Rscript", script, fcomp, title, opt.refplot, fmut, opt.readplot, \
       opt.ymax, opt.folder, opt.title, __version__]
-  code = subprocess.call(map(str, call))
+  code = subprocess.call(list(map(str, call)))
 
   if code == 0:
     if not opt.quiet:
-      print("pdf %s generated" % title)
+      print(("pdf %s generated" % title))
     return 0
   else:
     print("Error: plotting with R failed")
     return 1
 
 
-        
-def opt_plots(opt):       
+
+def opt_plots(opt):
   """ optional plots for length distribution
   and cumulative C>T mutations, per strand """
-  
+
   fmut = opt.folder+"/"+"misincorporation.txt"
   flength = opt.folder+"/"+"lgdistribution.txt"
   output = opt.folder+"/"+"Length_plot.pdf"
 
-  script = construct_path("lengths.R") 
+  script = construct_path("lengths.R")
   call = ["Rscript", script, flength, output, fmut, opt.length, \
       opt.title, __version__, bool_to_int(opt.quiet)]
-  code = subprocess.call(map(str, call))
+  code = subprocess.call(list(map(str, call)))
   if code == 0:
     return 0
   else:
@@ -77,7 +75,7 @@ def check_R_one_lib(name):
 
 def check_R_lib():
     """
-    Checks if the necessary R libraries are here, signal 
+    Checks if the necessary R libraries are here, signal
     otherwise
     """
     libs = ["inline", "ggplot2", "gam", "Rcpp", "RcppGSL"]
@@ -90,11 +88,11 @@ def check_R_lib():
     if len(missing_lib) > 1:
         # Grammar Nazi has arrived
         last_ele = missing_lib.pop()
-        print ("Missing the following R libraries '" + "', '".join(missing_lib) \
-            + "' and '" + last_ele + "'")
+        print(("Missing the following R libraries '" + "', '".join(missing_lib) \
+            + "' and '" + last_ele + "'"))
         return 1
     elif len(missing_lib) == 1:
-        print ("Missing the following R library "+missing_lib[0])
+        print(("Missing the following R library "+missing_lib[0]))
         return 1
     else :
         # No missing libraries

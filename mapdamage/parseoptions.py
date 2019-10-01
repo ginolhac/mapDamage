@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
 import os
 import sys
@@ -38,7 +36,7 @@ def check_py_version():
         return None
 
 
-def options():  
+def options():
     parser = OptionParser("%prog [options] -i BAMfile -r reference.fasta\n\nUse option -h or --help for help", version=__version__, \
             epilog="report bugs to aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com")
 
@@ -153,7 +151,7 @@ def options():
     if not check_py_version():
         return None
 
-    # if the user wants to check the R packages then do that before the option parsing 
+    # if the user wants to check the R packages then do that before the option parsing
     if options.check_R_packages:
         if check_R_lib():
             sys.exit(1)
@@ -224,7 +222,7 @@ def options():
 
     # check destination for rescaled bam
     if not options.rescale_out and (options.rescale or options.rescale_only):
-        # if there are mulitiple bam files to rescale then pick first one as 
+        # if there are mulitiple bam files to rescale then pick first one as
         # the name of the rescaled file
         if isinstance(options.filename,list):
             basename = os.path.basename(options.filename[0])
@@ -235,12 +233,12 @@ def options():
 
     if os.path.isdir(options.folder):
         if not options.quiet and not options.plot_only:
-            print("Warning, %s already exists" % options.folder)
+            print(("Warning, %s already exists" % options.folder))
         if options.plot_only:
             if not file_exist(options.folder+"/dnacomp.txt") or not file_exist(options.folder+"/misincorporation.txt"):
                 parser.error('folder %s is not a valid result folder' % options.folder)
     else:
-        os.makedirs(options.folder, mode = 0750)
+        os.makedirs(options.folder, mode = 0o750)
         if options.plot_only or options.stats_only or options.rescale_only:
             sys.stderr.write("Error, %s does not exist while plot/stats/rescale only was used\n" % options.folder)
             return None
@@ -279,4 +277,3 @@ def options():
 
 
     return options
-

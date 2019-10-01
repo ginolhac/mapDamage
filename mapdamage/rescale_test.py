@@ -1,6 +1,6 @@
 import unittest
 import optparse
-import rescale
+from . import rescale
 import pysam
 import filecmp
 

@@ -1,14 +1,13 @@
-#!/usr/bin/env python
 import sys
 import string
 
 # from Martin Kircher, to complement DNA
-TABLE = string.maketrans('TGCAMRWSYKVHDBtgcamrwsykvhdb', \
+TABLE = str.maketrans('TGCAMRWSYKVHDBtgcamrwsykvhdb', \
     'ACGTKYWSRMBDHVacgtkywsrmbdhv')
 
 LETTERS = ("A", "C", "G", "T")
 MUTATIONS = ('G>A', 'C>T', 'A>G', 'T>C', 'A>C', 'A>T', 'C>G', 'C>A', 'T>G',
-             'T>A', 'G>C', 'G>T', 'A>-', 'T>-', 'C>-', 'G>-', '->A', '->T', 
+             'T>A', 'G>C', 'G>T', 'A>-', 'T>-', 'C>-', 'G>-', '->A', '->T',
              '->C', '->G', 'S')
 HEADER = LETTERS + ("Total", ) + MUTATIONS
 
@@ -33,11 +32,11 @@ def record_lg(read, coordinate, tab):
   """ record global length distribution
   don't record paired reads as they are normally not used for aDNA """
   std = '-' if read.is_reverse else '+'
-  
+
   length = (max(coordinate) - min(coordinate))
   if not read.is_paired:
     tab[std][length] = tab[std][length] + 1
-    
+
   return tab
 
 
@@ -47,7 +46,7 @@ def read_fasta_index(filename):
     sys.stderr.write("Error: %s\n" % msg)
     sys.stderr.write("       Filename: %s\n" % filename)
     sys.stderr.write("       Line:     %s\n" % repr(line))
-  
+
   fai = {}
   with open(filename, 'r') as handle:
     for line in handle:

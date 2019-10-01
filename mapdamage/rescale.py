@@ -31,14 +31,14 @@ def get_corr_prob(folder, rescale_length_5p, rescale_length_3p):
         fi_handle = csv.DictReader(open(full_path))
         corr_prob = {}
         for line in fi_handle:
-            if (corr_prob.has_key(line["Position"])):
+            if (line["Position"] in corr_prob):
                 sys.exit('This file has multiple position definitions %s, line %d: %s' % \
                     (folder, fi_handle.line_num, corr_prob[line["Position"]]))
             else:
                 corr_prob[int(line["Position"])] = {'C.T':float(line["C.T"]), 'G.A':float(line["G.A"])}
 
         # Exclude probabilities for positions outside of user-specified region
-        for key in corr_prob.keys():
+        for key in list(corr_prob.keys()):
             if key < -rescale_length_3p or key > rescale_length_5p:
                 corr_prob.pop(key)
 
@@ -75,13 +75,13 @@ def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length,direction="both"):
     back_pos = pos-length-1 
     # position from 3' end
 
-    if corr_prob.has_key(pos):
+    if pos in corr_prob:
         p5_corr = corr_prob[pos][subs]
         # correction from 5' end
     else:
         p5_corr = 0
 
-    if corr_prob.has_key(back_pos):
+    if back_pos in corr_prob:
         p3_corr = corr_prob[back_pos][subs]
         # correction from 3' end
     else:
@@ -104,7 +104,7 @@ def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length,direction="both"):
 
 def initialize_subs():
     """Initialize a substitution table, to track the expected substitution counts"""
-    per_qual = dict(zip(range(0,130),[0]*130))
+    per_qual = dict(list(zip(list(range(0,130)),[0]*130)))
     subs = {"CT-before":per_qual.copy(),\
             "TC-before":per_qual.copy(),\
             "GA-before":per_qual.copy(),\
@@ -164,7 +164,7 @@ def qual_summary_subs(subs):
             for qv in subs[i]:
                 if qv >= lv :
                     key = i+"-Q"+str(lv)
-                    if subs.has_key(key):
+                    if key in subs:
                         subs[key] += subs[i][qv]
                     else:
                         subs[key] = subs[i][qv]
@@ -174,32 +174,32 @@ def print_subs(subs):
     print("\tThe expected substition frequencies before and after scaling using the scaled qualities as probalities:")
     if subs["C"]!=0:
         # the special case of no substitutions
-        print("\tCT\t"+str(subs["CT-pvals_before"]/subs["C"])+"\t\t"+str(subs["CT-pvals"]/subs["C"]))
+        print(("\tCT\t"+str(subs["CT-pvals_before"]/subs["C"])+"\t\t"+str(subs["CT-pvals"]/subs["C"])))
     else: 
         print("\tCT\tNA\t\tNA")
     if subs["T"]!=0:
-        print("\tTC\t"+str(subs["TC-pvals"]/subs["T"])+"\t\t"+str(subs["TC-pvals"]/subs["T"]))
+        print(("\tTC\t"+str(subs["TC-pvals"]/subs["T"])+"\t\t"+str(subs["TC-pvals"]/subs["T"])))
     else:
         print("\tTC\tNA\t\tNA")
     if subs["G"]!=0:
-        print("\tGA\t"+str(subs["GA-pvals_before"]/subs["G"])+"\t\t"+str(subs["GA-pvals"]/subs["G"]))
+        print(("\tGA\t"+str(subs["GA-pvals_before"]/subs["G"])+"\t\t"+str(subs["GA-pvals"]/subs["G"])))
     else:
         print("\tGA\tNA\t\tNA")
     if subs["A"]!=0:
-        print("\tAG\t"+str(subs["AG-pvals"]/subs["A"])+"\t\t"+str(subs["AG-pvals"]/subs["A"]))
+        print(("\tAG\t"+str(subs["AG-pvals"]/subs["A"])+"\t\t"+str(subs["AG-pvals"]/subs["A"])))
     else:
         print("\tAG\tNA\t\tNA")
     print("\tQuality metrics before and after scaling")
-    print("\tCT-Q0 \t"+str(subs["CT-before-Q0"])+"\t\t"+str(subs["CT-after-Q0"]))
-    print("\tCT-Q10 \t"+str(subs["CT-before-Q10"])+"\t\t"+str(subs["CT-after-Q10"]))
-    print("\tCT-Q20 \t"+str(subs["CT-before-Q20"])+"\t\t"+str(subs["CT-after-Q20"]))
-    print("\tCT-Q30 \t"+str(subs["CT-before-Q30"])+"\t\t"+str(subs["CT-after-Q30"]))
-    print("\tCT-Q40 \t"+str(subs["CT-before-Q40"])+"\t\t"+str(subs["CT-after-Q40"]))
-    print("\tGA-Q0 \t"+str(subs["GA-before-Q0"])+"\t\t"+str(subs["GA-after-Q0"]))
-    print("\tGA-Q10 \t"+str(subs["GA-before-Q10"])+"\t\t"+str(subs["GA-after-Q10"]))
-    print("\tGA-Q20 \t"+str(subs["GA-before-Q20"])+"\t\t"+str(subs["GA-after-Q20"]))
-    print("\tGA-Q30 \t"+str(subs["GA-before-Q30"])+"\t\t"+str(subs["GA-after-Q30"]))
-    print("\tGA-Q40 \t"+str(subs["GA-before-Q40"])+"\t\t"+str(subs["GA-after-Q40"]))
+    print(("\tCT-Q0 \t"+str(subs["CT-before-Q0"])+"\t\t"+str(subs["CT-after-Q0"])))
+    print(("\tCT-Q10 \t"+str(subs["CT-before-Q10"])+"\t\t"+str(subs["CT-after-Q10"])))
+    print(("\tCT-Q20 \t"+str(subs["CT-before-Q20"])+"\t\t"+str(subs["CT-after-Q20"])))
+    print(("\tCT-Q30 \t"+str(subs["CT-before-Q30"])+"\t\t"+str(subs["CT-after-Q30"])))
+    print(("\tCT-Q40 \t"+str(subs["CT-before-Q40"])+"\t\t"+str(subs["CT-after-Q40"])))
+    print(("\tGA-Q0 \t"+str(subs["GA-before-Q0"])+"\t\t"+str(subs["GA-after-Q0"])))
+    print(("\tGA-Q10 \t"+str(subs["GA-before-Q10"])+"\t\t"+str(subs["GA-after-Q10"])))
+    print(("\tGA-Q20 \t"+str(subs["GA-before-Q20"])+"\t\t"+str(subs["GA-after-Q20"])))
+    print(("\tGA-Q30 \t"+str(subs["GA-before-Q30"])+"\t\t"+str(subs["GA-after-Q30"])))
+    print(("\tGA-Q40 \t"+str(subs["GA-before-Q40"])+"\t\t"+str(subs["GA-after-Q40"])))
     
 
 def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="both"):
@@ -237,7 +237,7 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
     new_qual = [-100]*length_read
     pos_on_read = 0
     number_of_rescaled_bases = 0.0
-    for (i, nt_seq, nt_ref, nt_qual) in itertools.izip(xrange(length_align), seq, refseq, qual):
+    for (i, nt_seq, nt_ref, nt_qual) in zip(range(length_align), seq, refseq, qual):
         # rescale the quality according to the triplet position, 
         # pair of the reference and the sequence
         if ((nt_seq == "T" and nt_ref =="C") or (nt_seq == "A" and nt_ref =="G")):

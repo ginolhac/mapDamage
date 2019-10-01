@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 import collections
 
@@ -7,7 +5,7 @@ import mapdamage
 from mapdamage.version import __version__
 
 
-def initialize_mut(ref, length):  
+def initialize_mut(ref, length):
   tab = {}
   for contig in ref:
     tab_contig = tab[contig] = {}
@@ -16,8 +14,8 @@ def initialize_mut(ref, length):
       for std in ('+','-'):
         tab_std = tab_end[std] = {}
         for mut in mapdamage.seq.HEADER:
-          tab_std[mut] = dict.fromkeys(xrange(length), 0)
-  
+          tab_std[mut] = dict.fromkeys(range(length), 0)
+
   return tab
 
 
@@ -26,8 +24,8 @@ def print_mut(mut, opt, out):
 
 
 def initialize_comp(ref, around, length):
-  keys = {"3p" : range(-length, 0) + range(1, around + 1),
-          "5p" : range(-around, 0) + range(1, length + 1)}
+  keys = {"3p" : list(range(-length, 0)) + list(range(1, around + 1)),
+          "5p" : list(range(-around, 0)) + list(range(1, length + 1))}
 
   tab = {}
   for contig in ref:
@@ -52,7 +50,7 @@ def initialize_lg():
   for std in ('+','-'):
     tab[std] = collections.defaultdict(int)
 
-  return tab 
+  return tab
 
 
 def print_lg(tab, opt, out):
@@ -74,8 +72,8 @@ def check_table_and_warn_if_dmg_freq_is_low(folder):
   total = 0.0
   for filename in ("5pCtoT_freq.txt", "3pGtoA_freq.txt"):
     if not os.path.exists(folder+"/"+filename):
-      print("Error: Required table has not been created ('%s'), bayesian computation cannot be performed" \
-            % filename)
+      print(("Error: Required table has not been created ('%s'), bayesian computation cannot be performed" \
+            % filename))
       return True
 
     with open(os.path.join(folder, filename)) as handle:
@@ -85,12 +83,12 @@ def check_table_and_warn_if_dmg_freq_is_low(folder):
           total += float(freq[1])
           break
       else:
-        print("Error: Could not find pos = 1 in table '%s', bayesian computation cannot be performed" \
-              % filename)
+        print(("Error: Could not find pos = 1 in table '%s', bayesian computation cannot be performed" \
+              % filename))
         return True
 
   if total < 0.01:
-    print("Warning: DNA damage levels are too low, the Bayesian computation should not be performed (%f < 0.01)\n" % total)
+    print(("Warning: DNA damage levels are too low, the Bayesian computation should not be performed (%f < 0.01)\n" % total))
 
   return False
 
@@ -103,9 +101,9 @@ def _print_freq_table(table, columns, opt, out, offset = 0):
   out.write("# Chr: reference from sam/bam header, End: from which termini of DNA sequences, Std: strand of reads\n")
   out.write("Chr\tEnd\tStd\tPos\t%s\n" % ("\t".join(columns)))
 
-  for (reference, ends) in sorted(table.iteritems()):
-    for (end, strands) in sorted(ends.iteritems()):
-      for (strand, subtable) in sorted(strands.iteritems()):
+  for (reference, ends) in sorted(table.items()):
+    for (end, strands) in sorted(ends.items()):
+      for (strand, subtable) in sorted(strands.items()):
         subtable["Total"] = {}
         for index in sorted(subtable[columns[0]]):
           subtable["Total"][index] = sum(subtable[letter][index] for letter in mapdamage.seq.LETTERS)

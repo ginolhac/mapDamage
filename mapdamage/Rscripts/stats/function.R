@@ -1,17 +1,17 @@
 #Various useful functions
 getPmat <- function(tmu,tv_ti_ratio,acgt){
-    #Returns the evolutionary substitution matrix  
+    #Returns the evolutionary substitution matrix
     if (sum(acgt>=1)!=0 || sum(acgt<=0)!=0){
         write("The ACGT frequencies must be in the range 0 to 1",stderr())
-        stop()       
+        stop()
     }
     if (all.equal(sum(acgt),1)!=TRUE){
         write("The ACGT frequencies do not sum to 1",stderr())
-        stop()       
+        stop()
     }
     if (tv_ti_ratio<=0){
         write("The transversion and transtition ratio cannot go under 0",stderr())
-        stop()       
+        stop()
     }
     #Returns the substitution probability matrix.
     if (identical(tv_ti_ratio,1) && identical(acgt,c(.25,.25,.25,.25))){
@@ -23,7 +23,7 @@ getPmat <- function(tmu,tv_ti_ratio,acgt){
         E  <- diag(exp(r$values))
 
         #      Q        The eigen vector change of basis
-        #  M  ->   M   
+        #  M  ->   M
         #
         #  ^       ^
         #  |B^-1   |B
@@ -32,8 +32,8 @@ getPmat <- function(tmu,tv_ti_ratio,acgt){
         out <- solve(a=t(B),b= E %*% t(B))#Little trick to avoid numerical difficulties
         rownames(out) <- c("A","C","G","T")
         colnames(out) <- c("A","C","G","T")
-        return(out) 
-    } 
+        return(out)
+    }
 }
 
 jukesCantorPmat <- function(tmu){
@@ -49,22 +49,22 @@ qmatHKY85 <- function(tmu,tv_ti,acgt){
     #               |    pi_a*tv_ti    pi_c              pi_g * tv_ti   sum_4         |
     #returns this matrix
     #This could be replaced with the analytical formulas for the substitutions probabilities.
-    
+
     Qmat <- matrix(rep(acgt,4),ncol=4,byrow=TRUE)
     diag(Qmat) <- 0
 
     #Adjusting the transversions versus transitions
-    #-  *  -  *    
-    #*  -  *  -    
-    #-  *  -  *    
-    #*  -  *  -    
+    #-  *  -  *
+    #*  -  *  -
+    #-  *  -  *
+    #*  -  *  -
 
     Qmat[1,2] <- tv_ti*Qmat[1,2]
     Qmat[1,4] <- tv_ti*Qmat[1,4]
 
     Qmat[2,1] <- tv_ti*Qmat[2,1]
     Qmat[2,3] <- tv_ti*Qmat[2,3]
-    
+
     Qmat[3,2] <- tv_ti*Qmat[3,2]
     Qmat[3,4] <- tv_ti*Qmat[3,4]
 
@@ -73,12 +73,12 @@ qmatHKY85 <- function(tmu,tv_ti,acgt){
 
     diag(Qmat) <- -apply(Qmat,1,sum)
 
-    Qmat <- tmu * Qmat 
+    Qmat <- tmu * Qmat
     return(Qmat)
 }
 
 metroDesc <- function(lpr,lol){
-    # the logic in the Metropolis-Hastings step 
+    # the logic in the Metropolis-Hastings step
     stopifnot(!is.na(lpr))
     stopifnot(!is.na(lol))
     if (log(runif(1))<lpr-lol){
@@ -89,7 +89,7 @@ metroDesc <- function(lpr,lol){
 }
 
 genOverHang <- function(la){
-    #Currently not used in the main code but could used to generate 
+    #Currently not used in the main code but could used to generate
     #overhangs like Philip
     r <- runif(1)
     i <- -1
@@ -143,7 +143,7 @@ seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
     }
 }
 
-#The following is an MC simulation code to mimic the 
+#The following is an MC simulation code to mimic the
 #nick frequency part in the model from Philip
 seqProbVecNuWithLengths<- cxxfunction(methods::signature(
                                       I_la="numeric",
@@ -162,7 +162,7 @@ seqProbVecNuWithLengths<- cxxfunction(methods::signature(
                       double r = ((double) rand() / (RAND_MAX));
                       int i = -1;
                       double p = 0;
-                      double term = -500; 
+                      double term = -500;
                       while (p<r){
                           if (i==-1){
                               term = 1;
@@ -175,7 +175,7 @@ seqProbVecNuWithLengths<- cxxfunction(methods::signature(
                       return(i);
                   }
                   ',body= '
-              srand(time(0)); 
+              srand(time(0));
         Rcpp::NumericVector la(I_la);
         Rcpp::NumericVector la_disp(I_la_disp);
         Rcpp::NumericVector nu(I_nu);
@@ -199,7 +199,7 @@ seqProbVecNuWithLengths<- cxxfunction(methods::signature(
                 double left_o_hang = genOverHang(la[0],la_disp[0]);
                 double right_o_hang = genOverHang(la[0],la_disp[0]);
                 double o_hang  = left_o_hang+right_o_hang;
-//              
+//
                 if (o_hang>=les(i)){
                     //Single stranded sequence
                     for (int j = 0; j <les(i);j++){
@@ -211,8 +211,8 @@ seqProbVecNuWithLengths<- cxxfunction(methods::signature(
                         for (int j = 0; j <(les[i]-right_o_hang);j++){
                             output(j) = output(j)+1;
                         }
-                        //The right overhang is always G>A for the double stranded but 
-                        //Here we will make the assumption that the pattern is symmetric 
+                        //The right overhang is always G>A for the double stranded but
+                        //Here we will make the assumption that the pattern is symmetric
                         //for practical reasons We can\'t  do that ....
                     }else {
                         Rcpp::NumericVector sa = floor(runif(1,0,les[i]-o_hang))+left_o_hang;
@@ -258,7 +258,7 @@ pDam <- function(th,ded,des,la,nu,lin){
 }
 
 logLikFunOneBaseSlow <- function(Gen,S,Theta,deltad,deltas,laVec,nuVec,m,lin){
-    #Calculates the log likelihood using R, a C++ version is available  
+    #Calculates the log likelihood using R, a C++ version is available
     ll <- 0
     for (i in 1:length(laVec)){
         #Get the damage probabilities
@@ -268,7 +268,7 @@ logLikFunOneBaseSlow <- function(Gen,S,Theta,deltad,deltas,laVec,nuVec,m,lin){
     return(ll)
 }
 
-#The same logic as in logLikFunOneBaseSlow except using a compiled code 
+#The same logic as in logLikFunOneBaseSlow except using a compiled code
 #to do the hard work
 logLikFunOneBaseFast <- cxxfunction(methods::signature(
                                       I_Gen="numeric",
@@ -333,7 +333,7 @@ return(ret);
 
 
 logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
-    #Calculates the logLikelihood for all the bases by calling 
+    #Calculates the logLikelihood for all the bases by calling
     # logLikFunOneBaseFast for each base
     if (deltad<0 || deltad>1 || deltas<0 || deltas>1  ){
         return(-Inf)
@@ -341,8 +341,8 @@ logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
     #A,C,G and T
 
     deb <- 0
-    
-    Asub <- dat[,"A.C"]+dat[,"A.G"]+dat[,"A.T"]    
+
+    Asub <- dat[,"A.C"]+dat[,"A.G"]+dat[,"A.T"]
     ALL <- logLikFunOneBaseFast(dat[,"A"],cbind(dat[,"A"]-Asub,dat[,"A.C"],dat[,"A.G"],dat[,"A.T"]),Theta,deltad,deltas,laVec,nuVec,m,1)
     if (deb){
         ALLSlow <- logLikFunOneBaseSlow(dat[,"A"],cbind(dat[,"A"]-Asub,dat[,"A.C"],dat[,"A.G"],dat[,"A.T"]),Theta,deltad,deltas,laVec,nuVec,m,1)
@@ -355,7 +355,7 @@ logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
         CLLSlow <- logLikFunOneBaseSlow(dat[,"C"],cbind(dat[,"C.A"],dat[,"C"]-Csub,dat[,"C.G"],dat[,"C.T"]),Theta,deltad,deltas,laVec,nuVec,m,2)
         stopifnot(all.equal(CLL,CLLSlow))
     }
-    
+
 
     Gsub <- dat[,"G.A"]+dat[,"G.C"]+dat[,"G.T"]
     GLL <- logLikFunOneBaseFast(dat[,"G"],cbind(dat[,"G.A"],dat[,"G.C"],dat[,"G"]-Gsub,dat[,"G.T"]),Theta,deltad,deltas,laVec,nuVec,m,3)
@@ -363,7 +363,7 @@ logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
         GLLSlow <- logLikFunOneBaseSlow(dat[,"G"],cbind(dat[,"G.A"],dat[,"G.C"],dat[,"G"]-Gsub,dat[,"G.T"]),Theta,deltad,deltas,laVec,nuVec,m,3)
         stopifnot(all.equal(CLL,CLLSlow))
     }
-    
+
     Tsub <- dat[,"T.A"]+dat[,"T.C"]+dat[,"T.G"]
     TLL <- logLikFunOneBaseFast(dat[,"T"],cbind(dat[,"T.A"],dat[,"T.C"],dat[,"T.G"],dat[,"T"]-Tsub),Theta,deltad,deltas,laVec,nuVec,m,4)
     if (deb){
@@ -375,7 +375,7 @@ logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
 
 
 getParams <- function(cp){
-    #Utility function nice to update the MCMC iterations matrix 
+    #Utility function nice to update the MCMC iterations matrix
     return(c(cp$Theta,cp$Rho,cp$DeltaD,cp$DeltaS,cp$Lambda,cp$LambdaRight,cp$LambdaDisp,cp$Nu))
 }
 
@@ -385,7 +385,7 @@ plotTrace<- function(dat,main,k=111){
 }
 
 plotEverything <- function(mcmcOut,hi=0,pl,thin=100){
-    #Plots the MCMC traceplot in the form of a running median and 
+    #Plots the MCMC traceplot in the form of a running median and
     #histogram of the MCMC iterations
     if (sum(c(cu_pa$same_overhangs==FALSE,
                     cu_pa$fix_disp==FALSE,
@@ -438,7 +438,7 @@ plotEverything <- function(mcmcOut,hi=0,pl,thin=100){
 }
 
 accRat <- function(da){
-    #A rough measure of the acceptance ratio 
+    #A rough measure of the acceptance ratio
     return(length(unique(da))/length(da))
 }
 
@@ -467,7 +467,7 @@ adjustPropVar <- function(mcmc,propVar){
 }
 
 runGibbs <- function(cu_pa,iter){
-    #Sampling over the conditional posterior distribution 
+    #Sampling over the conditional posterior distribution
     #for the parameters.
     esti <- matrix(nrow=iter,ncol=9)
     colnames(esti) <- c("Theta","Rho","DeltaD","DeltaS","Lambda","LambdaRight","LambdaDisp","Nu","LogLik")
@@ -492,7 +492,7 @@ runGibbs <- function(cu_pa,iter){
             #Update the nu parameter by via MC estimation
             cu_pa<-updateNu(cu_pa)
         }
-        esti[i,c(1:8)] <- getParams(cu_pa) 
+        esti[i,c(1:8)] <- getParams(cu_pa)
         esti[i,"LogLik"] <- logLikAll(cu_pa$dat,cu_pa$ThetaMat,cu_pa$DeltaD,cu_pa$DeltaS,cu_pa$laVec,cu_pa$nuVec,cu_pa$m)
         if (! (i %% 1000) && cu_pa$verbose){
             cat("MCMC-Iter\t",i,"\t",esti[i,"LogLik"],"\n")
@@ -504,7 +504,7 @@ runGibbs <- function(cu_pa,iter){
 
 simPredCheck <- function(da,output){
     #Simulates one draw from the posterior predictive distribution
-    #and the probability of a C>T substitution because of a cytosine 
+    #and the probability of a C>T substitution because of a cytosine
     #demnation.
     bases <- da[,c("A","C","G","T")]
     #Constructing the lambda vector
@@ -541,12 +541,12 @@ simPredCheck <- function(da,output){
                                          output$cu_pa$mLe,
                                          output$cu_pa$forward_only,
                                          output$cu_pa$nuSamples,
-                                         output$cu_pa$ds_protocol) 
+                                         output$cu_pa$ds_protocol)
         nuVec <- c(nuVec,rev(1-nuVec))
     }else {
         nuVec <- output$cu_pa$nuVec
     }
-    
+
     #Sample the other parameters
     des <- sample(output$out[,"DeltaS"],1)
     ded <- sample(output$out[,"DeltaD"],1)
@@ -562,10 +562,10 @@ simPredCheck <- function(da,output){
     subs <- matrix(NA,nrow=nrow(output$cu_pa$dat),ncol=4+length(coln))
     colnames(subs) <- c("A","C","G","T",coln)
     #
-    damProb <- rep(NA,nrow(output$cu_pa$dat)) 
-    damProbGA <- damProb 
+    damProb <- rep(NA,nrow(output$cu_pa$dat))
+    damProbGA <- damProb
     for (i in 1:nrow(output$cu_pa$dat)){
-        #Construct the site specific probabilities 
+        #Construct the site specific probabilities
         pct <- nuVec[i]*(laVec[i]*des+ded*(1-laVec[i]))
         pga <- (1-nuVec[i])*(laVec[i]*des+ded*(1-laVec[i]))
         pDamMat <- matrix(c(
@@ -574,11 +574,11 @@ simPredCheck <- function(da,output){
                          pga,0,1-pga,0,
                          0,0,0,1
                          ),nrow=4,byrow=TRUE)
-        ThetapDam <- pDamMat %*% pmat 
+        ThetapDam <- pDamMat %*% pmat
         #Calculate the probability C.T due to cytosine demanation
-        damProb[i] <- ptransCC*pct/(ptransCC*pct+ptransCT) 
-        #Do not forget the reverse complement 
-        damProbGA[i] <- ptransGG*pga/(ptransGG*pga+ptransGA) 
+        damProb[i] <- ptransCC*pct/(ptransCC*pct+ptransCT)
+        #Do not forget the reverse complement
+        damProbGA[i] <- ptransGG*pga/(ptransGG*pga+ptransGA)
         #Then draw from a multinomial distribution
         subs[i,c("A.C","A.G","A.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"A"],ThetapDam[1,]))[-1]/output$cu_pa$dat[i,"A"]
         subs[i,c("C.A","C.G","C.T")] <- t(rmultinom(1,output$cu_pa$dat[i,"C"],ThetapDam[2,]))[-2]/output$cu_pa$dat[i,"C"]
@@ -602,7 +602,7 @@ calcSampleStats <- function(da,X){
 
 postPredCheck <- function(da,output,samples=10000){
     #Plots the 95% posterior predictive intervals with the data as lines.
-    #Returns the site specific probability of a C>T or G>A substitution 
+    #Returns the site specific probability of a C>T or G>A substitution
     #because of a cytosine demnation.
     CTs <- matrix(NA,nrow=nrow(da),ncol=samples)
     GAs <- matrix(NA,nrow=nrow(da),ncol=samples)
@@ -635,28 +635,28 @@ postPredCheck <- function(da,output,samples=10000){
     }
     CTsStats <- calcSampleStats(da,CTs)
     GAsStats <- calcSampleStats(da,GAs)
-    REsStats <- calcSampleStats(da,REs) 
+    REsStats <- calcSampleStats(da,REs)
     #Plotting the posterior predictive intervals
     p <- ggplot()+
-         geom_point(aes(x,mea,colour="C->T",aes_string="subs"),data=CTsStats)+
+         geom_point(aes(x,mea,colour="C->T"),data=CTsStats)+
          geom_point(aes(x,mea,colour="G->A"),data=GAsStats)+
          geom_point(aes(x,mea,colour="Others"),data=REsStats)+
-         geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="C->T"),data=CTsStats)+
-         geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="G->A"),data=GAsStats)+
-         geom_errorbar(aes(x=x,y=med,ymin=loCI,ymax=hiCI,color="Others"),data=REsStats)+
+         geom_errorbar(aes(x=x,ymin=loCI,ymax=hiCI,color="C->T"),data=CTsStats)+
+         geom_errorbar(aes(x=x,ymin=loCI,ymax=hiCI,color="G->A"),data=GAsStats)+
+         geom_errorbar(aes(x=x,ymin=loCI,ymax=hiCI,color="Others"),data=REsStats)+
          geom_line(aes(oneBased,C.T/C),color="red",data=data.frame(da))+
          geom_line(aes(oneBased,G.A/G),color="green",data=data.frame(da))+
          geom_line(aes(oneBased,((A.C+A.G+A.T)/A+(C.A+C.G)/C+(G.C+G.T)/G+(T.A+T.C+T.G)/T)/10),color="blue",data=data.frame(da))+
-         ylab("Substitution rate")+
-         xlab("Relative position")+
-         scale_x_continuous(breaks=bres,labels=labs)+
-         labs(colour = "Subs. type")+
-         ggtitle("Posterior prediction intervals")
+         labs(y = "Substitution rate",
+              x = "Relative position",
+              colour = "Subs. type",
+              title = "Posterior prediction intervals")+
+         scale_x_continuous(breaks=bres,labels=labs)
     if (output$cu_pa$use_bw_theme){
         p <- p+theme_bw()
     }
     plot(p)
-    #The correcting probabilities 
+    #The correcting probabilities
     coProbs <- cbind(da[,"Pos"],apply(C2TProbs,1,mean),apply(G2AProbs,1,mean))
     colnames(coProbs) <- c("Position","C.T","G.A")
     return(coProbs)
@@ -686,9 +686,8 @@ writeMCMC <- function(out,filename){
     qua <- apply(out$out[,parameters],2,quantile,seq(from=0,to=1,by=.025))
     acc <- apply(out$out[,parameters],2,accRat)
     summStat <- rbind(mea,std,acc,qua)
-    rownames(summStat)[1] <- "Mean" 
-    rownames(summStat)[2] <- "Std." 
-    rownames(summStat)[3] <- "Acceptance ratio" 
+    rownames(summStat)[1] <- "Mean"
+    rownames(summStat)[2] <- "Std."
+    rownames(summStat)[3] <- "Acceptance ratio"
     write.csv(summStat,paste(filename,"_summ_stat.csv",sep=""))
 }
-

@@ -1,12 +1,12 @@
 #The main work flow of the package
 #Load the libraries
-suppressMessages(library(inline))  #Already checked the libraries 
-suppressMessages(library(ggplot2)) #thus ignoring any messages from them
-suppressMessages(library(Rcpp))
-suppressMessages(library(gam)) 
-suppressMessages(library(RcppGSL))
+suppressPackageStartupMessages(library(inline))  #Already checked the libraries
+suppressPackageStartupMessages(library(ggplot2)) #thus ignoring any messages from them
+suppressPackageStartupMessages(library(Rcpp))
+suppressPackageStartupMessages(library(gam))
+suppressPackageStartupMessages(library(RcppGSL))
 
-#Miscellaneous functions 
+#Miscellaneous functions
 source(paste(path_to_mapDamage_stats,"function.R",sep=""))
 
 #Prior and proposal distributions for the parameters
@@ -18,7 +18,7 @@ source(paste(path_to_mapDamage_stats,"postConditonal.R",sep=""))
 #functions for the grid search
 source(paste(path_to_mapDamage_stats,"start.R",sep=""))
 
-#functions for loading the data 
+#functions for loading the data
 source(paste(path_to_mapDamage_stats,"data.R",sep=""))
 
 
@@ -39,14 +39,14 @@ if (forward_only && reverse_only){
     stop()
 }
 
-fow_dat <-readMapDamData(path_to_dat) 
+fow_dat <-readMapDamData(path_to_dat)
 rev_dat <-readMapDamData(path_to_dat,forward=0)
 if (forward_only){
     #Taking only the forward part
-    dat <- fow_dat[1:sub_length,] 
+    dat <- fow_dat[1:sub_length,]
 }else if (reverse_only){
     #Taking only the reverse part
-    dat <- rev_dat[sub_length:1,] 
+    dat <- rev_dat[sub_length:1,]
 }else {
     #Using both ends
     dat <- joinFowAndRev(fow_dat,rev_dat,sub_length)
@@ -107,7 +107,7 @@ cu_pa$ThetaMat <- getPmat(cu_pa$Theta,cu_pa$Rho,cu_pa$acgt)
 
 #######################################################
 #
-#              Setting the lambda vector 
+#              Setting the lambda vector
 #
 #######################################################
 
@@ -127,17 +127,17 @@ if (!cu_pa$same_overhangs){
 
 #######################################################
 #
-#              Setting the nu vector 
+#              Setting the nu vector
 #
 #######################################################
 
 if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
-    #Using the single stranded protocol with nu samples which makes 
+    #Using the single stranded protocol with nu samples which makes
     #no sense
     write("Silly to use the MC estimation for nu_i if using the single stranded protocol", stderr())
     stop()
 }else if (cu_pa$nuSamples!=0 & cu_pa$fix_nu) {
-    #Using the fixed nu parameter with nu samples which makes no sense 
+    #Using the fixed nu parameter with nu samples which makes no sense
     write("Silly to use the MC estimation for nu_i and use fix_nu ", stderr())
     stop()
 }else if (cu_pa$nuSamples!=0){
@@ -164,7 +164,7 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
         cu_pa$nuVec <- c(rep(1,nrow(dat)/2),rep(0,nrow(dat)/2))
     }
 }else {
-    #This is for a non linear nick frequency, assumes the G>T and G>A are 
+    #This is for a non linear nick frequency, assumes the G>T and G>A are
     #mostly due to DNA damage patterns do not use for low damage datasets
     te<-(dat[,"C.T"]/dat[,"C"])/(dat[,"G.A"]/dat[,"G"]+dat[,"C.T"]/dat[,"C"])
     if (sum(is.na(te) )!=0 ){
@@ -177,7 +177,7 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
             cu_pa$nuVec <- c(rep(1,nrow(dat)/2),rep(0,nrow(dat)/2))
         }
     } else {
-        #The substitutes seem to be okay estimate the nick frequency using GAM 
+        #The substitutes seem to be okay estimate the nick frequency using GAM
         if (cu_pa$forward_only || cu_pa$reverse_only){
             if (cu_pa$use_raw_nick_freq){
                 #Use the frequency
@@ -202,14 +202,14 @@ if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
 }
 #######################################################
 #
-#          Finding an "optimal" starting place 
+#          Finding an "optimal" starting place
 #
 #######################################################
 
 if (grid_iter!=0){
     #Start at random places and optimize the likelihood function
-    cu_pa <- gridSearch(cu_pa,grid_iter) 
-} 
+    cu_pa <- gridSearch(cu_pa,grid_iter)
+}
 
 #Calculate the log likelihood in the beginning
 if (cu_pa$same_overhangs){
@@ -267,11 +267,11 @@ if (out_file_base!=""){
     pdf(paste(out_file_base,"_MCMC_hist.pdf",sep=""))
     plotEverything(mcmcOut,hi=1)
     dev.off()
-    #Posterior predictive plot 
+    #Posterior predictive plot
     pdf(paste(out_file_base,"_MCMC_post_pred.pdf",sep=""))
     siteProb <- postPredCheck(dat,mcmcOut)
     dev.off()
-    #Write correcting probabilities 
+    #Write correcting probabilities
     write.csv(siteProb,paste(out_file_base,"_MCMC_correct_prob.csv",sep=""))
 } else {
     cat("Plotting\n")

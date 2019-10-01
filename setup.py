@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from distutils.core import setup
@@ -31,7 +31,7 @@ def setup_version():
         with open(os.path.join("mapdamage", "_version.py"), "w") as handle:
             handle.write("#!/usr/bin/env python\n")
             handle.write("__version__ = %r\n" % (version.strip(),))
-    except (subprocess.CalledProcessError, OSError), error:
+    except (subprocess.CalledProcessError, OSError) as error:
         raise SystemExit("Could not determine mapDamage version: %s" % (error,))
 
 
@@ -46,7 +46,7 @@ class compileInstall(DistutilsInstall):
         files = self.get_outputs()
         for fi in files:
             if fi.endswith("seqtk/seqtk"):
-                os.chmod(fi,0755)
+                os.chmod(fi,0o755)
 
 
 
@@ -55,7 +55,7 @@ class compileInstall(DistutilsInstall):
 setup(
     cmdclass={'install': compileInstall},
     name='mapdamage',
-    version='2.0.8',
+    version='2.1.0',
     author='Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson',
     author_email='MSchubert@snm.ku.dk, jonsson.hakon@gmail.com',
     packages=['mapdamage'],

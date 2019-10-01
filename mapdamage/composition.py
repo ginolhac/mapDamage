@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import mapdamage
 import itertools
 import csv
@@ -10,8 +8,8 @@ def count_ref_comp(read, chrom, before, after, comp):
   """ record basae composition in external genomic regions """
   std = '-' if read.is_reverse else '+'
 
-  _update_table(comp[chrom]['5p'][std], before, xrange(-len(before), 0))
-  _update_table(comp[chrom]['3p'][std], after,  xrange(1, len(after) + 1))
+  _update_table(comp[chrom]['5p'][std], before, range(-len(before), 0))
+  _update_table(comp[chrom]['3p'][std], after,  range(1, len(after) + 1))
 
 
 def count_read_comp(read, chrom, length, comp):
@@ -20,12 +18,12 @@ def count_read_comp(read, chrom, length, comp):
   if read.is_reverse:
     std, seq = '-', mapdamage.seq.revcomp(seq)
 
-  _update_table(comp[chrom]['5p'][std], seq,           xrange(1, length + 1))
-  _update_table(comp[chrom]['3p'][std], reversed(seq), xrange(-1, - length - 1, -1))
+  _update_table(comp[chrom]['5p'][std], seq,           range(1, length + 1))
+  _update_table(comp[chrom]['3p'][std], reversed(seq), range(-1, - length - 1, -1))
 
 
 def _update_table(table, sequence, indices):
-  for (index, nt) in itertools.izip(indices, sequence):
+  for (index, nt) in zip(indices, sequence):
     if nt in table:
       table[nt][index] += 1
 
@@ -35,7 +33,7 @@ def get_base_comp(filename,destination=False):
     Gets the basecomposition of all the sequences in filename
     and returns the value to destination if given.
     """
-    path_to_seqtk = mapdamage.rscript.construct_path("seqtk",folder="seqtk") 
+    path_to_seqtk = mapdamage.rscript.construct_path("seqtk",folder="seqtk")
     bases = {"A":0,"C":0,"G":0,"T":0}
     alp = ["A","C","G","T"]
     try:
@@ -47,7 +45,7 @@ def get_base_comp(filename,destination=False):
             bases["C"] = bases["C"] + int(tabs[3])
             bases["G"] = bases["G"] + int(tabs[4])
             bases["T"] = bases["T"] + int(tabs[5])
-    except (OSError, ValueError), error:
+    except (OSError, ValueError) as error:
         sys.stderr.write("Error: Seqtk failed: %s\n" % (error,))
         sys.exit(1)
     # get the base frequencies
@@ -75,7 +73,7 @@ def read_base_comp(filename):
         lp = li.split()
         if first_line:
             header = lp
-            first_line = False 
+            first_line = False
         else:
             body = lp
     bases = {}
