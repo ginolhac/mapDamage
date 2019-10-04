@@ -595,8 +595,8 @@ calcSampleStats <- function(da,X){
                       pos=da[,"Pos"],
                       mea=apply(X,1,mean),
                       med=apply(X,1,median),
-                      loCI=apply(X,1,quantile,c(0.025)),
-                      hiCI=apply(X,1,quantile,c(0.975))
+                      loCI=apply(X,1,quantile,c(0.025), na.rm = TRUE),
+                      hiCI=apply(X,1,quantile,c(0.975), na.rm = TRUE)
                       ))
 }
 
