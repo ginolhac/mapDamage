@@ -4,7 +4,12 @@
 from distutils.core import setup
 from distutils.command.install import install as DistutilsInstall
 import os
+import sys
 import subprocess
+
+if sys.version_info < (3, 5):
+    print("At least Python 3.5 is required.\n", file=sys.stderr)
+    exit(1)
 
 def compile_seqtk():
     """Compiling the seqtk toolkit"""
@@ -55,11 +60,11 @@ class compileInstall(DistutilsInstall):
 setup(
     cmdclass={'install': compileInstall},
     name='mapdamage',
-    version='2.1.0',
+    version='2.1.1',
     author='Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson',
     author_email='MSchubert@snm.ku.dk, jonsson.hakon@gmail.com',
     packages=['mapdamage'],
-    package_data={'mapdamage': ['Rscripts/*.R','Rscripts/stats/*.R','seqtk/seqtk']},
+    package_data={'mapdamage': ['Rscripts/*.R','Rscripts/stats/*.R','tests/test.bam','tests/fake1.fasta','tests/dnacomp.txt','seqtk/seqtk']},
     scripts=['bin/mapDamage'],
     url='https://github.com/ginolhac/mapDamage',
     license='LICENSE.txt',

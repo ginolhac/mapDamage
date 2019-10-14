@@ -1,6 +1,19 @@
 ## mapDamage
 
-[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/mapdamage2/README.html) [![Conda](https://img.shields.io/conda/dn/bioconda/mapdamage2.svg)](https://anaconda.org/bioconda/mapdamage2/files)
+[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/mapdamage2/README.html) [![Conda](https://img.shields.io/conda/dn/bioconda/mapdamage2.svg)](https://anaconda.org/bioconda/mapdamage2/files) ![Conda](https://anaconda.org/bioconda/mapdamage2/badges/latest_release_date.svg) ![Conda](https://anaconda.org/bioconda/mapdamage2/badges/version.svg)
+
+
+#### `bioconda` installation
+
+- python3 version **2.1.1**
+```
+conda install -c bioconda mapdamage2=2.1.1
+```
+
+- python3 version **2.1.1** **with** R and 4 mandatory packages for the Bayesian inference:
+```
+conda install -c bioconda mapdamage2=2.1.1=pyr36_1
+```
 
 ---
 
@@ -29,13 +42,28 @@ Ginolhac A, Rasmussen M, Gilbert MT, Willerslev E, Orlando L.
 http://bioinformatics.oxfordjournals.org/content/27/15/2153](http://bioinformatics.oxfordjournals.org/content/27/15/2153)
 
 
-### Test
+### Test the no-stats part
 
-in the package, you can test `mapDamage` by running:
+you can test `mapDamage` by running:
 
 ```
 cd mapDamage/mapdamage/
 python3 mp_test.py
+```
+
+should return
+```
+Started with the command: /usr/local/bin/mapDamage -i tests/test.bam -r tests/fake1.fasta -d tests/results --no-stats
+	Reading from 'tests/test.bam'
+	Writing results to 'tests/results/'
+pdf tests/results/Fragmisincorporation_plot.pdf generated
+additional tests/results/Length_plot.pdf generated
+Successful run
+.
+----------------------------------------------------------------------
+Ran 1 test in 3.208s
+
+OK
 ```
 
 
