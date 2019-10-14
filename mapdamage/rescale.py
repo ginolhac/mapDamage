@@ -19,8 +19,8 @@ def phred_char_to_pval(ch):
 
 def get_corr_prob(folder, rescale_length_5p, rescale_length_3p):
     """
-    Reads the damage probability correction file, returns a 
-    dictionary with this structure 
+    Reads the damage probability correction file, returns a
+    dictionary with this structure
     position (one based)  -  CT  -  probability
                           -  GA  -  probability
     """
@@ -28,21 +28,21 @@ def get_corr_prob(folder, rescale_length_5p, rescale_length_3p):
     if not os.path.isfile(full_path):
         sys.exit("Missing file, the file \n\tStats_out_MCMC_correct_prob.csv\nshould be in the folder\n\t"+folder+"\nDid you run the MCMC estimates of the parameters?")
     try:
-        fi_handle = csv.DictReader(open(full_path))
-        corr_prob = {}
-        for line in fi_handle:
-            if (line["Position"] in corr_prob):
-                sys.exit('This file has multiple position definitions %s, line %d: %s' % \
-                    (folder, fi_handle.line_num, corr_prob[line["Position"]]))
-            else:
-                corr_prob[int(line["Position"])] = {'C.T':float(line["C.T"]), 'G.A':float(line["G.A"])}
+        with open(full_path) as fi:
+            fi_handle = csv.DictReader(fi)
+            corr_prob = {}
+            for line in fi_handle:
+                if (line["Position"] in corr_prob):
+                    sys.exit('This file has multiple position definitions %s, line %d: %s' % \
+                        (folder, fi_handle.line_num, corr_prob[line["Position"]]))
+                else:
+                    corr_prob[int(line["Position"])] = {'C.T':float(line["C.T"]), 'G.A':float(line["G.A"])}
 
-        # Exclude probabilities for positions outside of user-specified region
-        for key in list(corr_prob.keys()):
-            if key < -rescale_length_3p or key > rescale_length_5p:
-                corr_prob.pop(key)
-
-        return corr_prob
+            # Exclude probabilities for positions outside of user-specified region
+            for key in list(corr_prob.keys()):
+                if key < -rescale_length_3p or key > rescale_length_5p:
+                    corr_prob.pop(key)
+            return corr_prob
     except csv.Error as e:
         sys.exit('File %s, line %d: %s' % (os.path.join(folder,"Stats_out_MCMC_correct_prob.csv"), \
             fi_handle.line_num, e))
@@ -50,11 +50,11 @@ def get_corr_prob(folder, rescale_length_5p, rescale_length_3p):
 
 def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length,direction="both"):
     """
-    The position specific damaging correction, using the input 
-    corr_prob dictionary holding the damage correcting values 
-    nt_seq nucleotide in the sequence 
+    The position specific damaging correction, using the input
+    corr_prob dictionary holding the damage correcting values
+    nt_seq nucleotide in the sequence
     nt_ref nucleotide in the reference
-    pos relative position from the 5' end 
+    pos relative position from the 5' end
     length length of the sequence
     direction which end to consider the rescaling
     returns the correction probability for this particular set
@@ -71,8 +71,8 @@ def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length,direction="both"):
     else:
         # other transitions/transversions are not affected by damage
         return 0
-    
-    back_pos = pos-length-1 
+
+    back_pos = pos-length-1
     # position from 3' end
 
     if pos in corr_prob:
@@ -90,7 +90,7 @@ def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length,direction="both"):
     if direction == "forward":
         return p5_corr
     elif direction == "backward":
-        return p3_corr 
+        return p3_corr
     elif direction == "both":
         if pos < abs(back_pos) :
             # then we use the forward correction
@@ -151,7 +151,7 @@ def record_subs(subs,nt_seq,nt_ref,nt_qual,nt_newqual,prob_corr):
     else:
         sub_type = "NN"
     if (sub_type != "NN"):
-        # record only transitions 
+        # record only transitions
         subs[sub_type+"-before"][int(ord(nt_qual))-33] += 1
         subs[sub_type+"-after"][int(ord(nt_newqual))-33] += 1
     if (nt_ref in ["A","C","G","T"]):
@@ -175,7 +175,7 @@ def print_subs(subs):
     if subs["C"]!=0:
         # the special case of no substitutions
         print(("\tCT\t"+str(subs["CT-pvals_before"]/subs["C"])+"\t\t"+str(subs["CT-pvals"]/subs["C"])))
-    else: 
+    else:
         print("\tCT\tNA\t\tNA")
     if subs["T"]!=0:
         print(("\tTC\t"+str(subs["TC-pvals"]/subs["T"])+"\t\t"+str(subs["TC-pvals"]/subs["T"])))
@@ -200,19 +200,19 @@ def print_subs(subs):
     print(("\tGA-Q20 \t"+str(subs["GA-before-Q20"])+"\t\t"+str(subs["GA-after-Q20"])))
     print(("\tGA-Q30 \t"+str(subs["GA-before-Q30"])+"\t\t"+str(subs["GA-after-Q30"])))
     print(("\tGA-Q40 \t"+str(subs["GA-before-Q40"])+"\t\t"+str(subs["GA-after-Q40"])))
-    
+
 
 def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="both"):
     """
     bam              a pysam bam object
     read             a pysam read object
     ref              a pysam fasta ref file
-    reflengths       a dictionary holding the length of the references 
-    subs             a dictionary holding the corrected number of substition before and after scaling 
+    reflengths       a dictionary holding the length of the references
+    subs             a dictionary holding the corrected number of substition before and after scaling
     corr_prob dictionary from get_corr_prob
     returns a read with rescaled quality score
-    
-    Iterates through the read and reference, rescales the quality 
+
+    Iterates through the read and reference, rescales the quality
     according to corr_prob
     """
     if not debug:
@@ -238,7 +238,7 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
     pos_on_read = 0
     number_of_rescaled_bases = 0.0
     for (i, nt_seq, nt_ref, nt_qual) in zip(range(length_align), seq, refseq, qual):
-        # rescale the quality according to the triplet position, 
+        # rescale the quality according to the triplet position,
         # pair of the reference and the sequence
         if ((nt_seq == "T" and nt_ref =="C") or (nt_seq == "A" and nt_ref =="G")):
             # need to rescale this subs.
@@ -250,13 +250,13 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
         else:
             # don't rescale, other bases
             newp = 1 - phred_char_to_pval(nt_qual)
-            newq = nt_qual 
+            newq = nt_qual
         if pos_on_read < length_read:
-            new_qual[pos_on_read] = newq 
+            new_qual[pos_on_read] = newq
             record_subs(subs,nt_seq,nt_ref,nt_qual,new_qual[pos_on_read],newp)
             if nt_seq != "-":
                 pos_on_read += 1
-            # done with the aligned portion of the read 
+            # done with the aligned portion of the read
         else:
             if not debug:
                 logger.warning("Warning: The aligment of the read is longer than the actual read %s",(read.qname))
@@ -266,7 +266,7 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
     if read.is_reverse:
         new_qual = new_qual[::-1]
     if (read.cigar[0][0] == 4):
-        # check for soft clipping at forward end 
+        # check for soft clipping at forward end
         new_qual = read.qual[0:read.cigar[0][1]] + new_qual
     if (read.cigar[-1][0] == 4):
         # the same backwards
@@ -285,7 +285,7 @@ def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="b
 
 
 def rescale_qual(ref, options,debug=False):
-    """    
+    """
     ref                a pysam fasta ref file
     bam_filename       name of a BAM/SAM file to read
     fi                 file containing the csv with correction probabilities
@@ -319,20 +319,20 @@ def rescale_qual(ref, options,debug=False):
             pass
         elif not hit.qual and not debug:
             logger.warning("Cannot rescale base PHRED scores for read '%s'; no scores assigned." % hit.qname)
-        elif hit.is_paired : 
+        elif hit.is_paired :
             if first_pair and not debug:
-                # assuming the ends are non-overlapping 
+                # assuming the ends are non-overlapping
                 logger.warning("Warning! Assuming the pairs are non-overlapping, facing inwards and correctly paired.")
                 first_pair=False
             #5p --------------> 3p
             #3p <-------------- 5p
             # pair 1 (inwards)
-            #5p ----> 
+            #5p ---->
             #             <---- 5p
             #     A         B
-            # pair 2 (outwards), this happens if the reference is RC this is not supported 
+            # pair 2 (outwards), this happens if the reference is RC this is not supported
             #             ----> 3p
-            #3p <----         
+            #3p <----
             #     A         B
             # Correct outwards pairs from the 3p and inwards pairs with the 5p end
             if ((not hit.is_reverse) and hit.mate_is_reverse and (hit.pnext>hit.pos) and hit.tid==hit.mrnm):
