@@ -74,7 +74,7 @@
 
 	 <h2><a name="content">Contents</a></h2>
 
-	<li><a href="#a1">Introduction</a></li>
+  <li><a href="#a1">Introduction</a></li>
 
 	<li><a href="#a2">News in version 2.0</a></li>
 
@@ -180,10 +180,29 @@ and can be found at <a href="https://github.com/lh3/seqtk">here at github.</a></
 
 <p>mapDamage2 was successfully tested on GNU/Linux and MacOSX environments. For MacOSX, you can follow the <a href="mac_install.html">following guidelines</a> written by mapDamage users.</p>
 
+
+<h4>Using conda</h4>
+
 <p>A <a href="http://bioconda.github.io/recipes/mapdamage2/README.html">bioconda installation</a> is available, that allows to install both the python and R dependencies in one command.
 
 <code>conda install -c bioconda mapdamage2=2.1.1=pyr36_1</code>
 
+
+<h4>Using container</h4>
+
+A <a href="https://quay.io/repository/biocontainers/mapdamage2">container by quay.io</a> is available if you are using <a href="https://www.docker.com">docker</a>
+
+<p>Usage as below:</p>
+
+<p><code>
+docker pull quay.io/biocontainers/mapdamage2:2.1.1--pyr36_1</br>
+[...]</br>
+docker run -ti quay.io/biocontainers/mapdamage2:2.1.1--pyr36_1  /bin/bash</br>
+bash-4.2# mapDamage --check-R-packages</br>
+All R packages are present
+</code></p>
+
+<h4>Regular installation</h4>
 
 <ol>
 
@@ -220,11 +239,7 @@ then, <code>$HOME/.local/bin</code> must be in your PATH.</p>
 
 <li><u>Install pysam:</u><br>
 
-Download the tarball archive for <a href="http://code.google.com/p/pysam/downloads/list">pysam</a>.
-
-Untar the downloaded tar file and follow instructions in the pysam-XXX/INSTALL text file. <a href="http://www.cython.org">Cython</a> is necessary if pysam needs to be built.<br>It is recommend to check if the pysam installation seems okay before proceeding with the following command<br><code>python -c "import pysam"</code><br>
-
-If nothing appears, then proceed.</p></li>
+Visit the page <a href="https://pysam.readthedocs.io/en/latest/installation.html">install pysam</a></li>
 
 <li><u>Install R:</u><br>
 
