@@ -64,7 +64,7 @@
 
           <p>
 
-          Users with versions dating prior to June 12 2013 please update. 
+          Users with versions dating prior to June 12 2013 please update.
 
           A nasty bug that caused the statistical part of mapDamage to use
 
@@ -85,7 +85,7 @@
 	<li><a href="#a5">Examples and datasets</a></li>
 
 	<li><a href="#a6">Usage</a></li>
-	
+
         <li><a href="#a6.5">Web interface (insideDNA.me)</a></li>
 
 	<li><a href="#a7">Description of tables</a></li>
@@ -124,7 +124,7 @@
 
 <ul>
 
-<li>Python (version &gt;= 2.6)</li>
+<li>Python (version &gt;= 3.5)</li>
 
 <li>
 
@@ -132,11 +132,11 @@
 
 <li>
 
-<a>R</a> (version &gt;= 2.15.1) must be present in your $PATH. Otherwise, only tables will be produced.</li>
+<a>R</a> (version &gt;= 3.1) must be present in your $PATH.</li>
 
 <li>
 
-<a href="http://code.google.com/p/pysam/">pysam</a> (version &gt;= 0.6) python package, an interface for reading/writing SAM/BAM files</li>
+<a href="https://github.com/pysam-developers/pysam">pysam</a> (version &gt;= 0.6) python package, an interface for reading/writing SAM/BAM files</li>
 
 <li>
 
@@ -166,7 +166,7 @@
 
 </li>
 
-</ul><p>Of note, the R libraries and the GSL library are only required for the statistical estimation of DNA damage 
+</ul><p>Of note, the R libraries and the GSL library are only required for the statistical estimation of DNA damage
 
 parameters. A stripped-down version of <i>seqtk</i> is included in this package for fast computation of reference base composition, it is written by Heng Li
 
@@ -180,6 +180,9 @@ and can be found at <a href="https://github.com/lh3/seqtk">here at github.</a></
 
 <p>mapDamage2 was successfully tested on GNU/Linux and MacOSX environments. For MacOSX, you can follow the <a href="mac_install.html">following guidelines</a> written by mapDamage users.</p>
 
+<p>A <a href="http://bioconda.github.io/recipes/mapdamage2/README.html">bioconda installation</a> is available, that allows to install both the python and R dependencies in one command.
+
+<code>conda install -c bioconda mapdamage2=2.1.1=pyr36_1</code>
 
 
 <ol>
@@ -248,18 +251,18 @@ Another alternative for downloading this package is to use the <a href="http://d
 
 </ul>
 
-<p>Note that if steps 4-6 fail for some reason, then it is possible to utilize mapDamage without 
+<p>Note that if steps 4-6 fail for some reason, then it is possible to utilize mapDamage without
 
 the statistical function.</p>
-	  
+
 <li><u>Compilation of seqtk</u><br>
 
-This step requires both a C compiler and the zlib for reading compressed files.	On GNU/Linux, use 
+This step requires both a C compiler and the zlib for reading compressed files.	On GNU/Linux, use
 	<code>sudo apt-get install make gcc libz-dev</code> to install them prior to mapDamage installation.
 </ul>
-	  
-	  
-	  
+
+
+
 </ol>
 
 
@@ -310,7 +313,7 @@ otherwise install it locally<br><code>python setup.py install --user</code><br>
 
 	<a href="images/jumpfig.png"><img src="images/jumpfig_small.png"></a>
 
-	
+
 
 	</li><br>
 
@@ -334,7 +337,7 @@ otherwise install it locally<br><code>python setup.py install --user</code><br>
 
 	<li>The program was rewritten in python to make it simpler and the dependency on bedtools was replaced by the use of pysam. The memory footprint is now negligible and runtime reduced by <i>ca.</i> 25%.</li>
 
-	<li>It is now possible to filter out nucleotides with qualities inferior to a threshold defined by users, 
+	<li>It is now possible to filter out nucleotides with qualities inferior to a threshold defined by users,
 
 	allowing users to reduce the impact of sequencing errors when counting misincorporations.</li>
 
@@ -368,7 +371,7 @@ raise a warning but the program will proceed since all necessary references are 
 
 <p>As an alternative, one can run only the plotting, statistic estimations or rescaling
 
-on an already processed dataset. Use a combination of <code>-d</code> option followed by 
+on an already processed dataset. Use a combination of <code>-d</code> option followed by
 
 a valid folder and the <code>--plot-only</code>, <code>--stats-only</code> or  <code>--rescale-only</code> options.</p>
 
@@ -378,15 +381,15 @@ a valid folder and the <code>--plot-only</code>, <code>--stats-only</code> or  <
 
 <p>
 
-We assume the pairs are facing inwards when counting the position specific misincorporations and rescaling quality scores. 
+We assume the pairs are facing inwards when counting the position specific misincorporations and rescaling quality scores.
 
-An additional assumption in the rescaling process is the pairs are non-overlapping. 
+An additional assumption in the rescaling process is the pairs are non-overlapping.
 
 Make sure the pairing information in the BAM/SAM file is correct as we rely on the paired end information provided by the file.
 
-We advise not using non-overlapping paired ends coming from highly degraded samples (small template lengths) as they are 
+We advise not using non-overlapping paired ends coming from highly degraded samples (small template lengths) as they are
 
-likely contamination. 
+likely contamination.
 
 </p>
 
@@ -410,7 +413,7 @@ likely contamination.
 
 	<li><a href="images/E522_Fragmisincorporation_plot.png"><code>Fragmisincorporation_plot.pdf</code></a>, a pdf file that displays both fragmentation and misincorporation patterns.</li>
 
-	<li><a href="images/E522_Length_plot.png"><code>Length_plot.pdf</code></a>, a pdf file that displays length distribution of singleton reads per strand and cumulative 
+	<li><a href="images/E522_Length_plot.png"><code>Length_plot.pdf</code></a>, a pdf file that displays length distribution of singleton reads per strand and cumulative
 
 	frequencies of C-&gt;T at 5'-end and G-&gt;A at 3'-end are also displayed per strand. <br><b>Important remark</b>: paired-ended reads are not considered for this analysis since the plot displays the distribution of read lengths and not insert sizes of paired-ended reads. For this last purpose, one can use the dedicated Picard tool <a href="http://picard.sourceforge.net/command-line-overview.shtml#CollectInsertSizeMetrics">CollectInsertSizeMetrics</a>.</li>
 
@@ -488,7 +491,7 @@ likely contamination.
 
 </code></pre>
 
-<p>For further examples and usage introduction see the supplementary material chapter in the 
+<p>For further examples and usage introduction see the supplementary material chapter in the
 
 mapDamage2.0 manuscript.</p>
 
@@ -536,9 +539,9 @@ General options:
 
     -n DOWNSAMPLE, --downsample=DOWNSAMPLE
 
-                        Downsample to a randomly selected fraction of the reads (if 0 &lt; DOWNSAMPLE &lt; 1), 
+                        Downsample to a randomly selected fraction of the reads (if 0 &lt; DOWNSAMPLE &lt; 1),
 
-                        or a fixed number of randomly selected reads (if DOWNSAMPLE &gt;= 1). By default, 
+                        or a fixed number of randomly selected reads (if DOWNSAMPLE &gt;= 1). By default,
 
                         no downsampling is performed.
 
@@ -580,15 +583,15 @@ Options for graphics:
 
     -m READPLOT, --readplot=READPLOT
 
-                        read length, in nucleotides, considered for plotting nucleotide 
+                        read length, in nucleotides, considered for plotting nucleotide
 
                         misincorporations [25]
 
     -b REFPLOT, --refplot=REFPLOT
 
-                        the number of reference nucleotides to consider for ploting base 
+                        the number of reference nucleotides to consider for ploting base
 
-                        composition in the region located upstream and downstream of 
+                        composition in the region located upstream and downstream of
 
                         every read [10]
 
@@ -618,7 +621,7 @@ Options for the statistical estimation:
 
     --diff-hangs        The overhangs are different for 5' and 3'  [False]
 
-    --fix-nicks=FIX_NICKS 
+    --fix-nicks=FIX_NICKS
 
                         Fix the nick frequency vector nu else estimate it with GAM [False]
 
@@ -647,7 +650,7 @@ Options for the statistical estimation:
 
 <h2><a name="a6.5"> Web interface</a></h2>
 Anna Kostikova from <a href="https://insidedna.me">insideDNA</a> implemented a web interface for mapDamage.</br>
-Users can adjust the cloud ressources in terms of RAM/CPU to perform their analysis. 
+Users can adjust the cloud ressources in terms of RAM/CPU to perform their analysis.
 She wrote a <a href = "https://insidedna.me/tutorials/view/Analysis-ancient-DNA-samples-using-mapDamage">tutorial</a> explaining how to use this
 <a href="https://insidedna.me/app#/tools/100648/">web interface (sign up required).</a>
 
@@ -685,9 +688,9 @@ NC_012920.1 3p  +   4   514 483 221 400 1618    30  11  3   4   0   1   1   0   
 
 <p>The first lines that start by a hash contain information about the options used while processing the data.
 
-Then, the table contains occurrences of the 12 mutation type + 4 deletions + 4 insertions + 
+Then, the table contains occurrences of the 12 mutation type + 4 deletions + 4 insertions +
 
-soft-clipping for each combination of reference (<code>Chr</code> column),  strand (<code>Std</code> column) ,  end (<code>End</code> column) and  position (<code>Pos</code> column). 
+soft-clipping for each combination of reference (<code>Chr</code> column),  strand (<code>Std</code> column) ,  end (<code>End</code> column) and  position (<code>Pos</code> column).
 
 In Z-&gt;X, Z comes from the reference, X is the nucleotide from reads. The columns A, C, G and T are the respective reference base count
 
@@ -711,7 +714,7 @@ position as follows</p>
 
 
 
-<p>The <a href="#Fragmisincorporation_plot">Fragmisincorporation</a> plot sums up misincorporations  for all references and strand orientations, finally 
+<p>The <a href="#Fragmisincorporation_plot">Fragmisincorporation</a> plot sums up misincorporations  for all references and strand orientations, finally
 
 displays the frequencies per sequencing position.  </p>
 
@@ -729,9 +732,9 @@ displays the frequencies per sequencing position.  </p>
 
 
 
-<p>Soft-clipped bases are bases located at read extremities that are NOT aligned to the reference. 
+<p>Soft-clipped bases are bases located at read extremities that are NOT aligned to the reference.
 
-Those bases are not taken into account and alignments are computed on aligned bases. 
+Those bases are not taken into account and alignments are computed on aligned bases.
 
 However, the soft-clipped bases are recorded and displayed as an orange line as a diagnostic for users.
 
@@ -777,15 +780,15 @@ NC_012920.1 3p  +   -64 223 185 102 288 798
 
 <p>The first lines that start by a hash contain information about the options used while processing the data.
 
-Then, the table contains occurrences for each nucleotides, per reference (<code>Chr</code> column), 
+Then, the table contains occurrences for each nucleotides, per reference (<code>Chr</code> column),
 
 per strand (<code>Std</code> column) , per end (<code>End</code> column) and per position (<code>Pos</code> column).</p>
 
 
 
-<p>At a given position, base composition is recorded either for the reference or for reads depending 
+<p>At a given position, base composition is recorded either for the reference or for reads depending
 
-on the position and direction. The following table details which sequences and coordinates are 
+on the position and direction. The following table details which sequences and coordinates are
 
 used by default:</p>
 
@@ -833,9 +836,9 @@ used by default:</p>
 
 
 
-<p>This table contains the MCMC output of the five model parameters (depending on options) and log likelihood. The mean, standard deviation and quantiles per 2.5% interval 
+<p>This table contains the MCMC output of the five model parameters (depending on options) and log likelihood. The mean, standard deviation and quantiles per 2.5% interval
 
-of the MCMC posterior simulations are reported. The 
+of the MCMC posterior simulations are reported. The
 
 acceptance ratio (ratio of acceptances in the MCMC iterations) for each model parameter is calculated and depicted in the file and should be around 0.2. The companion file <code>Stats_out_MCMC_iter.csv</code> contains all the values obtained for each MCMC iteration and is available in graphical format as a <a href="#Stats_out_MCMC_hist.png">histogram</a> or a <a href="#Stats_out_MCMC_trace.png">traceplot</a>.
 
@@ -1000,7 +1003,7 @@ mapDamage2.0: fast approximate Bayesian estimates of ancient DNA damage paramete
 
 Ginolhac A, Rasmussen M, Gilbert MT, Willerslev E, Orlando L.
 
-mapDamage: testing for damage patterns in ancient DNA sequences. 
+mapDamage: testing for damage patterns in ancient DNA sequences.
 
 <a href="http://bioinformatics.oxfordjournals.org/content/27/15/2153"><em>Bioinformatics</em> 2011 <b>27</b> (15):2153-2155</a></p>
 
@@ -1032,9 +1035,9 @@ from victims of the Black Death. <i>Proc Natl Acad Sci USA</i>. 2011 108:E746-52
 
 <p>Q: Why do I do not get the Lengh_plot.pdf file? (or only a blank page)</p><br>
 
-<p>A: This is likely you are using paired-end reads. The length distribution is performed only for single-end reads using their lengths. 
+<p>A: This is likely you are using paired-end reads. The length distribution is performed only for single-end reads using their lengths.
 
-In theory, paired-end reads could also be used but we think this does not represent the real insert size and could be misleading. 
+In theory, paired-end reads could also be used but we think this does not represent the real insert size and could be misleading.
 
 Best results are obtained by using merged paired-end reads (mapped as single-end), so when the full inserts are sequenced.</p>
 
@@ -1046,11 +1049,11 @@ Best results are obtained by using merged paired-end reads (mapped as single-end
 
 <p>A: Use the following commands</p>
 
-<p><code>git clone --recursive https://github.com/ginolhac/mapDamage.git</code><br>
+<p><code>git clone https://github.com/ginolhac/mapDamage.git</code><br>
 
 
 
-<p>Q: Where is the original version of mapDamage?</p>
+<p>Q: Where is the first version of mapDamage?</p>
 
 
 
@@ -1096,7 +1099,7 @@ ginolhac at gmail.com, MSchubert at snm.ku.dk or jonsson.hakon at gmail.com.</p>
 
 
 
-  
+
 
   </body>
 
