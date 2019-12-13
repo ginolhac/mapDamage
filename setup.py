@@ -60,8 +60,8 @@ class compileInstall(DistutilsInstall):
 setup(
     cmdclass={'install': compileInstall},
     name='mapdamage',
-    version='2.1.1',
-    author='Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson',
+    version='2.2.0',
+    author='AurÃ©lien Ginolhac, Mikkel Schubert, Ãkon JÃ³nsson',
     author_email='MSchubert@snm.ku.dk, jonsson.hakon@gmail.com',
     packages=['mapdamage'],
     package_data={'mapdamage': ['Rscripts/*.R','Rscripts/stats/*.R','tests/*','seqtk/seqtk']},
