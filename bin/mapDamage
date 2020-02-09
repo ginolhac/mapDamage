@@ -139,20 +139,6 @@ def _check_mm_option():
             raise SystemExit("The --mapdamage-modules path (path=%s) must contain the mapdamage module" % path_to_mm)
     return path_to_mm
 
-def is_paired(alignfile):
-    """
-    check if an alignment file contains paired end data by
-    looking at the first 100 reads
-    """
-
-    n = 0
-    for read in alignfile:
-        if read.is_paired:
-            return True
-        n += 1
-        if n == 100:
-            return False
-
 
 def main():
     start_time = time.time()
@@ -241,14 +227,6 @@ def main():
     else:
         in_bam = pysam.Samfile(options.filename)
 
-    # exit SAM/BAM is paired (look at top 100 reads)
-    if is_paired(in_bam):
-        logger.error("alignment file must be single-ended")
-        sys.stderr.write("alignment file must be single-ended\n")
-        sys.exit(1)
-    # reset SAM/BAM to the begining
-    in_bam = pysam.Samfile(options.filename)
-
     reflengths = dict(list(zip(in_bam.references, in_bam.lengths)))
     # check if references in SAM/BAM are the same in the fasta reference file
     fai_lengths = mapdamage.seq.read_fasta_index(options.ref + ".fai")
@@ -293,8 +271,13 @@ def main():
     counter = 0
 
     # main loop
+    warned_about_pe = False
     for read in _read_bamfile(in_bam, options):
         counter += 1
+        if not warned_about_pe and read.is_paired:
+            logger.warning("paired-end alignment found; only single-ended alignments are used")
+            warned_about_pe = True
+            continue
 
         # external coordinates 5' and 3' , 3' is 1-based offset
         coordinate = mapdamage.align.get_coordinates(read)
