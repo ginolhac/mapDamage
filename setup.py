@@ -35,7 +35,7 @@ def setup_version():
         version = subprocess.check_output(("git", "describe", "--always", "--tags", "--dirty"))
         with open(os.path.join("mapdamage", "_version.py"), "w") as handle:
             handle.write("#!/usr/bin/env python\n")
-            handle.write("__version__ = %r\n" % (version.strip(),))
+            handle.write("__version__ = %r\n" % (version.decode("utf-8").strip(),))
     except (subprocess.CalledProcessError, OSError) as error:
         raise SystemExit("Could not determine mapDamage version: %s" % (error,))
 
