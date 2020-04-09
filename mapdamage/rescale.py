@@ -171,35 +171,38 @@ def qual_summary_subs(subs):
 
 def print_subs(subs):
     """Print the substition table"""
-    print("\tThe expected substition frequencies before and after scaling using the scaled qualities as probalities:")
+    logger = logging.getLogger(__name__)
+    log = logger.info
+
+    log("\tThe expected substition frequencies before and after scaling using the scaled qualities as probalities:")
     if subs["C"]!=0:
         # the special case of no substitutions
-        print(("\tCT\t"+str(subs["CT-pvals_before"]/subs["C"])+"\t\t"+str(subs["CT-pvals"]/subs["C"])))
+        log("\tCT\t"+str(subs["CT-pvals_before"]/subs["C"])+"\t\t"+str(subs["CT-pvals"]/subs["C"]))
     else:
-        print("\tCT\tNA\t\tNA")
+        log("\tCT\tNA\t\tNA")
     if subs["T"]!=0:
-        print(("\tTC\t"+str(subs["TC-pvals"]/subs["T"])+"\t\t"+str(subs["TC-pvals"]/subs["T"])))
+        log("\tTC\t"+str(subs["TC-pvals"]/subs["T"])+"\t\t"+str(subs["TC-pvals"]/subs["T"]))
     else:
-        print("\tTC\tNA\t\tNA")
+        log("\tTC\tNA\t\tNA")
     if subs["G"]!=0:
-        print(("\tGA\t"+str(subs["GA-pvals_before"]/subs["G"])+"\t\t"+str(subs["GA-pvals"]/subs["G"])))
+        log("\tGA\t"+str(subs["GA-pvals_before"]/subs["G"])+"\t\t"+str(subs["GA-pvals"]/subs["G"]))
     else:
-        print("\tGA\tNA\t\tNA")
+        log("\tGA\tNA\t\tNA")
     if subs["A"]!=0:
-        print(("\tAG\t"+str(subs["AG-pvals"]/subs["A"])+"\t\t"+str(subs["AG-pvals"]/subs["A"])))
+        log("\tAG\t"+str(subs["AG-pvals"]/subs["A"])+"\t\t"+str(subs["AG-pvals"]/subs["A"]))
     else:
-        print("\tAG\tNA\t\tNA")
-    print("\tQuality metrics before and after scaling")
-    print(("\tCT-Q0 \t"+str(subs["CT-before-Q0"])+"\t\t"+str(subs["CT-after-Q0"])))
-    print(("\tCT-Q10 \t"+str(subs["CT-before-Q10"])+"\t\t"+str(subs["CT-after-Q10"])))
-    print(("\tCT-Q20 \t"+str(subs["CT-before-Q20"])+"\t\t"+str(subs["CT-after-Q20"])))
-    print(("\tCT-Q30 \t"+str(subs["CT-before-Q30"])+"\t\t"+str(subs["CT-after-Q30"])))
-    print(("\tCT-Q40 \t"+str(subs["CT-before-Q40"])+"\t\t"+str(subs["CT-after-Q40"])))
-    print(("\tGA-Q0 \t"+str(subs["GA-before-Q0"])+"\t\t"+str(subs["GA-after-Q0"])))
-    print(("\tGA-Q10 \t"+str(subs["GA-before-Q10"])+"\t\t"+str(subs["GA-after-Q10"])))
-    print(("\tGA-Q20 \t"+str(subs["GA-before-Q20"])+"\t\t"+str(subs["GA-after-Q20"])))
-    print(("\tGA-Q30 \t"+str(subs["GA-before-Q30"])+"\t\t"+str(subs["GA-after-Q30"])))
-    print(("\tGA-Q40 \t"+str(subs["GA-before-Q40"])+"\t\t"+str(subs["GA-after-Q40"])))
+        log("\tAG\tNA\t\tNA")
+    log("\tQuality metrics before and after scaling")
+    log("\tCT-Q0 \t"+str(subs["CT-before-Q0"])+"\t\t"+str(subs["CT-after-Q0"]))
+    log("\tCT-Q10 \t"+str(subs["CT-before-Q10"])+"\t\t"+str(subs["CT-after-Q10"]))
+    log("\tCT-Q20 \t"+str(subs["CT-before-Q20"])+"\t\t"+str(subs["CT-after-Q20"]))
+    log("\tCT-Q30 \t"+str(subs["CT-before-Q30"])+"\t\t"+str(subs["CT-after-Q30"]))
+    log("\tCT-Q40 \t"+str(subs["CT-before-Q40"])+"\t\t"+str(subs["CT-after-Q40"]))
+    log("\tGA-Q0 \t"+str(subs["GA-before-Q0"])+"\t\t"+str(subs["GA-after-Q0"]))
+    log("\tGA-Q10 \t"+str(subs["GA-before-Q10"])+"\t\t"+str(subs["GA-after-Q10"]))
+    log("\tGA-Q20 \t"+str(subs["GA-before-Q20"])+"\t\t"+str(subs["GA-after-Q20"]))
+    log("\tGA-Q30 \t"+str(subs["GA-before-Q30"])+"\t\t"+str(subs["GA-after-Q30"]))
+    log("\tGA-Q40 \t"+str(subs["GA-before-Q40"])+"\t\t"+str(subs["GA-after-Q40"]))
 
 
 def rescale_qual_read(bam, read, ref, corr_prob,subs, debug = False,direction="both"):
@@ -355,7 +358,5 @@ def rescale_qual(ref, options,debug=False):
     qual_summary_subs(subs)
     bam.close()
     bam_out.close()
-    if not options.quiet:
-        print_subs(subs)
-    if not debug:
-        logger.debug("Rescaling completed in %f seconds" % (time.time() - start_time,))
+    print_subs(subs)
+    logger.debug("Rescaling completed in %f seconds" % (time.time() - start_time,))

@@ -15,11 +15,10 @@ def mock_options(filename,rescale_out,folder):
     return optparse.Values({
         "filename":filename,
         "rescale_out":rescale_out,
-        "verbose":True,
+        "log_level": "DEBUG",
         "folder":folder,
         "rescale_length_5p":12, # default values as in --seq-length
         "rescale_length_3p":12, # default values as in --seq-length
-        "quiet":True
         })
 
 

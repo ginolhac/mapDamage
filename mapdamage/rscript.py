@@ -35,12 +35,12 @@ def plot(opt):
       opt.ymax, opt.folder, opt.title, __version__]
   code = subprocess.call(list(map(str, call)))
 
+  logger = logging.getLogger(__name__)
   if code == 0:
-    if not opt.quiet:
-      print(("pdf %s generated" % title))
+    logger.info("pdf %s generated", title)
     return 0
   else:
-    print("Error: plotting with R failed")
+    logger.error("plotting with R failed")
     return 1
 
 
@@ -55,12 +55,13 @@ def opt_plots(opt):
 
   script = construct_path("lengths.R")
   call = ["Rscript", script, flength, output, fmut, opt.length, \
-      opt.title, __version__, bool_to_int(opt.quiet)]
+      opt.title, __version__, int(args.log_level not in ("DEBUG", "INFO"))]
   code = subprocess.call(list(map(str, call)))
   if code == 0:
     return 0
   else:
-    print("Error: plotting with R failed")
+    logger = logging.getLogger(__name__)
+    logger.error("plotting with R failed")
     return 1
 
 
@@ -85,14 +86,16 @@ def check_R_lib():
         if check_R_one_lib(lib):
             #found a missing library
             missing_lib.append(lib)
+
+    logger = logging.getLogger(__name__)
     if len(missing_lib) > 1:
         # Grammar Nazi has arrived
         last_ele = missing_lib.pop()
-        print(("Missing the following R libraries '" + "', '".join(missing_lib) \
-            + "' and '" + last_ele + "'"))
+        logger.error("Missing the following R libraries '" + "', '".join(missing_lib) \
+            + "' and '" + last_ele + "'")
         return 1
     elif len(missing_lib) == 1:
-        print(("Missing the following R library "+missing_lib[0]))
+        logger.error("Missing the following R library %s", missing_lib[0])
         return 1
     else :
         # No missing libraries
@@ -121,8 +124,8 @@ def run_stats(opt):
          opt.folder+"/",                         \
          construct_path("stats/"),             \
          opt.folder+"/Stats_out",                \
-         int(opt.verbose),                       \
-         int(opt.quiet),                         \
+         1 if opt.log_level == "DEBUG" else 0,   \
+         1 if opt.log_level not in ("DEBUG", "INFO") else 0, \
          int(opt.jukes_cantor),                       \
          opt.folder+"/acgt_ratio.csv",            \
          int(opt.use_raw_nick_freq),                   \
@@ -132,7 +135,7 @@ def run_stats(opt):
 
     logger = logging.getLogger(__name__)
     logger.info("Performing Bayesian estimates")
-    logger.debug("Call: %s" % (" ".join(arg),))
+    logger.debug("Call: %s", " ".join(arg))
     start_time = time.time()
 
     try:
@@ -141,7 +144,7 @@ def run_stats(opt):
         logger.error("The Bayesian statistics program failed to finish")
         raise e
 
-    logger.debug("Bayesian estimates completed in %f seconds" % (time.time() - start_time,))
+    logger.debug("Bayesian estimates completed in %f seconds", time.time() - start_time)
     return 0
 
 

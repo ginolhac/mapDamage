@@ -36,6 +36,7 @@ import time
 import sys
 import os
 
+import coloredlogs
 import pysam
 
 import mapdamage
@@ -60,8 +61,8 @@ def _filter_reads(bamfile):
 
 
 def _downsample_to_fraction(bamfile, options):
-    if options.verbose:
-        print("\tDownsampling %.2f fraction of the original file" % options.downsample)
+    log = logging.getLogger(__name__)
+    log.debug("Downsampling %.2f fraction of the original file", options.downsample)
     assert options.downsample > 0, "Downsample fraction must be positive, not %s" % options.downsample
 
     rand = random.Random(options.downsample_seed)
@@ -71,8 +72,8 @@ def _downsample_to_fraction(bamfile, options):
 
 
 def _downsample_to_fixed_number(bamfile, options):
-    if options.verbose:
-        print("\tDownsampling %d random reads from the original file" % options.downsample)
+    log = logging.getLogger(__name__)
+    log.debug("Downsampling %d random reads from the original file", options.downsample)
 
     # use reservoir sampling
     downsample_to = int(options.downsample)
@@ -104,19 +105,18 @@ def _read_bamfile(bamfile, options):
 def main(argv):
     start_time = time.time()
 
+    coloredlogs.install(fmt="%(asctime)s %(name)s %(levelname)s %(message)s")
+    logger = logging.getLogger(__name__)
+
     options = mapdamage.parseoptions.options(argv)
-    if options == None:
-        sys.stderr.write("Option parsing failed, terminating the program\n")
+    if options is None:
+        logging.error("Option parsing failed, terminating the program")
         return 1
 
-    logging.basicConfig(filename = os.path.join(options.folder, "Runtime_log.txt"),
-                        format   = '%(asctime)s\t%(levelname)s\t%(name)s: %(message)s',
-                        level    = logging.DEBUG)
-    handler = logging.StreamHandler()
+    handler = logging.FileHandler(os.path.join(options.folder, "Runtime_log.txt"))
     handler.setLevel(logging.INFO)
     logging.getLogger().addHandler(handler)
 
-    logger = logging.getLogger("main")
     logger.info("Started with the command: " + " ".join(sys.argv))
 
     # plot using R if results folder already done
@@ -158,8 +158,7 @@ def main(argv):
 
     # rescale the qualities
     if options.rescale_only:
-        if not options.quiet:
-            print("Starting rescaling...")
+        logger.info("Starting rescaling...")
         mapdamage.rescale.rescale_qual(ref, options)
         return 0
 
@@ -169,7 +168,7 @@ def main(argv):
         # disabling rescaling if reading from standard input since we need
         # to read it twice
         if options.rescale:
-            print("Warning, reading from standard input, rescaling is disabled")
+            logger.info("Warning, reading from standard input, rescaling is disabled")
             options.rescale = False
     else:
         in_bam = pysam.Samfile(options.filename)
@@ -182,10 +181,9 @@ def main(argv):
     elif not mapdamage.seq.compare_sequence_dicts(fai_lengths, reflengths):
         return 1
     elif (len(reflengths) >= 1000) and not options.merge_reference_sequences:
-        print("WARNING: Alignment contains a large number of reference sequences (%i)!" % len(reflengths))
-        print("  This may lead to excessive memory/disk usage.")
-        print("  Consider using --merge-reference-sequences")
-        print()
+        logger.warning("Alignment contains a large number of reference sequences (%i)!", len(reflengths))
+        logger.warning("This may lead to excessive memory/disk usage.")
+        logger.warning("Consider using --merge-reference-sequences")
 
     refnames = in_bam.references
     if options.merge_reference_sequences:
@@ -198,21 +196,17 @@ def main(argv):
     # for length distributions
     lgdistrib =  mapdamage.tables.initialize_lg()
 
-    if not options.quiet:
-        print("\tReading from '%s'" % options.filename)
-        if  options.minqual != 0:
-            print("\tFiltering out bases with a Phred score < %d" % options.minqual)
-        if options.verbose:
-            print("\t%d references are assumed in SAM/BAM file, for a total of %d nucleotides" % (len(reflengths), sum(reflengths.values())))
-        print("\tWriting results to '%s/'" % options.folder)
-
+    logger.info("Reading from '%s'", options.filename)
+    if options.minqual != 0:
+        logger.info("Filtering out bases with a Phred score < %d", options.minqual)
+    logger.debug("%d references are assumed in SAM/BAM file, for a total of %d nucleotides", len(reflengths), sum(reflengths.values()))
+    logger.info("Writing results to '%s/'", options.folder)
 
     # open file handler to write alignments in fasta format
     if options.fasta:
         # use name of the SAM/BAM filename without extension
         ffasta = os.path.splitext(os.path.basename(options.filename))[0]+'.fasta'
-        if not options.quiet:
-            print("\tWriting alignments in '%s'" % ffasta)
+        logger.info("Writing alignments in '%s'" % ffasta)
         fhfasta = open(options.folder+"/"+ffasta,"w")
 
     counter = 0
@@ -275,13 +269,11 @@ def main(argv):
         if options.fasta:
             mapdamage.seq.write_fasta(read, chrom, seq, refseq, min(coordinate), max(coordinate), before, after, fhfasta)
 
-        if options.verbose:
-            if counter % 50000 == 0:
-                print("\t%10d filtered alignments processed" % (counter,))
+        if counter % 50000 == 0:
+            logger.debug("%10d filtered alignments processed", counter)
 
-    if options.verbose:
-        print("\tDone. %d filtered alignments processed" % (counter,))
-    logger.debug("BAM read in %f seconds" % (time.time() - start_time,))
+    logger.debug("Done. %d filtered alignments processed", counter)
+    logger.debug("BAM read in %f seconds", time.time() - start_time)
 
     # close file handlers
     in_bam.close()

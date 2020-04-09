@@ -1,4 +1,5 @@
 import os
+import logging
 import shutil
 import sys
 
@@ -7,17 +8,17 @@ from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
 from mapdamage.version import __version__
 from mapdamage.rscript import check_R_lib
 
+
 def file_exist(filename):
     if os.path.exists(filename) and not os.path.isdir(filename):
         return True
     elif filename == "-":
         return True
     else:
-        sys.stderr.write("Error: '%s' is not a valid file\n" % (filename))
         return None
 
 
-def options(argv):
+def _parse_args(argv):
     parser = OptionParser("%prog [options] -i BAMfile -r reference.fasta\n\nUse option -h or --help for help", version=__version__, \
             epilog="report bugs to aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com")
 
@@ -50,10 +51,8 @@ def options(argv):
           default=False,action="store_true")
     group.add_option("--plot-only", dest="plot_only", help="Run only plotting from a valid result folder", \
           default=False,action="store_true")
-    group.add_option("-q", "--quiet", dest="quiet", help="Disable any output to stdout", \
-          default=False,action="store_true")
-    group.add_option("-v", "--verbose", dest="verbose", help="Display progression information during parsing", \
-          default=False,action="store_true")
+    group.add_option("--log-level", help="Logging verbosity level; one of DEBUG, INFO, WARNING, and ERROR [%default]", 
+        choices=("DEBUG", "INFO", "WARNING", "ERROR"), default="INFO")
     group.add_option("--no-plot", dest="no_r", help=SUPPRESS_HELP, default=False, action="store_true")
     parser.add_option_group(group)
 
@@ -122,24 +121,27 @@ def options(argv):
                       help="How many bases to rescale at the 5' termini; defaults to --seq-length.", type=int, action="store")
     parser.add_option_group(group4)
 
+    return parser.parse_args(argv)
 
-    #Parse the arguments
-    (options, args) = parser.parse_args(argv)
+
+def options(argv):
+    (options, args) = _parse_args(argv)
+    logger = logging.getLogger(__name__)
 
     # check if the Rscript executable is present on the system
     if not shutil.which('Rscript'):
-        print("Warning, Rscript is not in your PATH, plotting is disabled")
+        logger.warning("Rscript is not in your PATH, plotting is disabled")
         options.no_r = True
 
     # if the user wants to check the R packages then do that before the option parsing
     if options.check_R_packages:
         if options.no_r:
-            print("Cannot check for R packages without Rscript.")
+            logger.error("Cannot check for R packages without Rscript")
             sys.exit(1)
         elif check_R_lib():
             sys.exit(1)
         else:
-            print("All R packages are present")
+            logger.info("All R packages are present")
             sys.exit(0)
 
     # check general arguments
@@ -149,6 +151,7 @@ def options(argv):
         parser.error('Reference file not given (-r)')
     if not options.plot_only and not options.stats_only:
         if not file_exist(options.filename) or not file_exist(options.ref):
+            logger.error("%r is not a valid file", filename)
             return None
     if options.downsample is not None:
         if options.downsample <= 0:
@@ -166,9 +169,6 @@ def options(argv):
         parser.error('Input bam not provided, required with --rescale-only')
     if options.rescale_only and not options.ref:
         parser.error('Reference not provided, required with --rescale-only')
-
-    if options.verbose and options.quiet:
-        parser.error('Cannot use verbose and quiet option at the same time')
 
     # check options
     if options.length < 0:
@@ -215,15 +215,15 @@ def options(argv):
         options.rescale_out = os.path.join(options.folder, with_ext)
 
     if os.path.isdir(options.folder):
-        if not options.quiet and not options.plot_only:
-            print(("Warning, %s already exists" % options.folder))
+        if not options.plot_only:
+            logger.warning("Folder %r already exists; content may be overwritten", options.folder)
         if options.plot_only:
             if not file_exist(options.folder+"/dnacomp.txt") or not file_exist(options.folder+"/misincorporation.txt"):
                 parser.error('folder %s is not a valid result folder' % options.folder)
     else:
         os.makedirs(options.folder, mode = 0o750)
         if options.plot_only or options.stats_only or options.rescale_only:
-            sys.stderr.write("Error, %s does not exist while plot/stats/rescale only was used\n" % options.folder)
+            logger.error("Folder %s does not exist while plot/stats/rescale only was used\n" % options.folder)
             return None
 
     if options.rescale_length_3p is None:
@@ -244,7 +244,7 @@ def options(argv):
 
     if options.no_r or check_R_lib():
         # check for R libraries
-        print("The Bayesian estimation has been disabled\n")
+        logger.warning("The Bayesian estimation has been disabled")
         options.no_stats = True
         if options.stats_only:
             sys.exit("Cannot use --stats-only with missing R libraries")
@@ -252,6 +252,5 @@ def options(argv):
             sys.exit("Cannot use --rescale with missing R libraries")
         if options.rescale_only:
             sys.exit("Cannot use --rescale-only with missing R libraries")
-
 
     return options

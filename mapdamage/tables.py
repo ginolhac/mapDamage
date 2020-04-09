@@ -1,5 +1,6 @@
-import os
 import collections
+import logging
+import os
 
 import mapdamage
 from mapdamage.version import __version__
@@ -70,10 +71,11 @@ def check_table_and_warn_if_dmg_freq_is_low(folder):
   Bayesian estimation of DNA damages, i.e < 1% at first position.
   """
   total = 0.0
+  logger = logging.getLogger(__name__)
   for filename in ("5pCtoT_freq.txt", "3pGtoA_freq.txt"):
     if not os.path.exists(folder+"/"+filename):
-      print(("Error: Required table has not been created ('%s'), bayesian computation cannot be performed" \
-            % filename))
+      logger.error("Required table has not been created (%r), bayesian computation cannot be performed",
+            filename)
       return True
 
     with open(os.path.join(folder, filename)) as handle:
@@ -83,12 +85,12 @@ def check_table_and_warn_if_dmg_freq_is_low(folder):
           total += float(freq[1])
           break
       else:
-        print(("Error: Could not find pos = 1 in table '%s', bayesian computation cannot be performed" \
-              % filename))
+        logger.error("Could not find pos = 1 in table %r, bayesian computation cannot be performed",
+            filename)
         return True
 
   if total < 0.01:
-    print(("Warning: DNA damage levels are too low, the Bayesian computation should not be performed (%f < 0.01)\n" % total))
+      logger.warning("DNA damage levels are too low, the Bayesian computation should not be performed (%f < 0.01)", total)
 
   return False
 
