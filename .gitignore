@@ -10,5 +10,8 @@ MANIFEST
 dist
 build
 sdist
+venv
+.eggs
+*.egg-info
 
 mapdamage/_version.py
