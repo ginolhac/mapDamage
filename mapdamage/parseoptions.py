@@ -17,7 +17,7 @@ def file_exist(filename):
         return None
 
 
-def options():
+def options(argv):
     parser = OptionParser("%prog [options] -i BAMfile -r reference.fasta\n\nUse option -h or --help for help", version=__version__, \
             epilog="report bugs to aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com")
 
@@ -54,8 +54,6 @@ def options():
           default=False,action="store_true")
     group.add_option("-v", "--verbose", dest="verbose", help="Display progression information during parsing", \
           default=False,action="store_true")
-    group.add_option("--mapdamage-modules", dest="mapdamage_modules", help="Override the system wide installed mapDamage module", \
-          default=None)
     group.add_option("--no-plot", dest="no_r", help=SUPPRESS_HELP, default=False, action="store_true")
     parser.add_option_group(group)
 
@@ -126,7 +124,7 @@ def options():
 
 
     #Parse the arguments
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args(argv)
 
     # check if the Rscript executable is present on the system
     if not shutil.which('Rscript'):

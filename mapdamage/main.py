@@ -35,7 +35,10 @@ import random
 import time
 import sys
 import os
+
 import pysam
+
+import mapdamage
 
 
 _BAM_UNMAPPED  = 0x4
@@ -97,44 +100,11 @@ def _read_bamfile(bamfile, options):
     else:
         return _downsample_to_fixed_number(bamfile, options)
 
-def _check_mm_option():
-    """
-    As the user can override the system wide mapdamage modules with
-    the --mapdamage-modules, it has to happen before option parsing
-    in mapdamage.parseoptions
-    """
-    path_to_mm = None
-    for nr,arg in zip(list(range(len(sys.argv))),sys.argv):
-        if arg.startswith("--mapdamage-modules"):
-            try:
-                if "=" in arg:
-                    # the option is of the format --mapdamage-modules=AAAA
-                    arg_p = arg.split("=")
-                    path_to_mm = arg_p[1]
-                else:
-                    # the option is of the format --mapdamage-modules AAAA
-                    path_to_mm = sys.argv[nr+1]
-                break
-            except IndexError as e:
-                raise SystemExit("Must specify a path to --mapdamage-modules")
-    if path_to_mm != None:
-        if not os.path.isdir(path_to_mm):
-            raise SystemExit("The --mapdamage-modules option must be a valid path (path=%s)" % path_to_mm)
-        if not os.path.isdir(os.path.join(path_to_mm,"mapdamage")):
-            raise SystemExit("The --mapdamage-modules path (path=%s) must contain the mapdamage module" % path_to_mm)
-    return path_to_mm
 
-
-def main():
+def main(argv):
     start_time = time.time()
 
-    # the user can override the system wide mapdamage modules
-    path_to_mm = _check_mm_option()
-    if path_to_mm != None:
-        sys.path.insert(0,path_to_mm)
-    import mapdamage
-
-    options = mapdamage.parseoptions.options()
+    options = mapdamage.parseoptions.options(argv)
     if options == None:
         sys.stderr.write("Option parsing failed, terminating the program\n")
         return 1
@@ -357,5 +327,9 @@ def main():
     return 0
 
 
+def entry_point():
+    return main(sys.argv[1:])
+
+
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
