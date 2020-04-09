@@ -79,7 +79,7 @@ def check_table_and_warn_if_dmg_freq_is_low(folder):
     total = 0.0
     logger = logging.getLogger(__name__)
     for filename in ("5pCtoT_freq.txt", "3pGtoA_freq.txt"):
-        if not os.path.exists(folder + "/" + filename):
+        if not os.path.exists(os.path.join(folder, filename)):
             logger.error(
                 "Required table has not been created (%r), bayesian computation cannot be performed",
                 filename,

@@ -19,9 +19,9 @@ def construct_path(name, folder="Rscripts"):
 def plot(opt):
     """Calls the 'Rscript' to draw the plots.
     """
-    fmut = opt.folder + "/" + "misincorporation.txt"
-    fcomp = opt.folder + "/" + "dnacomp.txt"
-    title = opt.folder + "/" + "Fragmisincorporation_plot.pdf"
+    fmut = os.path.join(opt.folder, "misincorporation.txt")
+    fcomp = os.path.join(opt.folder, "dnacomp.txt")
+    title = os.path.join(opt.folder, "Fragmisincorporation_plot.pdf")
 
     script = construct_path("mapDamage.R")
     call = [
@@ -51,9 +51,9 @@ def plot(opt):
 def opt_plots(opt):
     """optional length distribution and cumulative C>T mutations plots, per strand
     """
-    fmut = opt.folder + "/" + "misincorporation.txt"
-    flength = opt.folder + "/" + "lgdistribution.txt"
-    output = opt.folder + "/" + "Length_plot.pdf"
+    fmut = os.path.join(opt.folder, "misincorporation.txt")
+    flength = os.path.join(opt.folder, "lgdistribution.txt")
+    output = os.path.join(opt.folder, "Length_plot.pdf")
 
     script = construct_path("lengths.R")
     call = [

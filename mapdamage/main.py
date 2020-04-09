@@ -224,7 +224,7 @@ def main(argv):
         # use name of the SAM/BAM filename without extension
         ffasta = os.path.splitext(os.path.basename(options.filename))[0] + ".fasta"
         logger.info("Writing alignments in '%s'" % ffasta)
-        fhfasta = open(options.folder + "/" + ffasta, "w")
+        fhfasta = open(os.path.join(options.folder, ffasta), "w")
 
     counter = 0
 
@@ -321,11 +321,11 @@ def main(argv):
         fhfasta.close()
 
     # output results, write summary tables to disk
-    with open(options.folder + "/" + "misincorporation.txt", "w") as fmut:
+    with open(os.path.join(options.folder, "misincorporation.txt"), "w") as fmut:
         mapdamage.tables.print_mut(misincorp, options, fmut)
-    with open(options.folder + "/" + "dnacomp.txt", "w") as fcomp:
+    with open(os.path.join(options.folder, "dnacomp.txt"), "w") as fcomp:
         mapdamage.tables.print_comp(dnacomp, options, fcomp)
-    with open(options.folder + "/" + "lgdistribution.txt", "w") as flg:
+    with open(os.path.join(options.folder, "lgdistribution.txt"), "w") as flg:
         mapdamage.tables.print_lg(lgdistrib, options, flg)
 
     # plot using R
