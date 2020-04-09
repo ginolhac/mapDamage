@@ -38,7 +38,7 @@ setup(
     cmdclass={'install': compileInstall},
     name='mapdamage',
     version='2.2.0',
-    author='AurÃ©lien Ginolhac, Mikkel Schubert, Ãkon JÃ³nsson',
+    author="Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson",
     author_email='MSchubert@snm.ku.dk, jonsson.hakon@gmail.com',
     packages=['mapdamage'],
     package_data={'mapdamage': ['Rscripts/*.R', 'Rscripts/stats/*.R', 'tests/*']},
