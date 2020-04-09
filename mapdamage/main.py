@@ -228,7 +228,7 @@ def main(argv):
         # external coordinates 5' and 3' , 3' is 1-based offset
         coordinate = mapdamage.align.get_coordinates(read)
         # record aligned length for single-end reads
-        lgdistrib = mapdamage.seq.record_lg(read, coordinate, lgdistrib)
+        mapdamage.seq.record_length(read, coordinate, lgdistrib)
         # fetch reference name, chromosome or contig names
         chrom = in_bam.getrname(read.tid)
 

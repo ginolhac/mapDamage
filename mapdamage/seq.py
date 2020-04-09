@@ -35,16 +35,15 @@ def revcomp(seq):
     return seq.translate(TABLE)[::-1]
 
 
-def record_lg(read, coordinate, tab):
-    """ record global length distribution
-  don't record paired reads as they are normally not used for aDNA """
-    std = "-" if read.is_reverse else "+"
-
-    length = max(coordinate) - min(coordinate)
+def record_length(read, coordinate, table):
+    """ Record global length distribution.
+    Don't record paired reads as they are normally not used for aDNA.
+    """
     if not read.is_paired:
-        tab[std][length] = tab[std][length] + 1
+        std = "-" if read.is_reverse else "+"
+        length = max(coordinate) - min(coordinate)
 
-    return tab
+        table[std][length] += 1
 
 
 def read_fasta_index(filename):
