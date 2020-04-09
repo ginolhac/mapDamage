@@ -1,5 +1,6 @@
-import mapdamage
+import csv
 
+import mapdamage
 import mapdamage.seqtk as seqtk
 
 
@@ -27,48 +28,34 @@ def _update_table(table, sequence, indices):
             table[nt][index] += 1
 
 
-def get_base_comp(filename, destination=None):
-    """
-    Gets the basecomposition of all the sequences in filename
-    and returns the value to destination if given.
+def write_base_comp(fasta, destination):
+    """Calculates the total base composition across all sequences in 'fasta'
+    and writes them to 'destination' as CSV.
     """
     bases = {"A": 0, "C": 0, "G": 0, "T": 0}
-    alp = ["A", "C", "G", "T"]
-
-    for stats in seqtk.comp(filename).values():
+    for stats in seqtk.comp(fasta):
         for key in bases:
             bases[key] += stats[key]
 
-    # get the base frequencies
+    # calculate the base frequencies
     ba_su = sum(bases.values())
-    for ba in alp:
-        bases[ba] = float(bases[ba]) / float(ba_su)
-    if destination is None:
-        return bases
-    else:
-        # write the results
-        fo = open(destination, "w")
-        vals = [str(bases[i]) for i in alp]
-        fo.write(",".join(alp) + "\n")
-        fo.write(",".join(vals) + "\n")
-        fo.close()
+    for key in bases:
+        bases[key] = bases[key] / ba_su
+
+    with open(destination, "wt", newline="") as handle:
+        writer = csv.writer(handle)
+
+        header = ["A", "C", "G", "T"]
+        writer.writerow(header)
+        writer.writerow(bases[key] for key in header)
 
 
 def read_base_comp(filename):
+    """Read the base compition from a file created by write_base_comp
     """
-    Read the base compition from a file created by get_base_comp
-    """
-    fh = open(filename)
-    first_line = True
-    for li in fh:
-        li = li.rstrip()
-        lp = li.split()
-        if first_line:
-            header = lp
-            first_line = False
-        else:
-            body = lp
-    bases = {}
-    for ba, per in zip(header, body):
-        bases[ba] = per
-    return bases
+    with open("names.csv", newline="") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            return row
+
+    raise csv.Error("No rows found in %r" % (filename,))
