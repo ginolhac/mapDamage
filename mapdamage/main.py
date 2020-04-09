@@ -42,6 +42,8 @@ import pysam
 import mapdamage
 
 
+_LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
+
 _BAM_UNMAPPED = 0x4
 _BAM_SECONDARY = 0x100
 _BAM_FAILED_QC = 0x200
@@ -106,7 +108,7 @@ def _read_bamfile(bamfile, options):
 def main(argv):
     start_time = time.time()
 
-    coloredlogs.install(fmt="%(asctime)s %(name)s %(levelname)s %(message)s")
+    coloredlogs.install(fmt=_LOG_FORMAT)
     logger = logging.getLogger(__name__)
 
     options = mapdamage.parseoptions.options(argv)
@@ -116,6 +118,8 @@ def main(argv):
 
     handler = logging.FileHandler(os.path.join(options.folder, "Runtime_log.txt"))
     handler.setLevel(logging.INFO)
+    formatter = logging.Formatter(_LOG_FORMAT)
+    handler.setFormatter(formatter)
     logging.getLogger().addHandler(handler)
 
     logger.info("Started with the command: " + " ".join(sys.argv))
