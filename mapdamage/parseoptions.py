@@ -1,6 +1,8 @@
-from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
 import os
+import shutil
 import sys
+
+from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
 
 from mapdamage.version import __version__
 from mapdamage.rscript import check_R_lib
@@ -13,15 +15,6 @@ def file_exist(filename):
     else:
         sys.stderr.write("Error: '%s' is not a valid file\n" % (filename))
         return None
-
-
-def whereis(program):
-    for path in os.environ.get('PATH', '').split(':'):
-        if os.path.exists(os.path.join(path, program)) and \
-            not os.path.isdir(os.path.join(path, program)):
-            return os.path.join(path, program)
-    return None
-
 
 
 def check_py_version():
@@ -151,9 +144,17 @@ def options():
     if not check_py_version():
         return None
 
+    # check if the Rscript executable is present on the system
+    if not shutil.which('Rscript'):
+        print("Warning, Rscript is not in your PATH, plotting is disabled")
+        options.no_r = True
+
     # if the user wants to check the R packages then do that before the option parsing
     if options.check_R_packages:
-        if check_R_lib():
+        if options.no_r:
+            print("Cannot check for R packages without Rscript.")
+            sys.exit(1)
+        elif check_R_lib():
             sys.exit(1)
         else:
             print("All R packages are present")
@@ -255,16 +256,11 @@ def options():
         parser.error("--rescale-length-5p must be less than or equal to "
                      "--seq-length and greater than zero")
 
-    # check if the Rscript executable is present on the system
-    if not whereis('Rscript'):
-        print("Warning, Rscript is not in your PATH, plotting is disabled")
-        options.no_r = True
-
     # check the nick frequencies options
     if (options.use_raw_nick_freq + options.fix_nicks + options.single_stranded)>1:
         parser.error("The options --use-raw-nick-freq, --fix-nicks and --single-stranded are mutually exclusive.")
 
-    if check_R_lib():
+    if options.no_r or check_R_lib():
         # check for R libraries
         print("The Bayesian estimation has been disabled\n")
         options.no_stats = True
