@@ -324,6 +324,7 @@ def rescale_qual_read(bam, read, ref, corr_prob, subs, debug=False, direction="b
             # done with the aligned portion of the read
         else:
             if not debug:
+                logger = logging.getLogger(__name__)
                 logger.warning(
                     "Warning: The aligment of the read is longer than the actual read %s",
                     (read.qname),
@@ -362,6 +363,7 @@ def rescale_qual(ref, options, debug=False):
 
     Iterates through BAM file, makes a new BAM file with rescaled qualities.
     """
+    logger = logging.getLogger(__name__)
     if not debug:
         # no need to log when unit testing
         logger = logging.getLogger(__name__)
