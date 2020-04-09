@@ -155,16 +155,9 @@ def main(argv):
     # fetch all references and associated lengths in nucleotides
     try:
         ref = pysam.Fastafile(options.ref)
-    except IOError as e:
-        # Couldn't open the reference file
-        logger.error(
-            "Couldn't open the reference file "
-            + options.ref
-            + " or there are permission problems writing the "
-            + options.ref
-            + ".fai file"
-        )
-        raise e
+    except IOError as error:
+        logger.error("Could not open the reference file %r: %e", options.ref, error)
+        raise
 
     # rescale the qualities
     if options.rescale_only:
@@ -230,6 +223,7 @@ def main(argv):
 
     # main loop
     warned_about_pe = False
+    warned_about_quals = False
     for read in _read_bamfile(in_bam, options):
         counter += 1
         if not warned_about_pe and read.is_paired:
@@ -255,11 +249,11 @@ def main(argv):
 
         # add gaps according to the cigar string, do it for qualities if filtering options is on
         if not (options.minqual and read.qual):
-            if options.minqual:
+            if options.minqual and not warned_about_quals:
                 logger.warning(
-                    "Cannot filter bases by PHRED scores for read '%s'; no scores available."
-                    % read.qname
+                    "Reads without PHRED scores found; cannot filter by --min-basequal"
                 )
+                warned_about_quals = True
 
             (seq, refseq) = mapdamage.align.align(read.cigar, seq, refseq)
         else:
