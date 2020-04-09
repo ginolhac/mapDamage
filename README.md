@@ -71,5 +71,5 @@ OK
 
 
 ### Contact
-Please report bugs and suggest possible improvements to Aurélien Ginolhac, Mikkel Schubert or Hákon Jónsson by email:
-ginolhac at gmail.com, mikkelsch at gmail.com or jonsson.hakon at gmail.com.
+Please report bugs and suggest possible improvements on GitHub:
+https://github.com/ginolhac/mapDamage/issues/new

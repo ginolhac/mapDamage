@@ -22,7 +22,7 @@ def _build_parser():
     parser = OptionParser(
         "%prog [options] -i BAMfile -r reference.fasta\n\nUse option -h or --help for help",
         version=__version__,
-        epilog="report bugs to aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com",
+        epilog="Please report bugs on GitHub: https://github.com/ginolhac/mapDamage/issues/new",
     )
 
     args = OptionGroup(parser, "Input files")

@@ -24,7 +24,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 plot and quantify damage patterns from a SAM/BAM file
 
 :Authors: Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson, Ludovic Orlando
-:Contact: aginolhac@snm.ku.dk, MSchubert@snm.ku.dk, jonsson.hakon@gmail.com
 :Date: November 2012
 :Type: tool
 :Input: SAM/BAM

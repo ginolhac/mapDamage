@@ -27,7 +27,6 @@ setup(
     name='mapdamage',
     version='2.2.0',
     author="Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson",
-    author_email='MSchubert@snm.ku.dk, jonsson.hakon@gmail.com',
     packages=['mapdamage'],
     package_data={'mapdamage': ['Rscripts/*.R', 'Rscripts/stats/*.R', 'tests/*']},
     entry_points={"console_scripts": ["mapDamage=mapdamage.main:entry_point"]},
