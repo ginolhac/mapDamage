@@ -17,18 +17,6 @@ def file_exist(filename):
         return None
 
 
-def check_py_version():
-    req_version = (2, 6)
-    cur_version = sys.version_info
-
-    if cur_version >= req_version:
-        return True
-    else:
-        sys.stderr.write("Your Python interpreter is too old."\
-            "Please consider upgrading to at least %d.%d\n" % (req_version[0], req_version[1]))
-        return None
-
-
 def options():
     parser = OptionParser("%prog [options] -i BAMfile -r reference.fasta\n\nUse option -h or --help for help", version=__version__, \
             epilog="report bugs to aginolhac@snm.ku.dk, MSchubert@snm.ku.dk or jonsson.hakon@gmail.com")
@@ -139,10 +127,6 @@ def options():
 
     #Parse the arguments
     (options, args) = parser.parse_args()
-
-    # check python version
-    if not check_py_version():
-        return None
 
     # check if the Rscript executable is present on the system
     if not shutil.which('Rscript'):

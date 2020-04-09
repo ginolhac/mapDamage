@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-import logging
-import random
-import time
-import sys
-import os
-
 """ Copyright (c) 2012  Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson
 and Ludovic Orlando
 
@@ -37,19 +30,11 @@ plot and quantify damage patterns from a SAM/BAM file
 :Input: SAM/BAM
 :Output: tabulated tables, pdf
 """
-
-# check if pysam if available
-MODULE = "pysam"
-URL = "http://code.google.com/p/pysam/"
-try:
-    __import__(MODULE)
-except ImportError as e:
-    sys.stderr.write("Error: Could not import required module '%s':\n\t- %s\n" % (MODULE, e))
-    sys.stderr.write("       If module is not installed, please download from '%s'.\n" % URL)
-    sys.stderr.write("       A local install may be performed using the following command:\n")
-    sys.stderr.write("       $ python setup.py install --user\n\n")
-    sys.exit(1)
-
+import logging
+import random
+import time
+import sys
+import os
 import pysam
 
 
