@@ -212,16 +212,8 @@ def main(argv):
     )
     logger.info("Writing results to '%s/'", options.folder)
 
-    # open file handler to write alignments in fasta format
-    if options.fasta:
-        # use name of the SAM/BAM filename without extension
-        ffasta = os.path.splitext(os.path.basename(options.filename))[0] + ".fasta"
-        logger.info("Writing alignments in '%s'" % ffasta)
-        fhfasta = open(os.path.join(options.folder, ffasta), "w")
-
-    counter = 0
-
     # main loop
+    counter = 0
     warned_about_pe = False
     warned_about_quals = False
     for read in _read_bamfile(in_bam, options):
@@ -290,29 +282,14 @@ def main(argv):
         # compute base composition for genomic regions
         mapdamage.composition.count_ref_comp(read, chrom, before, after, dnacomp)
 
-        if options.fasta:
-            mapdamage.seq.write_fasta(
-                read,
-                chrom,
-                seq,
-                refseq,
-                min(coordinate),
-                max(coordinate),
-                before,
-                after,
-                fhfasta,
-            )
-
         if counter % 50000 == 0:
             logger.debug("%10d filtered alignments processed", counter)
 
     logger.debug("Done. %d filtered alignments processed", counter)
     logger.debug("BAM read in %f seconds", time.time() - start_time)
 
-    # close file handlers
+    # close file handles
     in_bam.close()
-    if options.fasta:
-        fhfasta.close()
 
     # output results, write summary tables to disk
     with open(os.path.join(options.folder, "misincorporation.txt"), "w") as fmut:

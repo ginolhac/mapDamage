@@ -30,20 +30,6 @@ MUTATIONS = (
 HEADER = LETTERS + ("Total",) + MUTATIONS
 
 
-def write_fasta(read, ref, seq, refseq, start, end, before, after, fout):
-    std = "-" if read.is_reverse else "+"
-
-    # output coordinate in 1-based offset for 5'
-    if len(before) > 0:
-        fout.write(">%s\n%s\n" % (ref, before))
-    fout.write(
-        ">%s:%d-%d\n%s\n>%s_%s\n%s\n"
-        % (ref, start + 1, end, refseq, read.qname, std, seq)
-    )
-    if len(after) > 0:
-        fout.write(">%s\n%s\n" % (ref, after))
-
-
 def revcomp(seq):
     """ return reverse complemented string """
     return seq.translate(TABLE)[::-1]

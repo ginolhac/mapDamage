@@ -88,14 +88,6 @@ def _build_parser():
         type="string",
     )
     group.add_option(
-        "-f",
-        "--fasta",
-        dest="fasta",
-        help="Write alignments in a FASTA file",
-        default=False,
-        action="store_true",
-    )
-    group.add_option(
         "--plot-only",
         help="Run only plotting from a valid result folder",
         default=False,
