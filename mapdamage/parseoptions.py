@@ -6,7 +6,7 @@ import sys
 from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
 
 from mapdamage.version import __version__
-from mapdamage.rscript import check_R_lib
+from mapdamage.rscript import check_r_libraries
 
 
 def file_exist(filename):
@@ -289,7 +289,7 @@ def options(argv):
         if options.no_r:
             logger.error("Cannot check for R packages without Rscript")
             sys.exit(1)
-        elif check_R_lib():
+        elif not check_r_libraries():
             sys.exit(1)
         else:
             logger.info("All R packages are present")
@@ -414,7 +414,7 @@ def options(argv):
             "The options --use-raw-nick-freq, --fix-nicks and --single-stranded are mutually exclusive."
         )
 
-    if options.no_r or check_R_lib():
+    if options.no_r or not check_r_libraries():
         # check for R libraries
         logger.warning("The Bayesian estimation has been disabled")
         options.no_stats = True

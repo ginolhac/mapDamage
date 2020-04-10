@@ -132,8 +132,12 @@ def main(argv):
             logger.error("Cannot use plot damage patterns if R is missing, terminating")
             return 1
         else:
-            mapdamage.rscript.plot(options)
-            mapdamage.rscript.opt_plots(options)
+            if not mapdamage.rscript.misincorporation_plot(options):
+                return 1
+
+            if not mapdamage.rscript.length_distribution_plot(options):
+                return 1
+
             return 0
 
     # run the Bayesian estimation if the matrix construction is done
@@ -151,7 +155,10 @@ def main(argv):
             else:
                 # Construct the base composition file
                 mapdamage.composition.write_base_comp(options.ref, path_to_basecomp)
-            mapdamage.rscript.run_stats(options)
+
+            if not mapdamage.rscript.perform_bayesian_estimates(options):
+                return 1
+
             return 0
 
     # fetch all references and associated lengths in nucleotides
@@ -303,8 +310,11 @@ def main(argv):
 
     # plot using R
     if not options.no_r:
-        mapdamage.rscript.plot(options)
-        mapdamage.rscript.opt_plots(options)
+        if not mapdamage.rscript.misincorporation_plot(options):
+            return 1
+
+        if not mapdamage.rscript.length_distribution_plot(options):
+            return 1
 
     # raises a warning for very low damage levels
     if mapdamage.tables.check_table_and_warn_if_dmg_freq_is_low(options.folder):
@@ -316,7 +326,9 @@ def main(argv):
         mapdamage.composition.write_base_comp(
             options.ref, os.path.join(options.folder, "dnacomp_genome.csv")
         )
-        mapdamage.rscript.run_stats(options)
+
+        if not mapdamage.rscript.perform_bayesian_estimates(options):
+            return 1
 
     # rescale the qualities
     if options.rescale:

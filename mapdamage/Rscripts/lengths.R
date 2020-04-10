@@ -14,7 +14,6 @@ OPT.MISINCORP <- args[3]
 OPT.LENGTH    <- args[4]
 OPT.TITLE     <- args[5]
 OPT.VERSION   <- args[6]
-OPT.QUIET     <- args[7]
 
 MISMATCHES  <- c("C>T", "G>A")
 
@@ -103,7 +102,4 @@ if(nrow(lg) == 0){
     
     # graphics.off() calls dev.off() for all devices but doesn't return anything (avoid null device message)
     graphics.off()
-    if(OPT.QUIET == 0){
-        cat(paste("additional", OPT.PDFOUT, "generated\n"))
-    }
 }
