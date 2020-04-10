@@ -116,10 +116,13 @@ def main(argv):
         return 1
 
     handler = logging.FileHandler(os.path.join(options.folder, "Runtime_log.txt"))
-    handler.setLevel(logging.INFO)
     formatter = logging.Formatter(_LOG_FORMAT)
     handler.setFormatter(formatter)
     logging.getLogger().addHandler(handler)
+
+    logging.getLogger().setLevel(options.log_level)
+    for handler in logging.getLogger().handlers:
+        handler.setLevel(options.log_level)
 
     logger.info("Started with the command: " + " ".join(sys.argv))
 
