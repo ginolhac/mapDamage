@@ -60,26 +60,23 @@ def _filter_reads(bamfile):
             yield read
 
 
-def _downsample_to_fraction(bamfile, options):
-    log = logging.getLogger(__name__)
-    log.debug("Downsampling %.2f fraction of the original file", options.downsample)
-    assert options.downsample > 0, (
-        "Downsample fraction must be positive, not %s" % options.downsample
-    )
+def _downsample_to_fraction(bamfile, downsample_to, seed):
+    if not (0 <= downsample_to < 1):
+        raise ValueError(downsample_to)
 
-    rand = random.Random(options.downsample_seed)
+    rand = random.Random(seed)
     for read in _filter_reads(bamfile):
-        if rand.random() < options.downsample:
+        if rand.random() < downsample_to:
             yield read
 
 
-def _downsample_to_fixed_number(bamfile, options):
-    log = logging.getLogger(__name__)
-    log.debug("Downsampling %d random reads from the original file", options.downsample)
-
+def _downsample_to_fixed_number(bamfile, downsample_to, seed):
     # use reservoir sampling
-    downsample_to = int(options.downsample)
-    rand = random.Random(options.downsample_seed)
+    if downsample_to < 1:
+        raise ValueError(downsample_to)
+
+    downsample_to = int(downsample_to)
+    rand = random.Random(seed)
     sample = [None] * downsample_to
     for (index, record) in enumerate(_filter_reads(bamfile)):
         if index >= downsample_to:
@@ -87,21 +84,26 @@ def _downsample_to_fixed_number(bamfile, options):
             if index >= downsample_to:
                 continue
         sample[index] = record
+
     return [_f for _f in sample if _f]
 
 
-def _read_bamfile(bamfile, options):
+def _read_bamfile(bamfile, downsample_to, seed):
     """
     Takes a subset of the bamfile. Can use a approximate fraction of the
     hits or specific number of reads using reservoir sampling. Returns
     a list in the last case otherwise a iterator.
     """
-    if options.downsample is None:
+
+    log = logging.getLogger(__name__)
+    if downsample_to is None:
         return _filter_reads(bamfile)
-    elif options.downsample < 1:
-        return _downsample_to_fraction(bamfile, options)
+    elif downsample_to < 1:
+        log.debug("Downsampling BAM to %.1f%%", downsample_to * 100)
+        return _downsample_to_fraction(bamfile, downsample_to, seed)
     else:
-        return _downsample_to_fixed_number(bamfile, options)
+        log.debug("Downsampling BAM to %d random reads", downsample_to)
+        return _downsample_to_fixed_number(bamfile, downsample_to, seed)
 
 
 def main(argv):
@@ -224,7 +226,7 @@ def main(argv):
     # main loop
     counter = 0
     warned_about_quals = False
-    for read in _read_bamfile(in_bam, options):
+    for read in _read_bamfile(in_bam, options.downsample, options.downsample_seed):
         counter += 1
 
         # external coordinates 5' and 3' , 3' is 1-based offset
