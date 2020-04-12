@@ -223,16 +223,9 @@ def main(argv):
 
     # main loop
     counter = 0
-    warned_about_pe = False
     warned_about_quals = False
     for read in _read_bamfile(in_bam, options):
         counter += 1
-        if not warned_about_pe and read.is_paired:
-            logger.warning(
-                "paired-end alignment found; only single-ended alignments are used"
-            )
-            warned_about_pe = True
-            continue
 
         # external coordinates 5' and 3' , 3' is 1-based offset
         coordinate = mapdamage.align.get_coordinates(read)

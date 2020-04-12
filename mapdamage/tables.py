@@ -49,11 +49,11 @@ def print_comp(comp, opt, out):
 
 
 def initialize_lg():
-    tab = {}
-    for std in ("+", "-"):
-        tab[std] = collections.defaultdict(int)
-
-    return tab
+    return {
+        (kind, strand): collections.defaultdict(int)
+        for kind in ("pe", "se")
+        for strand in ("+", "-")
+    }
 
 
 def print_lg(tab, opt, out):
@@ -66,10 +66,10 @@ def print_lg(tab, opt, out):
             "# Quality filtering of bases with a Phred score < %d\n" % opt.minqual
         )
     out.write("# Std: strand of reads\n")
-    out.write("Std\tLength\tOccurences \n")
-    for std in tab:
-        for i in tab[std]:
-            out.write("%s\t%d\t%d\n" % (std, i, tab[std][i]))
+    out.write("Std\tKind\tLength\tOccurences \n")
+    for (pe_or_se, strand), lengths in sorted(tab.items()):
+        for length, count in sorted(lengths.items()):
+            out.write("%s\t%s\t%d\t%d\n" % (strand, pe_or_se, length, count))
 
 
 def check_table_and_warn_if_dmg_freq_is_low(folder):

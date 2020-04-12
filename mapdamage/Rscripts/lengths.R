@@ -25,34 +25,39 @@ calculate.mutation.table <- function(filename){
 }
 
 
-plot.length <- function(tbl, title, color) {
-    table <- aggregate(tbl$Occurences, by=list(tbl$Length), FUN=sum)
-    names(table)<- c("Length", "Occurences")
-    plot(table$Length, table$Occurences, type="h",
-       col = color, main = title, cex.axis = 0.8, las = 2,
-       xlab = "", ylab = "", axes = FALSE)
- 
+plot.lengthStd <- function(tbl, title) {
+    data <- NULL
+    min_len <- min(tbl$Length)
+    max_len <- max(tbl$Length)
+    for (kind in c("se", "pe")) {
+        for (strand in c("+", "-")) {
+            row <- NULL
+
+            subtbl <- subset(tbl, Std == strand & Kind == kind)
+            for (length in min_len:max_len) {
+                row <- c(row, sum(subtbl[subtbl$Length == length, "Occurences"]))
+            }
+
+            data <- rbind(data, row)
+        }
+    }
+
+    colnames(data) <- min_len:max_len
+
+    colors <- c(rgb(1:0, 0, 0:1, 1/2), grey.colors(3))
+    barplot(data, border = NA, col = colors, axes = FALSE, axisnames = FALSE, main = title)
+
+    legend('topright',
+           c('+ strand (SE)','- strand (SE)', '+ strand (PE)','- strand (PE)'),
+           fill = colors, bty = 'n', border = NA)
+
     mtext("Occurences", side = 2, line = 2.5, cex = 0.7)
     mtext("Read length", side = 1, line = 2, cex = 0.7)
-    xcoord = seq(min(table$Length), max(table$Length), 10)
+    xcoord = seq(min_len, max_len, 10)
     axis(side = 1, labels = xcoord, at = xcoord, las = 2, cex.axis = 0.6)
     axis(side = 2, labels = TRUE, las = 2, cex.axis = 0.6)
 }
 
-plot.lengthStd <- function(tbl, title) {
-    subplus = subset(tbl, Std == "+")
-    subminus = subset(tbl, Std == "-")
-    plot(subplus$Length, subplus$Occurences, type="h", col=rgb(1,0,0,1/2), main = title, axes = FALSE)
-    lines(subminus$Length, subminus$Occurences, type="h", col=rgb(0,0,1,1/2))
-    mtext("Occurences", side = 4, line = 2.5, cex = 0.7)
-    mtext("Read length", side = 1, line = 2, cex = 0.7)
-    xcoord = seq(min(subplus$Length), max(subplus$Length), 10)
-    axis(side = 1, labels = xcoord, at = xcoord, las = 2, cex.axis = 0.6)
-    axis(side = 4, labels = TRUE, las = 2, cex.axis = 0.6)
-    legend('topright',c('+ strand','- strand'),
-       fill = rgb(1:0,0,0:1,0.4), bty = 'n',
-       border = NA)
-}
 
 plot.cumul.mutation <- function(tbl, end, mut, sid) {
     subplus = subset(tbl, Std == "+" & End == end)
@@ -79,8 +84,8 @@ if(nrow(lg) == 0){
     pdf(file = OPT.PDFOUT, title = paste("mapDamage-", OPT.VERSION, sep=""))
     par(oma = c(4,2,2,2), mar = c(1,2,1,2))
     layout(matrix(c(1,1,  # Title
-                    2,3,  # lengths
-                    4,5), # Cumulative mutation
+                    2,2,  # lengths
+                    3,4), # Cumulative mutation
                     3, 2, byrow = TRUE),
            heights = c(3, 20, 20))
     
@@ -89,8 +94,7 @@ if(nrow(lg) == 0){
     mtext(OPT.TITLE, 3, cex = 1.3)
     
     # Base compositions
-    plot.length(lg, "Single-end read length distribution", "black")
-    plot.lengthStd(lg, "Single-end read length per strand")
+    plot.lengthStd(lg, "Length distribution")
     
     # Misincorporation patterns
     mut <- calculate.mutation.table(OPT.MISINCORP)
