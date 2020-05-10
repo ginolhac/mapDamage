@@ -38,5 +38,11 @@ setup(
     long_description=open("README.md").read(),
     python_requires=">=3.5",
     install_requires=["coloredlogs", "pysam"],
-    ext_modules=[Extension("mapdamage.seqtk", ["mapdamage/seqtk/seqtk.c"])],
+    ext_modules=[
+        Extension(
+            "mapdamage.seqtk",
+            sources=["mapdamage/seqtk/seqtk.c"],
+            libraries=["z"],
+        )
+    ],
 )
