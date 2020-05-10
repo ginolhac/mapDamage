@@ -28,14 +28,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <inttypes.h>
 #include <zlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <limits.h>
-#include <assert.h>
-#include <math.h>
 
 #include "kseq.h"
 KSEQ_INIT(gzFile, gzread)
