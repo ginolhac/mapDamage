@@ -4,10 +4,10 @@ import os
 import subprocess
 
 from setuptools import setup, Extension
-from setuptools.command.install import install as SetuptoolsInstall
+from setuptools.command.build_py import build_py as SetuptoolsBuildPy
 
 
-class GitVersionInstall(SetuptoolsInstall):
+class GitVersionBuild(SetuptoolsBuildPy):
     def run(self):
         if os.path.exists(".git"):
             try:
@@ -25,7 +25,7 @@ class GitVersionInstall(SetuptoolsInstall):
 
 
 setup(
-    cmdclass={"install": GitVersionInstall},
+    cmdclass={"build_py": GitVersionBuild},
     name="mapdamage",
     version="2.2.0",
     author="Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson",
@@ -40,9 +40,7 @@ setup(
     install_requires=["coloredlogs", "pysam"],
     ext_modules=[
         Extension(
-            "mapdamage.seqtk",
-            sources=["mapdamage/seqtk/seqtk.c"],
-            libraries=["z"],
+            "mapdamage.seqtk", sources=["mapdamage/seqtk/seqtk.c"], libraries=["z"],
         )
     ],
 )
