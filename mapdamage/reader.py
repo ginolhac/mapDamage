@@ -20,7 +20,7 @@ class BAMReader:
         self.downsample_seed = downsample_seed
 
         self.is_stream = False
-        if filepath == "-" or self.filepath.is_fifo:
+        if filepath == "-" or self.filepath.is_fifo():
             self.is_stream = True
 
         self.handle = pysam.AlignmentFile(self.filepath)
