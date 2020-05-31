@@ -15,9 +15,9 @@ def construct_path(name, folder="Rscripts"):
 
 
 def misincorporation_plot(opt):
-    fmut = os.path.join(opt.folder, "misincorporation.txt")
-    fcomp = os.path.join(opt.folder, "dnacomp.txt")
-    output = os.path.join(opt.folder, "Fragmisincorporation_plot.pdf")
+    fmut = opt.folder / "misincorporation.txt"
+    fcomp = opt.folder / "dnacomp.txt"
+    output = opt.folder / "Fragmisincorporation_plot.pdf"
 
     logger = logging.getLogger(__name__)
     logger.info("Saving misincorporation plot to %r", output)
@@ -42,9 +42,9 @@ def misincorporation_plot(opt):
 def length_distribution_plot(opt):
     """optional length distribution and cumulative C>T mutations plots, per strand
     """
-    fmut = os.path.join(opt.folder, "misincorporation.txt")
-    flength = os.path.join(opt.folder, "lgdistribution.txt")
-    output = os.path.join(opt.folder, "Length_plot.pdf")
+    fmut = opt.folder / "misincorporation.txt"
+    flength = opt.folder / "lgdistribution.txt"
+    output = opt.folder / "Length_plot.pdf"
 
     logger = logging.getLogger(__name__)
     logger.info("Saving length distribution plot to %r", output)
@@ -104,13 +104,13 @@ def perform_bayesian_estimates(opt):
             int(opt.fix_nicks),
             int(not opt.single_stranded),
             opt.seq_length,
-            opt.folder + "/",
+            str(opt.folder) + "/",
             construct_path("stats/"),
-            os.path.join(opt.folder, "Stats_out"),
+            opt.folder / "Stats_out",
             int(opt.log_level == "DEBUG"),
             int(opt.log_level not in ("DEBUG", "INFO")),
             int(opt.jukes_cantor),
-            os.path.join(opt.folder, "acgt_ratio.csv"),
+            opt.folder / "acgt_ratio.csv",
             int(opt.use_raw_nick_freq),
             int(opt.theme_bw),
         ]

@@ -32,7 +32,6 @@ plot and quantify damage patterns from a SAM/BAM file
 import logging
 import time
 import sys
-import os
 
 import coloredlogs
 import pysam
@@ -54,7 +53,7 @@ def main(argv):
         logging.error("Option parsing failed, terminating the program")
         return 1
 
-    handler = logging.FileHandler(os.path.join(options.folder, "Runtime_log.txt"))
+    handler = logging.FileHandler(options.folder / "Runtime_log.txt")
     formatter = logging.Formatter(_LOG_FORMAT)
     handler.setFormatter(formatter)
     logging.getLogger().addHandler(handler)
@@ -84,8 +83,8 @@ def main(argv):
         # does not work for very low damage levels
         if mapdamage.statistics.check_table_and_warn_if_dmg_freq_is_low(options.folder):
             # before running the Bayesian estimation get the base composition
-            path_to_basecomp = os.path.join(options.folder, "dnacomp_genome.csv")
-            if os.path.isfile(path_to_basecomp):
+            path_to_basecomp = options.folder / "dnacomp_genome.csv"
+            if path_to_basecomp.is_file():
                 # Try to read the base composition file
                 mapdamage.composition.read_base_comp(path_to_basecomp)
             else:
@@ -104,7 +103,7 @@ def main(argv):
     try:
         ref = pysam.FastaFile(options.ref)
     except IOError as error:
-        logger.error("Could not open the reference file %r: %e", options.ref, error)
+        logger.error("Could not open the reference file '%s': %e", options.ref, error)
         raise
 
     # rescale the qualities
@@ -127,7 +126,7 @@ def main(argv):
 
     reflengths = reader.get_references()
     # check if references in SAM/BAM are the same in the fasta reference file
-    fai_lengths = mapdamage.seq.read_fasta_index(options.ref + ".fai")
+    fai_lengths = mapdamage.seq.read_fasta_index(str(options.ref) + ".fai")
     if not fai_lengths:
         return 1
     elif not mapdamage.seq.compare_sequence_dicts(fai_lengths, reflengths):
@@ -210,9 +209,9 @@ def main(argv):
     reader.close()
 
     # output results, write summary tables to disk
-    misincorp.write(os.path.join(options.folder, "misincorporation.txt"))
-    dnacomp.write(os.path.join(options.folder, "dnacomp.txt"))
-    lgdistrib.write(os.path.join(options.folder, "lgdistribution.txt"))
+    misincorp.write(options.folder / "misincorporation.txt")
+    dnacomp.write(options.folder / "dnacomp.txt")
+    lgdistrib.write(options.folder / "lgdistribution.txt")
 
     # plot using R
     if not options.no_r:
@@ -230,7 +229,7 @@ def main(argv):
     if not options.no_stats:
         # before running the Bayesian estimation get the base composition
         mapdamage.composition.write_base_comp(
-            options.ref, os.path.join(options.folder, "dnacomp_genome.csv")
+            options.ref, options.folder / "dnacomp_genome.csv"
         )
 
         if not mapdamage.rscript.perform_bayesian_estimates(options):

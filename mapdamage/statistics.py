@@ -1,6 +1,5 @@
 import collections
 import logging
-import os
 
 import mapdamage
 
@@ -48,7 +47,7 @@ class MisincorporationRates:
             update_table(end, strand, nbases)
 
     def write(self, filepath):
-        with open(filepath, "wt") as handle:
+        with filepath.open("wt") as handle:
             _write_freq_table(self.data, mapdamage.seq.HEADER, handle, offset=1)
 
 
@@ -84,7 +83,7 @@ class DNAComposition:
         self._update_table(self.data["3p"][strand], after, range(1, len(after) + 1))
 
     def write(self, filepath):
-        with open(filepath, "wt") as handle:
+        with filepath.open("wt") as handle:
             columns = mapdamage.seq.LETTERS + ("Total",)
             _write_freq_table(self.data, columns, handle)
 
@@ -128,14 +127,14 @@ def check_table_and_warn_if_dmg_freq_is_low(folder):
     total = 0.0
     logger = logging.getLogger(__name__)
     for filename in ("5pCtoT_freq.txt", "3pGtoA_freq.txt"):
-        if not os.path.exists(os.path.join(folder, filename)):
+        if not (folder / filename).is_file():
             logger.error(
                 "Required table has not been created (%r), bayesian computation cannot be performed",
                 filename,
             )
             return False
 
-        with open(os.path.join(folder, filename)) as handle:
+        with (folder / filename).open() as handle:
             for line in handle:
                 freq = line.strip().split("\t")
                 if freq[0] == "1":

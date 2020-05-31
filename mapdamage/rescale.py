@@ -1,6 +1,5 @@
 import csv
 import sys
-import os
 import mapdamage
 import pysam
 import math
@@ -25,8 +24,8 @@ def get_corr_prob(folder, rescale_length_5p, rescale_length_3p):
     position (one based)  -  CT  -  probability
                           -  GA  -  probability
     """
-    full_path = os.path.join(folder, "Stats_out_MCMC_correct_prob.csv")
-    if not os.path.isfile(full_path):
+    full_path = folder / "Stats_out_MCMC_correct_prob.csv"
+    if not full_path.is_file():
         sys.exit(
             "Missing file, the file \n\tStats_out_MCMC_correct_prob.csv\nshould be in the folder\n\t"
             + folder
@@ -54,14 +53,7 @@ def get_corr_prob(folder, rescale_length_5p, rescale_length_3p):
                     corr_prob.pop(key)
             return corr_prob
     except csv.Error as e:
-        sys.exit(
-            "File %s, line %d: %s"
-            % (
-                os.path.join(folder, "Stats_out_MCMC_correct_prob.csv"),
-                fi_handle.line_num,
-                e,
-            )
-        )
+        sys.exit("File %s, line %d: %s" % (full_path, fi_handle.line_num, e,))
 
 
 def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length, direction="both"):

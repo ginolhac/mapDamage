@@ -1,21 +1,16 @@
-import os
 import logging
 import shutil
 import sys
 
 from argparse import ArgumentParser, SUPPRESS
+from pathlib import Path
 
 from mapdamage.version import __version__
 from mapdamage.rscript import check_r_libraries
 
 
 def file_exist(filename):
-    if os.path.exists(filename) and not os.path.isdir(filename):
-        return True
-    elif filename == "-":
-        return True
-    else:
-        return None
+    return filename == Path("-") or filename.is_file()
 
 
 def _build_parser():
@@ -35,9 +30,14 @@ def _build_parser():
         "--input",
         help="SAM/BAM file, must contain a valid header, use '-' for reading a BAM from stdin",
         dest="filename",
+        type=Path,
     )
     args.add_argument(
-        "-r", "--reference", help="Reference file in FASTA format", dest="ref",
+        "-r",
+        "--reference",
+        help="Reference file in FASTA format",
+        dest="ref",
+        type=Path,
     )
 
     parser.add_argument_group(args)
@@ -83,7 +83,10 @@ def _build_parser():
         default=0,
     )
     group.add_argument(
-        "-d", "--folder", help="folder name to store results [results_FILENAME]",
+        "-d",
+        "--folder",
+        help="folder name to store results [results_FILENAME]",
+        type=Path,
     )
     group.add_argument(
         "--plot-only",
@@ -296,7 +299,7 @@ def options(argv):
         parser.error("Reference file not given (-r)")
     if not options.plot_only and not options.stats_only:
         if not file_exist(options.filename) or not file_exist(options.ref):
-            logger.error("%r is not a valid file", options.filename)
+            logger.error("%s is not a valid file", options.filename)
             return None
     if options.downsample is not None:
         if options.downsample <= 0:
@@ -343,42 +346,32 @@ def options(argv):
 
     # use filename as default for plot titles if not set
     if options.title == "" and options.filename:
-        options.title = os.path.splitext(os.path.basename(options.filename))[0]
+        options.title = options.filename.stem
     # for --plot-only, use the folder name, without results_ as title
     if options.title == "" and not options.filename and options.folder:
-        options.title = os.path.splitext(os.path.basename(options.folder))[0].replace(
-            "results_", ""
-        )
+        options.title = options.folder.stem.replace("results_", "")
 
     # check folder
     if not options.folder and options.filename:
-        options.folder = (
-            "results_" + os.path.splitext(os.path.basename(options.filename))[0]
-        )
+        options.folder = "results_" + options.filename.stem
 
     # check destination for rescaled bam
     if not options.rescale_out and (options.rescale or options.rescale_only):
-        # if there are mulitiple bam files to rescale then pick first one as
-        # the name of the rescaled file
-        if isinstance(options.filename, list):
-            basename = os.path.basename(options.filename[0])
-        else:
-            basename = os.path.basename(options.filename)
-        with_ext = os.path.splitext(basename)[0] + ".rescaled.bam"
-        options.rescale_out = os.path.join(options.folder, with_ext)
+        options.rescale_out = options.folder / (options.filename.stem + ".rescaled.bam")
 
-    if os.path.isdir(options.folder):
+    if options.folder.is_dir():
         if not options.plot_only:
             logger.warning(
                 "Folder %r already exists; content may be overwritten", options.folder
             )
         if options.plot_only:
-            if not file_exist(options.folder + "/dnacomp.txt") or not file_exist(
-                options.folder + "/misincorporation.txt"
+            if not (
+                (options.folder / "dnacomp.txt").is_file()
+                and (options.folder / "misincorporation.txt").is_file()
             ):
-                parser.error("folder %s is not a valid result folder" % options.folder)
+                parser.error("'%s' is not a valid result folder" % options.folder)
     else:
-        os.makedirs(options.folder, mode=0o750)
+        options.folder.mkdir(parents=True, exist_ok=True, mode=0o750)
         if options.plot_only or options.stats_only or options.rescale_only:
             logger.error(
                 "Folder %s does not exist while plot/stats/rescale only was used",
