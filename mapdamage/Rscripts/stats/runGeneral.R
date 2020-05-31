@@ -12,8 +12,8 @@ options(error = on_error)
 rm(list=ls())
 graphics.off()
 
-argsList<-commandArgs(TRUE) #Assuming the user is not using this script directly
-argsList <- argsList[-1]  #Skip --args
+# Assuming the user is not using this script directly
+argsList <- commandArgs(TRUE)
 
 
 #######################################################

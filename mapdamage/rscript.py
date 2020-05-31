@@ -72,7 +72,7 @@ def check_r_libraries():
     missing_libries = False
     with open(os.devnull, "w") as null:
         for library in ["inline", "ggplot2", "gam", "Rcpp", "RcppGSL"]:
-            command = ["Rscript", script, "--args", library]
+            command = ["Rscript", script, library]
 
             if not _log_call(command, log_failures=False, stdout=null, stderr=null):
                 logger.error("Required R library is missing: %r", library)
@@ -91,7 +91,6 @@ def perform_bayesian_estimates(opt):
         [
             "Rscript",
             construct_path("stats/runGeneral.R"),
-            "--args",
             opt.rand,
             opt.burn,
             opt.adjust,
