@@ -3,7 +3,7 @@ import logging
 import shutil
 import sys
 
-from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
+from argparse import ArgumentParser, SUPPRESS
 
 from mapdamage.version import __version__
 from mapdamage.rscript import check_r_libraries
@@ -19,262 +19,258 @@ def file_exist(filename):
 
 
 def _build_parser():
-    parser = OptionParser(
-        "%prog [options] -i BAMfile -r reference.fasta\n\nUse option -h or --help for help",
-        version=__version__,
+    parser = ArgumentParser(
+        prog="mapDamage",
+        usage="%(prog)s [options] -i BAMfile -r reference.fasta",
         epilog="Please report bugs on GitHub: https://github.com/ginolhac/mapDamage/issues/new",
     )
 
-    args = OptionGroup(parser, "Input files")
-    args.add_option(
+    parser.add_argument(
+        "--version", action="version", version="%(prog)s " + __version__
+    )
+
+    args = parser.add_argument_group("Input files")
+    args.add_argument(
         "-i",
         "--input",
         help="SAM/BAM file, must contain a valid header, use '-' for reading a BAM from stdin",
-        type="string",
         dest="filename",
     )
-    args.add_option(
+    args.add_argument(
         "-r", "--reference", help="Reference file in FASTA format", dest="ref",
     )
 
-    parser.add_option_group(args)
-    group = OptionGroup(parser, "General options")
-    group.add_option(
+    parser.add_argument_group(args)
+    group = parser.add_argument_group("General options")
+    group.add_argument(
         "-n",
         "--downsample",
         help="Downsample to a randomly selected fraction of the reads (if 0 < DOWNSAMPLE < 1), or "
         "a fixed number of randomly selected reads (if DOWNSAMPLE >= 1). By default, no downsampling is performed.",
         type=float,
     )
-    group.add_option(
+    group.add_argument(
         "--downsample-seed",
         help="Seed value to use for downsampling. See documentation for py module 'random' for default behavior.",
         type=int,
     )
-    group.add_option(
+    group.add_argument(
         "--merge-reference-sequences",
-        help=SUPPRESS_HELP,
+        help=SUPPRESS,
         default=False,
         action="store_true",
     )
-    group.add_option(
+    group.add_argument(
         "-l",
         "--length",
-        help="read length, in nucleotides to consider [%default]",
+        help="read length, in nucleotides to consider [%(default)s]",
         type=int,
         default=70,
     )
-    group.add_option(
+    group.add_argument(
         "-a",
         "--around",
-        help="nucleotides to retrieve before/after reads [%default]",
+        help="nucleotides to retrieve before/after reads [%(default)s]",
         type=int,
         default=10,
     )
-    group.add_option(
+    group.add_argument(
         "-Q",
         "--min-basequal",
         dest="minqual",
-        help="minimun base quality Phred score considered, Phred-33 assumed [%default]",
+        help="minimun base quality Phred score considered, Phred-33 assumed [%(default)s]",
         type=int,
         default=0,
     )
-    group.add_option(
-        "-d",
-        "--folder",
-        help="folder name to store results [results_FILENAME]",
-        type="string",
+    group.add_argument(
+        "-d", "--folder", help="folder name to store results [results_FILENAME]",
     )
-    group.add_option(
+    group.add_argument(
         "--plot-only",
         help="Run only plotting from a valid result folder",
         default=False,
         action="store_true",
     )
-    group.add_option(
+    group.add_argument(
         "--log-level",
-        help="Logging verbosity level; one of DEBUG, INFO, WARNING, and ERROR [%default]",
+        help="Logging verbosity level; one of DEBUG, INFO, WARNING, and ERROR [%(default)s]",
         choices=("DEBUG", "INFO", "WARNING", "ERROR"),
         default="INFO",
     )
-    group.add_option(
-        "--no-plot", dest="no_r", help=SUPPRESS_HELP, default=False, action="store_true"
+    group.add_argument(
+        "--no-plot", dest="no_r", help=SUPPRESS, default=False, action="store_true"
     )
-    parser.add_option_group(group)
+    parser.add_argument_group(group)
 
     # options for plotting damage patterns
-    group2 = OptionGroup(parser, "Options for graphics")
-    group2.add_option(
+    group2 = parser.add_argument_group("Options for graphics")
+    group2.add_argument(
         "-y",
         "--ymax",
-        help="graphical y-axis limit for nucleotide misincorporation frequencies [%default]",
+        help="graphical y-axis limit for nucleotide misincorporation frequencies [%(default)s]",
         type=float,
         default=0.3,
     )
-    group2.add_option(
+    group2.add_argument(
         "-m",
         "--readplot",
-        help="read length, in nucleotides, considered for plotting nucleotide misincorporations [%default]",
+        help="read length, in nucleotides, considered for plotting nucleotide misincorporations [%(default)s]",
         type=int,
         default=25,
     )
-    group2.add_option(
+    group2.add_argument(
         "-b",
         "--refplot",
         help="the number of reference nucleotides to consider for ploting base composition in the region located upstream "
-        "and downstream of every read [%default]",
+        "and downstream of every read [%(default)s]",
         type=int,
         default=10,
     )
-    group2.add_option(
-        "-t",
-        "--title",
-        help="title used for plots [%default]",
-        type="string",
-        default="",
+    group2.add_argument(
+        "-t", "--title", help="title used for plots [%(default)s]", default="",
     )
-    parser.add_option_group(group2)
+    parser.add_argument_group(group2)
 
     # Then the plethora of optional options for the statistical estimation ..
-    group3 = OptionGroup(parser, "Options for the statistical estimation")
-    group3.add_option(
+    group3 = parser.add_argument_group("Options for the statistical estimation")
+    group3.add_argument(
         "--rand",
-        help="Number of random starting points for the likelihood optimization [%default]",
+        help="Number of random starting points for the likelihood optimization [%(default)s]",
         type=int,
         default=30,
     )
-    group3.add_option(
+    group3.add_argument(
         "--burn",
-        help="Number of burnin iterations [%default]",
+        help="Number of burnin iterations [%(default)s]",
         type=int,
         default=10000,
     )
-    group3.add_option(
+    group3.add_argument(
         "--adjust",
-        help="Number of adjust proposal variance parameters iterations [%default]",
+        help="Number of adjust proposal variance parameters iterations [%(default)s]",
         type=int,
         default=10,
     )
-    group3.add_option(
+    group3.add_argument(
         "--iter",
-        help="Number of final MCMC iterations [%default]",
+        help="Number of final MCMC iterations [%(default)s]",
         type=int,
         default=50000,
     )
-    group3.add_option(
+    group3.add_argument(
         "--forward",
-        help="Using only the 5' end of the seqs [%default]",
+        help="Using only the 5' end of the seqs [%(default)s]",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--reverse",
-        help="Using only the 3' end of the seqs [%default]",
+        help="Using only the 3' end of the seqs [%(default)s]",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--var-disp",
-        help="Variable dispersion in the overhangs [%default]",
+        help="Variable dispersion in the overhangs [%(default)s]",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--jukes-cantor",
-        help="Use Jukes Cantor instead of HKY85 [%default]",
+        help="Use Jukes Cantor instead of HKY85 [%(default)s]",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--diff-hangs",
-        help="The overhangs are different for 5' and 3' [%default]",
+        help="The overhangs are different for 5' and 3' [%(default)s]",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--fix-nicks",
-        help="Fix the nick frequency vector (Only C.T from the 5' end and G.A from the 3' end) [%default]",
+        help="Fix the nick frequency vector (Only C.T from the 5' end and G.A from the 3' end) [%(default)s]",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--use-raw-nick-freq",
-        help="Use the raw nick frequency vector without smoothing [%default]",
+        help="Use the raw nick frequency vector without smoothing [%(default)s]",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--single-stranded",
-        help="Single stranded protocol [%default]",
+        help="Single stranded protocol [%(default)s]",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--theme-bw",
-        help="Use black and white theme in post. pred. plot [%default]",
+        help="Use black and white theme in post. pred. plot [%(default)s]",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--seq-length",
-        help="How long sequence to use from each side [%default]",
+        help="How long sequence to use from each side [%(default)s]",
         type=int,
         default=12,
     )
-    group3.add_option(
+    group3.add_argument(
         "--stats-only",
         help="Run only statistical estimation from a valid result folder",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--no-stats",
         help="Disabled statistical estimation, active by default",
         default=False,
         action="store_true",
     )
-    group3.add_option(
+    group3.add_argument(
         "--check-R-packages",
         help="Check if the R modules are working",
         default=False,
         action="store_true",
     )
-    parser.add_option_group(group3)
+    parser.add_argument_group(group3)
 
-    group4 = OptionGroup(parser, "Options for rescaling of BAM files")
-    group4.add_option(
+    group4 = parser.add_argument_group("Options for rescaling of BAM files")
+    group4.add_argument(
         "--rescale",
         help="Rescale the quality scores in the BAM file using the output from the statistical estimation",
         default=False,
         action="store_true",
     )
-    group4.add_option(
+    group4.add_argument(
         "--rescale-only",
         help="Run only rescaling from a valid result folder",
         default=False,
         action="store_true",
     )
-    group4.add_option(
+    group4.add_argument(
         "--rescale-out", help="Write the rescaled BAM to this file",
     )
-    group4.add_option(
+    group4.add_argument(
         "--rescale-length-5p",
         help="How many bases to rescale at the 5' termini; defaults to --seq-length.",
         type=int,
     )
-    group4.add_option(
+    group4.add_argument(
         "--rescale-length-3p",
         help="How many bases to rescale at the 5' termini; defaults to --seq-length.",
         type=int,
     )
-    parser.add_option_group(group4)
+    parser.add_argument_group(group4)
 
     return parser
 
 
 def options(argv):
     parser = _build_parser()
-    (options, args) = parser.parse_args(argv)
+    options = parser.parse_args(argv)
     logger = logging.getLogger(__name__)
 
     # check if the Rscript executable is present on the system
