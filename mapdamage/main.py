@@ -30,7 +30,6 @@ plot and quantify damage patterns from a SAM/BAM file
 :Output: tabulated tables, pdf
 """
 import logging
-import random
 import time
 import sys
 import os
@@ -40,70 +39,7 @@ import pysam
 
 import mapdamage
 
-
 _LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
-
-_BAM_UNMAPPED = 0x4
-_BAM_SECONDARY = 0x100
-_BAM_FAILED_QC = 0x200
-_BAM_PCR_DUPE = 0x400
-_BAM_CHIMERIC = 0x800
-
-
-def _filter_reads(bamfile):
-    filtered_flags = (
-        _BAM_UNMAPPED | _BAM_SECONDARY | _BAM_FAILED_QC | _BAM_PCR_DUPE | _BAM_CHIMERIC
-    )
-
-    for read in bamfile:
-        if not (read.flag & filtered_flags):
-            yield read
-
-
-def _downsample_to_fraction(bamfile, downsample_to, seed):
-    if not (0 <= downsample_to < 1):
-        raise ValueError(downsample_to)
-
-    rand = random.Random(seed)
-    for read in _filter_reads(bamfile):
-        if rand.random() < downsample_to:
-            yield read
-
-
-def _downsample_to_fixed_number(bamfile, downsample_to, seed):
-    # use reservoir sampling
-    if downsample_to < 1:
-        raise ValueError(downsample_to)
-
-    downsample_to = int(downsample_to)
-    rand = random.Random(seed)
-    sample = [None] * downsample_to
-    for (index, record) in enumerate(_filter_reads(bamfile)):
-        if index >= downsample_to:
-            index = rand.randint(0, index)
-            if index >= downsample_to:
-                continue
-        sample[index] = record
-
-    return [_f for _f in sample if _f]
-
-
-def _read_bamfile(bamfile, downsample_to, seed):
-    """
-    Takes a subset of the bamfile. Can use a approximate fraction of the
-    hits or specific number of reads using reservoir sampling. Returns
-    a list in the last case otherwise a iterator.
-    """
-
-    log = logging.getLogger(__name__)
-    if downsample_to is None:
-        return _filter_reads(bamfile)
-    elif downsample_to < 1:
-        log.debug("Downsampling BAM to %.1f%%", downsample_to * 100)
-        return _downsample_to_fraction(bamfile, downsample_to, seed)
-    else:
-        log.debug("Downsampling BAM to %d random reads", downsample_to)
-        return _downsample_to_fixed_number(bamfile, downsample_to, seed)
 
 
 def main(argv):
@@ -177,17 +113,18 @@ def main(argv):
         return 0
 
     # open SAM/BAM file
-    if options.filename == "-":
-        in_bam = pysam.Samfile("-", "rb")
-        # disabling rescaling if reading from standard input since we need
-        # to read it twice
-        if options.rescale:
-            logger.info("Warning, reading from standard input, rescaling is disabled")
-            options.rescale = False
-    else:
-        in_bam = pysam.Samfile(options.filename)
+    reader = mapdamage.reader.BAMReader(
+        filepath=options.filename,
+        downsample_to=options.downsample,
+        downsample_seed=options.downsample_seed,
+    )
 
-    reflengths = dict(list(zip(in_bam.references, in_bam.lengths)))
+    if reader.is_stream and options.rescale:
+        # rescaling is not possible on a streasm, since we need to read it twice
+        logger.warning("Reading from stream, rescaling is disabled")
+        options.rescale = False
+
+    reflengths = reader.get_references()
     # check if references in SAM/BAM are the same in the fasta reference file
     fai_lengths = mapdamage.seq.read_fasta_index(options.ref + ".fai")
     if not fai_lengths:
@@ -202,7 +139,7 @@ def main(argv):
         logger.warning("This may lead to excessive memory/disk usage.")
         logger.warning("Consider using --merge-reference-sequences")
 
-    refnames = in_bam.references
+    refnames = reader.handle.references
     if options.merge_reference_sequences:
         refnames = ["*"]
 
@@ -226,7 +163,7 @@ def main(argv):
     # main loop
     counter = 0
     warned_about_quals = False
-    for read in _read_bamfile(in_bam, options.downsample, options.downsample_seed):
+    for read in reader:
         counter += 1
 
         # external coordinates 5' and 3' , 3' is 1-based offset
@@ -234,7 +171,7 @@ def main(argv):
         # record aligned length for single-end reads
         mapdamage.seq.record_length(read, coordinate, lgdistrib)
         # fetch reference name, chromosome or contig names
-        chrom = in_bam.getrname(read.tid)
+        chrom = reader.handle.getrname(read.tid)
 
         (before, after) = mapdamage.align.get_around(
             coordinate, chrom, reflengths, options.around, ref
@@ -293,7 +230,7 @@ def main(argv):
     logger.debug("BAM read in %f seconds", time.time() - start_time)
 
     # close file handles
-    in_bam.close()
+    reader.close()
 
     # output results, write summary tables to disk
     with open(os.path.join(options.folder, "misincorporation.txt"), "w") as fmut:
