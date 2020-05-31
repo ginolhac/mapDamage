@@ -121,8 +121,8 @@ def main(argv):
 
     if reader.is_stream and options.rescale:
         # rescaling is not possible on a streasm, since we need to read it twice
-        logger.warning("Reading from stream, rescaling is disabled")
-        options.rescale = False
+        logger.error("Cannot build model and rescale in one run when input is a pipe")
+        return 1
 
     reflengths = reader.get_references()
     # check if references in SAM/BAM are the same in the fasta reference file
