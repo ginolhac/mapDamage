@@ -71,7 +71,7 @@ class testRescaling(unittest.TestCase):
         options = mock_options(
             "tests/test.bam", "tests/test.rescaled.sam", "tests/probs/"
         )
-        ref = pysam.Fastafile("tests/fake1.fasta")
+        ref = pysam.FastaFile("tests/fake1.fasta")
         mapdamage.rescale.rescale_qual(ref, options, debug=True)
         self.assertTrue(
             filecmp.cmp("tests/test.rescaled.sam", "tests/test.rescaled.correct.sam")

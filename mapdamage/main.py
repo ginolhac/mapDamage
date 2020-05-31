@@ -101,7 +101,7 @@ def main(argv):
 
     # fetch all references and associated lengths in nucleotides
     try:
-        ref = pysam.Fastafile(options.ref)
+        ref = pysam.FastaFile(options.ref)
     except IOError as error:
         logger.error("Could not open the reference file %r: %e", options.ref, error)
         raise

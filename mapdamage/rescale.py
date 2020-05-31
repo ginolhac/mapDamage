@@ -373,12 +373,12 @@ def rescale_qual(ref, options, debug=False):
     start_time = time.time()
 
     # open SAM/BAM files
-    bam = pysam.Samfile(options.filename)
+    bam = pysam.AlignmentFile(options.filename)
     if debug:
         write_mode = "wh"
     else:
         write_mode = "wb"
-    bam_out = pysam.Samfile(options.rescale_out, write_mode, template=bam)
+    bam_out = pysam.AlignmentFile(options.rescale_out, write_mode, template=bam)
     corr_prob = get_corr_prob(
         options.folder,
         rescale_length_5p=options.rescale_length_5p,
