@@ -1,31 +1,6 @@
 import csv
 
-import mapdamage
 import mapdamage.seqtk as seqtk
-
-
-def count_ref_comp(read, before, after, comp):
-    """ record basae composition in external genomic regions """
-    std = "-" if read.is_reverse else "+"
-
-    _update_table(comp["5p"][std], before, range(-len(before), 0))
-    _update_table(comp["3p"][std], after, range(1, len(after) + 1))
-
-
-def count_read_comp(read, length, comp):
-    """ record base composition of read, discard marked nucleotides """
-    std, seq = "+", read.query
-    if read.is_reverse:
-        std, seq = "-", mapdamage.seq.revcomp(seq)
-
-    _update_table(comp["5p"][std], seq, range(1, length + 1))
-    _update_table(comp["3p"][std], reversed(seq), range(-1, -length - 1, -1))
-
-
-def _update_table(table, sequence, indices):
-    for (index, nt) in zip(indices, sequence):
-        if nt in table:
-            table[nt][index] += 1
 
 
 def write_base_comp(fasta, destination):

@@ -38,6 +38,7 @@ import coloredlogs
 import pysam
 
 import mapdamage
+import mapdamage.statistics
 
 _LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
 
@@ -81,10 +82,7 @@ def main(argv):
     # run the Bayesian estimation if the matrix construction is done
     if options.stats_only:
         # does not work for very low damage levels
-        if mapdamage.tables.check_table_and_warn_if_dmg_freq_is_low(options.folder):
-            logger.error("Cannot use the Bayesian estimation, terminating the program")
-            return 1
-        else:
+        if mapdamage.statistics.check_table_and_warn_if_dmg_freq_is_low(options.folder):
             # before running the Bayesian estimation get the base composition
             path_to_basecomp = os.path.join(options.folder, "dnacomp_genome.csv")
             if os.path.isfile(path_to_basecomp):
@@ -98,6 +96,9 @@ def main(argv):
                 return 1
 
             return 0
+        else:
+            logger.error("Cannot use the Bayesian estimation, terminating the program")
+            return 1
 
     # fetch all references and associated lengths in nucleotides
     try:
@@ -133,20 +134,15 @@ def main(argv):
         return 1
 
     # for misincorporation patterns, record mismatches
-    misincorp = mapdamage.tables.initialize_mut(options.length)
+    misincorp = mapdamage.statistics.MisincorporationRates(options.length)
     # for fragmentation patterns, record base compositions
-    dnacomp = mapdamage.tables.initialize_comp(options.around, options.length)
+    dnacomp = mapdamage.statistics.DNAComposition(options.around, options.length)
     # for length distributions
-    lgdistrib = mapdamage.tables.initialize_lg()
+    lgdistrib = mapdamage.statistics.FragmentLengths()
 
     logger.info("Reading from '%s'", options.filename)
     if options.minqual != 0:
         logger.info("Filtering out bases with a Phred score < %d", options.minqual)
-    logger.debug(
-        "%d references are assumed in SAM/BAM file, for a total of %d nucleotides",
-        len(reflengths),
-        sum(reflengths.values()),
-    )
     logger.info("Writing results to '%s/'", options.folder)
 
     # main loop
@@ -158,7 +154,7 @@ def main(argv):
         # external coordinates 5' and 3' , 3' is 1-based offset
         coordinate = mapdamage.align.get_coordinates(read)
         # record aligned length for single-end reads
-        mapdamage.seq.record_length(read, coordinate, lgdistrib)
+        lgdistrib.update(read, coordinate)
         # fetch reference name, chromosome or contig names
         chrom = reader.handle.getrname(read.tid)
 
@@ -193,21 +189,18 @@ def main(argv):
             before = beforerev
 
         # record soft clipping when present
-        mapdamage.align.record_soft_clipping(read, misincorp, options.length)
-
+        misincorp.update_soft_clipping(read)
         # count misincorparations by comparing read and reference base by base
-        mapdamage.align.get_mis(read, seq, refseq, options.length, misincorp, "5p")
+        misincorp.update(read, seq, refseq, "5p")
         # do the same with sequences align to 3'-ends
-        mapdamage.align.get_mis(
-            read, seq[::-1], refseq[::-1], options.length, misincorp, "3p"
-        )
+        misincorp.update(read, reversed(seq), reversed(refseq), "3p")
+
         # compute base composition for reads
-        mapdamage.composition.count_read_comp(read, options.length, dnacomp)
-
+        dnacomp.update_read(read, options.length)
         # compute base composition for genomic regions
-        mapdamage.composition.count_ref_comp(read, before, after, dnacomp)
+        dnacomp.update_reference(read, before, after)
 
-        if counter % 50000 == 0:
+        if counter % 50_000 == 0:
             logger.debug("%10d filtered alignments processed", counter)
 
     logger.debug("Done. %d filtered alignments processed", counter)
@@ -217,12 +210,9 @@ def main(argv):
     reader.close()
 
     # output results, write summary tables to disk
-    with open(os.path.join(options.folder, "misincorporation.txt"), "w") as fmut:
-        mapdamage.tables.print_mut(misincorp, options, fmut)
-    with open(os.path.join(options.folder, "dnacomp.txt"), "w") as fcomp:
-        mapdamage.tables.print_comp(dnacomp, options, fcomp)
-    with open(os.path.join(options.folder, "lgdistribution.txt"), "w") as flg:
-        mapdamage.tables.print_lg(lgdistrib, options, flg)
+    misincorp.write(os.path.join(options.folder, "misincorporation.txt"))
+    dnacomp.write(os.path.join(options.folder, "dnacomp.txt"))
+    lgdistrib.write(os.path.join(options.folder, "lgdistribution.txt"))
 
     # plot using R
     if not options.no_r:
@@ -233,7 +223,7 @@ def main(argv):
             return 1
 
     # raises a warning for very low damage levels
-    if mapdamage.tables.check_table_and_warn_if_dmg_freq_is_low(options.folder):
+    if not mapdamage.statistics.check_table_and_warn_if_dmg_freq_is_low(options.folder):
         options.no_stats = True
 
     # run the Bayesian estimation

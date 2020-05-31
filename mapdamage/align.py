@@ -75,24 +75,6 @@ def align_with_qual(cigarlist, seq, qual, threshold, ref):
     return "".join(lread), "".join(lqual), "".join(lref)
 
 
-def get_mis(read, seq, refseq, length, tab, end):
-    """ count mismatches using aligned reference and read,
-  must be redone since N in reference were randomly replaced by any bases """
-    std = "-" if read.is_reverse else "+"
-    subtable = tab[end][std]
-
-    for (i, nt_seq, nt_ref) in zip(range(length), seq, refseq):
-        if (nt_seq in "ACGT-") and (nt_ref in "ACGT-"):
-            if nt_ref != "-":
-                # record base composition in the reference, only A, C, G, T
-                subtable[nt_ref][i] += 1
-
-            # Most ref/seq pairs will be identical
-            if nt_ref != nt_seq:
-                mut = "%s>%s" % (nt_ref, nt_seq)
-                subtable[mut][i] += 1
-
-
 def parse_cigar(cigarlist, ope):
     """ for a specific operation (mismach, match, insertion, deletion... see above)
   return occurences and index in the alignment """
@@ -106,22 +88,3 @@ def parse_cigar(cigarlist, ope):
         if operation in oplist:
             tlength += length
     return coordinate
-
-
-def record_soft_clipping(read, tab, length):
-    """ record soft clipped bases at extremities """
-
-    def update_table(end, std, bases):
-        for i in range(0, min(bases, length)):
-            tab[end][std]["S"][i] += 1
-
-    strand = "-" if read.is_reverse else "+"
-    for (nbases, idx) in mapdamage.align.parse_cigar(read.cigar, 4):
-        if idx == 0:
-            # Soft-clipping at the left side of the alignment
-            end = "3p" if read.is_reverse else "5p"
-        else:
-            # Soft-clipping at the right side of the alignment
-            end = "5p" if read.is_reverse else "3p"
-
-        update_table(end, strand, nbases)

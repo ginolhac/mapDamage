@@ -7,5 +7,4 @@ import mapdamage.reader
 import mapdamage.rescale
 import mapdamage.rscript
 import mapdamage.seq
-import mapdamage.tables
 import mapdamage.version
