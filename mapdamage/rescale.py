@@ -295,7 +295,7 @@ def rescale_qual_read(bam, read, ref, corr_prob, subs, debug=False, direction="b
     new_qual = [-100] * length_read
     pos_on_read = 0
     number_of_rescaled_bases = 0.0
-    for (i, nt_seq, nt_ref, nt_qual) in zip(range(length_align), seq, refseq, qual):
+    for (_, nt_seq, nt_ref, nt_qual) in zip(range(length_align), seq, refseq, qual):
         # rescale the quality according to the triplet position,
         # pair of the reference and the sequence
         if (nt_seq == "T" and nt_ref == "C") or (nt_seq == "A" and nt_ref == "G"):
@@ -326,8 +326,8 @@ def rescale_qual_read(bam, read, ref, corr_prob, subs, debug=False, direction="b
             if not debug:
                 logger = logging.getLogger(__name__)
                 logger.warning(
-                    "Warning: The aligment of the read is longer than the actual read %s",
-                    (read.qname),
+                    "The aligment of the read is longer than the actual read %s",
+                    read.qname,
                 )
             break
     new_qual = "".join(new_qual)
@@ -393,8 +393,8 @@ def rescale_qual(ref, options, debug=False):
             pass
         elif not hit.qual and not debug:
             logger.warning(
-                "Cannot rescale base PHRED scores for read '%s'; no scores assigned."
-                % hit.qname
+                "Cannot rescale base PHRED scores for read '%s'; no scores assigned.",
+                hit.qname,
             )
         elif hit.is_paired:
             if first_pair and not debug:
@@ -443,8 +443,8 @@ def rescale_qual(ref, options, debug=False):
         bam_out.write(hit)
     if number_of_non_proper_pairs != 0 and not debug:
         logger.warning(
-            "Number of non-rescaled reads due to improper pairing:  %d"
-            % number_of_non_proper_pairs
+            "Number of non-rescaled reads due to improper pairing:  %d",
+            number_of_non_proper_pairs,
         )
     if subs["TC-before"] != subs["TC-after"] or subs["AG-before"] != subs["AG-after"]:
         sys.exit(
@@ -454,4 +454,4 @@ def rescale_qual(ref, options, debug=False):
     bam.close()
     bam_out.close()
     print_subs(subs)
-    logger.debug("Rescaling completed in %f seconds" % (time.time() - start_time,))
+    logger.debug("Rescaling completed in %f seconds", time.time() - start_time)

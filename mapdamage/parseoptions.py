@@ -381,8 +381,8 @@ def options(argv):
         os.makedirs(options.folder, mode=0o750)
         if options.plot_only or options.stats_only or options.rescale_only:
             logger.error(
-                "Folder %s does not exist while plot/stats/rescale only was used\n"
-                % options.folder
+                "Folder %s does not exist while plot/stats/rescale only was used",
+                options.folder,
             )
             return None
 

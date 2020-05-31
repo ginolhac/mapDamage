@@ -122,6 +122,6 @@ def compare_sequence_dicts(fasta_dict, bam_dict):
     if fasta_only:
         logger.warning("FASTA file contains extra sequences:")
         for key in fasta_only:
-            logger.warning(" - %s = %i bp" % (key, fasta_dict[key]))
+            logger.warning(" - %s = %i bp", key, fasta_dict[key])
 
     return not (different or bam_only)

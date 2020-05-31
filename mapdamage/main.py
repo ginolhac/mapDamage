@@ -255,7 +255,7 @@ def main(argv):
 
     # log the time it took
     logger.info("Successful run")
-    logger.debug("Run completed in %f seconds" % (time.time() - start_time,))
+    logger.debug("Run completed in %f seconds", time.time() - start_time)
 
     return 0
 
