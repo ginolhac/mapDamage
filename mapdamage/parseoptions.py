@@ -53,9 +53,7 @@ def _build_parser():
     )
     group.add_option(
         "--merge-reference-sequences",
-        help="Ignore referece sequence names when tabulating reads (using '*' instead). "
-        "Useful for alignments with a large number of reference sequnces, which may otherwise result in excessive "
-        "memory or disk usage due to the number of tables generated.",
+        help=SUPPRESS_HELP,
         default=False,
         action="store_true",
     )

@@ -131,22 +131,11 @@ def main(argv):
         return 1
     elif not mapdamage.seq.compare_sequence_dicts(fai_lengths, reflengths):
         return 1
-    elif (len(reflengths) >= 1000) and not options.merge_reference_sequences:
-        logger.warning(
-            "Alignment contains a large number of reference sequences (%i)!",
-            len(reflengths),
-        )
-        logger.warning("This may lead to excessive memory/disk usage.")
-        logger.warning("Consider using --merge-reference-sequences")
-
-    refnames = reader.handle.references
-    if options.merge_reference_sequences:
-        refnames = ["*"]
 
     # for misincorporation patterns, record mismatches
-    misincorp = mapdamage.tables.initialize_mut(refnames, options.length)
+    misincorp = mapdamage.tables.initialize_mut(options.length)
     # for fragmentation patterns, record base compositions
-    dnacomp = mapdamage.tables.initialize_comp(refnames, options.around, options.length)
+    dnacomp = mapdamage.tables.initialize_comp(options.around, options.length)
     # for length distributions
     lgdistrib = mapdamage.tables.initialize_lg()
 
@@ -203,25 +192,20 @@ def main(argv):
             after = mapdamage.seq.revcomp(before)
             before = beforerev
 
-        if options.merge_reference_sequences:
-            chrom = "*"
-
         # record soft clipping when present
-        mapdamage.align.record_soft_clipping(read, misincorp[chrom], options.length)
+        mapdamage.align.record_soft_clipping(read, misincorp, options.length)
 
         # count misincorparations by comparing read and reference base by base
-        mapdamage.align.get_mis(
-            read, seq, refseq, chrom, options.length, misincorp, "5p"
-        )
+        mapdamage.align.get_mis(read, seq, refseq, options.length, misincorp, "5p")
         # do the same with sequences align to 3'-ends
         mapdamage.align.get_mis(
-            read, seq[::-1], refseq[::-1], chrom, options.length, misincorp, "3p"
+            read, seq[::-1], refseq[::-1], options.length, misincorp, "3p"
         )
         # compute base composition for reads
-        mapdamage.composition.count_read_comp(read, chrom, options.length, dnacomp)
+        mapdamage.composition.count_read_comp(read, options.length, dnacomp)
 
         # compute base composition for genomic regions
-        mapdamage.composition.count_ref_comp(read, chrom, before, after, dnacomp)
+        mapdamage.composition.count_ref_comp(read, before, after, dnacomp)
 
         if counter % 50000 == 0:
             logger.debug("%10d filtered alignments processed", counter)

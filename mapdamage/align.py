@@ -75,11 +75,11 @@ def align_with_qual(cigarlist, seq, qual, threshold, ref):
     return "".join(lread), "".join(lqual), "".join(lref)
 
 
-def get_mis(read, seq, refseq, ref, length, tab, end):
+def get_mis(read, seq, refseq, length, tab, end):
     """ count mismatches using aligned reference and read,
   must be redone since N in reference were randomly replaced by any bases """
     std = "-" if read.is_reverse else "+"
-    subtable = tab[ref][end][std]
+    subtable = tab[end][std]
 
     for (i, nt_seq, nt_ref) in zip(range(length), seq, refseq):
         if (nt_seq in "ACGT-") and (nt_ref in "ACGT-"):

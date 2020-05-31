@@ -6,16 +6,14 @@ import mapdamage
 from mapdamage.version import __version__
 
 
-def initialize_mut(ref, length):
+def initialize_mut(length):
     tab = {}
-    for contig in ref:
-        tab_contig = tab[contig] = {}
-        for end in ("5p", "3p"):
-            tab_end = tab_contig[end] = {}
-            for std in ("+", "-"):
-                tab_std = tab_end[std] = {}
-                for mut in mapdamage.seq.HEADER:
-                    tab_std[mut] = dict.fromkeys(range(length), 0)
+    for end in ("5p", "3p"):
+        tab_end = tab[end] = {}
+        for std in ("+", "-"):
+            tab_std = tab_end[std] = {}
+            for mut in mapdamage.seq.HEADER:
+                tab_std[mut] = dict.fromkeys(range(length), 0)
 
     return tab
 
@@ -24,21 +22,19 @@ def print_mut(mut, opt, out):
     _print_freq_table(mut, mapdamage.seq.HEADER, opt, out, offset=1)
 
 
-def initialize_comp(ref, around, length):
+def initialize_comp(around, length):
     keys = {
         "3p": list(range(-length, 0)) + list(range(1, around + 1)),
         "5p": list(range(-around, 0)) + list(range(1, length + 1)),
     }
 
     tab = {}
-    for contig in ref:
-        tab_contig = tab[contig] = {}
-        for end in ("5p", "3p"):
-            tab_end = tab_contig[end] = {}
-            for std in ("+", "-"):
-                tab_std = tab_end[std] = {}
-                for letters in mapdamage.seq.LETTERS:
-                    tab_std[letters] = dict.fromkeys(keys[end], 0)
+    for end in ("5p", "3p"):
+        tab_end = tab[end] = {}
+        for std in ("+", "-"):
+            tab_std = tab_end[std] = {}
+            for letters in mapdamage.seq.LETTERS:
+                tab_std[letters] = dict.fromkeys(keys[end], 0)
 
     return tab
 
@@ -120,18 +116,15 @@ def _print_freq_table(table, columns, opt, out, offset=0):
     )
     out.write("Chr\tEnd\tStd\tPos\t%s\n" % ("\t".join(columns)))
 
-    for (reference, ends) in sorted(table.items()):
-        for (end, strands) in sorted(ends.items()):
-            for (strand, subtable) in sorted(strands.items()):
-                subtable["Total"] = {}
-                for index in sorted(subtable[columns[0]]):
-                    subtable["Total"][index] = sum(
-                        subtable[letter][index] for letter in mapdamage.seq.LETTERS
-                    )
+    for (end, strands) in sorted(table.items()):
+        for (strand, subtable) in sorted(strands.items()):
+            subtable["Total"] = {}
+            for index in sorted(subtable[columns[0]]):
+                subtable["Total"][index] = sum(
+                    subtable[letter][index] for letter in mapdamage.seq.LETTERS
+                )
 
-                    out.write(
-                        "%s\t%s\t%s\t%d" % (reference, end, strand, index + offset)
-                    )
-                    for base in columns:
-                        out.write("\t%d" % subtable[base][index])
-                    out.write("\n")
+                out.write("*\t%s\t%s\t%d" % (end, strand, index + offset))
+                for base in columns:
+                    out.write("\t%d" % subtable[base][index])
+                out.write("\n")
