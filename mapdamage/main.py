@@ -37,6 +37,7 @@ import coloredlogs
 import pysam
 
 import mapdamage
+import mapdamage.config
 import mapdamage.statistics
 
 _LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
@@ -48,9 +49,15 @@ def main(argv):
     coloredlogs.install(fmt=_LOG_FORMAT)
     logger = logging.getLogger(__name__)
 
-    options = mapdamage.parseoptions.options(argv)
-    if options is None:
-        logging.error("Option parsing failed, terminating the program")
+    try:
+        options = mapdamage.config.parse_args(argv)
+    except mapdamage.config.ArgumentError as error:
+        if error.argument_name:
+            logging.error("%s %s", error.argument_name, error.message)
+        else:
+            logging.error("%s", error.message)
+
+        logging.error("See 'mapDamage --help' for more information")
         return 1
 
     handler = logging.FileHandler(options.folder / "Runtime_log.txt")
