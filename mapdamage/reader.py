@@ -86,4 +86,8 @@ class BAMReader:
                     continue
             sample[index] = record
 
-        return (_f for _f in sample if _f is not None)
+        result = [read for read in sample if read is not None]
+        # Sampling does not preserve input order
+        result.sort(key=lambda read: (read.reference_id, read.reference_start))
+
+        return iter(result)
