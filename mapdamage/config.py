@@ -338,6 +338,11 @@ def parse_args(argv):
     options = parser.parse_args(argv)
     logger = logging.getLogger(__name__)
 
+    # Set logging levels for root logger and any additional handlers
+    logging.getLogger().setLevel(options.log_level)
+    for handler in logging.getLogger().handlers:
+        handler.setLevel(options.log_level)
+
     # check if the Rscript executable is present on the system
     if not shutil.which("Rscript"):
         logger.warning("Rscript is not in your PATH, plotting is disabled")
