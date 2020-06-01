@@ -8,7 +8,7 @@ def write_base_comp(fasta, destination):
     and writes them to 'destination' as CSV.
     """
     bases = {"A": 0, "C": 0, "G": 0, "T": 0}
-    for stats in seqtk.comp(fasta):
+    for stats in seqtk.comp(str(fasta)):
         for key in bases:
             bases[key] += stats[key]
 
