@@ -71,7 +71,7 @@ def check_r_libraries():
     script = construct_path("stats/checkLibraries.R")
     missing_libries = False
     with open(os.devnull, "w") as null:
-        for library in ["inline", "ggplot2", "gam", "Rcpp", "RcppGSL"]:
+        for library in ["ggplot2", "gam", "Rcpp", "RcppGSL"]:
             command = ["Rscript", script, library]
 
             if not _log_call(command, log_failures=False, stdout=null, stderr=null):

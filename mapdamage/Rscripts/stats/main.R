@@ -1,6 +1,5 @@
 #The main work flow of the package
 #Load the libraries
-suppressPackageStartupMessages(library(inline))  #Already checked the libraries
 suppressPackageStartupMessages(library(ggplot2)) #thus ignoring any messages from them
 suppressPackageStartupMessages(library(Rcpp))
 suppressPackageStartupMessages(library(gam))

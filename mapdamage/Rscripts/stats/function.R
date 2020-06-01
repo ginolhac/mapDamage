@@ -143,193 +143,144 @@ seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
     }
 }
 
-#The following is an MC simulation code to mimic the
-#nick frequency part in the model from Philip
-seqProbVecNuWithLengths<- cxxfunction(methods::signature(
-                                      I_la="numeric",
-                                      I_la_disp="numeric",
-                                      I_nu="numeric",
-                                      I_m="numeric",
-                                      I_lengths="numeric",
-                                      I_mLe="numeric",
-                                      I_fo="numeric",
-                                      I_iter="numeric",
-                                      I_ds_protocol="numeric"
-                             ) ,includes='
-                  #include <gsl/gsl_randist.h>
-                  int genOverHang(double la,double la_disp)
-                  {
-                      double r = ((double) rand() / (RAND_MAX));
-                      int i = -1;
-                      double p = 0;
-                      double term = -500;
-                      while (p<r){
-                          if (i==-1){
-                              term = 1;
-                          }else {
-                              term = 0;
-                          }
-                          p = p + (gsl_ran_negative_binomial_pdf(i+1,la,la_disp)+term)/2;
-                          i++;
-                      }
-                      return(i);
-                  }
-                  ',body= '
-              srand(time(0));
-        Rcpp::NumericVector la(I_la);
-        Rcpp::NumericVector la_disp(I_la_disp);
-        Rcpp::NumericVector nu(I_nu);
-        Rcpp::NumericVector m(I_m);
-        Rcpp::NumericVector les(I_lengths);
-        Rcpp::NumericVector mLe(I_mLe);
-        Rcpp::NumericVector fo(I_fo);
-        Rcpp::NumericVector iter(I_iter);
-        Rcpp::NumericVector ds_protocol(I_ds_protocol);
-//
-        Rcpp::NumericVector output(mLe[0]);
-        Rcpp::NumericVector reduced_output(m[0]);
-        if (ds_protocol[0]==0){
-            for (int j = 0; j < m[0];j++){
-                reduced_output(j) = 1;
-            }
-            return(reduced_output);
-        }else {
-            for (int i = 0; i < iter[0];i++ ){
-//
-                double left_o_hang = genOverHang(la[0],la_disp[0]);
-                double right_o_hang = genOverHang(la[0],la_disp[0]);
-                double o_hang  = left_o_hang+right_o_hang;
-//
-                if (o_hang>=les(i)){
-                    //Single stranded sequence
-                    for (int j = 0; j <les(i);j++){
-                        output(j) = output(j)+1;
-                    }
-                } else {
-                    Rcpp::NumericVector r = runif(1);
-                    if (r[0]< (1-nu[0])/((les[i]-o_hang-1)*nu[0]+(1-nu[0]))){
-                        for (int j = 0; j <(les[i]-right_o_hang);j++){
-                            output(j) = output(j)+1;
-                        }
-                        //The right overhang is always G>A for the double stranded but
-                        //Here we will make the assumption that the pattern is symmetric
-                        //for practical reasons We can\'t  do that ....
-                    }else {
-                        Rcpp::NumericVector sa = floor(runif(1,0,les[i]-o_hang))+left_o_hang;
-                        for (int j = 0; j <=sa[0];j++){
-                            output(j) = output(j)+1;
-                        }
-                    }
-                }
-            }
-            if (fo(0)){
-                //Only considering the forward part
-                for (int j = 0; j < m[0];j++){
-                    reduced_output(j) = output(j)/iter(0);
-                }
-            }else {
-                for (int j = 0; j < m[0]/2;j++){
-                    reduced_output(j) = output(j)/iter(0);
-                    reduced_output(m[0]-j-1) = 1-output(j)/iter(0);
-                }
-            }
-            return(reduced_output);
-        }
-',plugin='RcppGSL' )
+# The following is an MC simulation code to mimic the
+# nick frequency part in the model from Philip
+sourceCpp(code='
+// [[Rcpp::depends(RcppGSL)]]
+#include <RcppGSL.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
-
-
-
-pDam <- function(th,ded,des,la,nu,lin){
-    #The damage and mutation matrix multiplied together
-    pct <- nu*(la*des+ded*(1-la))
-    pga <- (1-nu)*(la*des+ded*(1-la))
-    return(
-           c(
-             th[lin,1]*1+th[lin,3]*pga
-             ,
-             th[lin,2]*(1-pct)
-             ,
-             th[lin,3]*(1-pga)
-             ,
-             th[lin,2]*pct+th[lin,4]*1
-             )
-           )
-}
-
-logLikFunOneBaseSlow <- function(Gen,S,Theta,deltad,deltas,laVec,nuVec,m,lin){
-    #Calculates the log likelihood using R, a C++ version is available
-    ll <- 0
-    for (i in 1:length(laVec)){
-        #Get the damage probabilities
-        pd <- pDam(Theta,deltad,deltas,laVec[i],nuVec[i],lin)
-        ll <- ll + dmultinom(S[i,],Gen[i],pd,log=TRUE)
+int genOverHang(double la, double la_disp) {
+  double r = ((double) rand() / (RAND_MAX));
+  int i = -1;
+  double p = 0;
+  double term = -500;
+  while (p < r) {
+    if (i == -1) {
+      term = 1;
+    } else {
+      term = 0;
     }
-    return(ll)
+    p = p + (gsl_ran_negative_binomial_pdf(i + 1, la, la_disp) + term) / 2;
+    i++;
+  }
+  return (i);
 }
 
-#The same logic as in logLikFunOneBaseSlow except using a compiled code
-#to do the hard work
-logLikFunOneBaseFast <- cxxfunction(methods::signature(
-                                      I_Gen="numeric",
-                                      I_S="numeric",
-                                      I_Theta="numeric",
-                                      I_deltad="numeric",
-                                      I_deltas="numeric",
-                                      I_laVec="numeric",
-                                      I_nuVec="numeric",
-                                      I_m="numeric",
-                                      I_lin="numeric"
-                                      ), body = '
-Rcpp::NumericMatrix S(I_S);
-Rcpp::NumericMatrix th(I_Theta);
+// [[Rcpp::export]] 
+Rcpp::NumericVector seqProbVecNuWithLengths(
+  Rcpp::NumericVector la,
+  Rcpp::NumericVector la_disp,
+  Rcpp::NumericVector nu,
+  Rcpp::NumericVector m,
+  Rcpp::NumericVector lengths,
+  Rcpp::NumericVector mLe,
+  Rcpp::NumericVector fo,
+  Rcpp::NumericVector iter,
+  Rcpp::NumericVector ds_protocol
+) {
+  srand(time(0));
 
-Rcpp::NumericVector Gen(I_Gen);
+  Rcpp::NumericVector output(mLe[0]);
+  Rcpp::NumericVector reduced_output(m[0]);
+  if (ds_protocol[0] == 0) {
+    for (int j = 0; j < m[0]; j++) {
+      reduced_output(j) = 1;
+    }
+    return (reduced_output);
+  } else {
+    for (int i = 0; i < iter[0]; i++) {
 
-Rcpp::NumericVector Vded(I_deltad);
-double ded = Vded[0];
+      double left_o_hang = genOverHang(la[0], la_disp[0]);
+      double right_o_hang = genOverHang(la[0], la_disp[0]);
+      double o_hang = left_o_hang + right_o_hang;
 
-Rcpp::NumericVector Vdes(I_deltas);
-double des = Vdes[0];
+      if (o_hang >= lengths(i)) {
+        // Single stranded sequence
+        for (int j = 0; j < lengths(i); j++) {
+          output(j) = output(j) + 1;
+        }
+      } else {
+        Rcpp::NumericVector r = Rcpp::runif(1);
+        if (r[0] < (1 - nu[0]) / ((lengths[i] - o_hang - 1) * nu[0] + (1 - nu[0]))) {
+          for (int j = 0; j < (lengths[i] - right_o_hang); j++) {
+            output(j) = output(j) + 1;
+          }
+          // The right overhang is always G>A for the double stranded but
+          // Here we will make the assumption that the pattern is symmetric
+          // for practical reasons We can\'t  do that ....
+        } else {
+          Rcpp::NumericVector sa = floor(Rcpp::runif(1, 0, lengths[i] - o_hang)) + left_o_hang;
+          for (int j = 0; j <= sa[0]; j++) {
+            output(j) = output(j) + 1;
+          }
+        }
+      }
+    }
+    if (fo(0)) {
+      // Only considering the forward part
+      for (int j = 0; j < m[0]; j++) {
+        reduced_output(j) = output(j) / iter(0);
+      }
+    } else {
+      for (int j = 0; j < m[0] / 2; j++) {
+        reduced_output(j) = output(j) / iter(0);
+        reduced_output(m[0] - j - 1) = 1 - output(j) / iter(0);
+      }
+    }
+    return (reduced_output);
+  }
+}', cacheDir=paste(path.expand("~"), ".mapDamage", sep="/"))
 
-Rcpp::NumericVector laVec(I_laVec);
 
-Rcpp::NumericVector nuVec(I_nuVec);
+sourceCpp(code='
+// [[Rcpp::depends(RcppGSL)]]
+#include <RcppGSL.h>
 
-Rcpp::NumericVector Vm(I_m);
-int m = Vm[0];
+#include <gsl/gsl_sf_gamma.h>
 
-Rcpp::NumericVector Vlin(I_lin);
-int lin = Vlin[0];
+// [[Rcpp::export]]
+double logLikFunOneBaseFast(
+    const Rcpp::NumericVector Gen,
+    const Rcpp::NumericVector S,
+    const Rcpp::NumericVector theta,
+    const double deltad,
+    const double deltas,
+    const Rcpp::NumericVector laVec,
+    const Rcpp::NumericVector nuVec,
+    const int m,
+    const int lin
+) {
+    Rcpp::NumericVector pDam(4);
+    double result = 0;
 
-Rcpp::NumericVector pDam(4);
+    for (int i = 0; i < laVec.size(); i++) {
+        double la = laVec[i];
+        double nu = nuVec[i];
+        double pct = nu * (la * deltas + deltad * (1 - la));
+        double pga = (1 - nu) * (la * deltas + deltad * (1 - la));
 
-Rcpp::NumericVector ret(1);
-ret[0] = 0;
+        pDam[0] = theta(lin - 1, 0) * 1 + theta(lin - 1, 2) * pga;
+        pDam[1] = theta(lin - 1, 1) * (1 - pct);
+        pDam[2] = theta(lin - 1, 2) * (1 - pga);
+        pDam[3] = theta(lin - 1, 1) * pct + theta(lin - 1, 3) * 1;
 
-for (int i = 0; i<laVec.size();i++){
-    double la = laVec[i];
-    double nu = nuVec[i];
-    double pct = nu*(la*des+ded*(1-la));
-    double pga = (1-nu)*(la*des+ded*(1-la));
-    pDam[0] = th(lin-1,0)*1+th(lin-1,2)*pga;
-    pDam[1] = th(lin-1,1)*(1-pct);
-    pDam[2] = th(lin-1,2)*(1-pga);
-    pDam[3] = th(lin-1,1)*pct+th(lin-1,3)*1;
-    double p1 = gsl_sf_lnfact(Gen(i))
-               -gsl_sf_lnfact(S(i,0))
-               -gsl_sf_lnfact(S(i,1))
-               -gsl_sf_lnfact(S(i,2))
-               -gsl_sf_lnfact(S(i,3));
-    double p2 = S(i,0)*log(pDam[0])
-               +S(i,1)*log(pDam[1])
-               +S(i,2)*log(pDam[2])
-               +S(i,3)*log(pDam[3]);
-    ret[0] = ret[0] + p1 + p2;
-}
-return(ret);
-', plugin="RcppGSL",include="#include <gsl/gsl_sf_gamma.h>")
+        double p1 = gsl_sf_lnfact(Gen(i)) -
+            gsl_sf_lnfact(S(i, 0)) -
+            gsl_sf_lnfact(S(i, 1)) -
+            gsl_sf_lnfact(S(i, 2)) -
+            gsl_sf_lnfact(S(i, 3));
 
+        double p2 = S(i, 0) * log(pDam[0]) +
+            S(i, 1) * log(pDam[1]) +
+            S(i, 2) * log(pDam[2]) +
+            S(i, 3) * log(pDam[3]);
+
+        result += p1 + p2;
+    }
+    return result;
+}', cacheDir=paste(path.expand("~"), ".mapDamage", sep="/"))
 
 
 logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
@@ -340,36 +291,18 @@ logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
     }
     #A,C,G and T
 
-    deb <- 0
-
     Asub <- dat[,"A.C"]+dat[,"A.G"]+dat[,"A.T"]
     ALL <- logLikFunOneBaseFast(dat[,"A"],cbind(dat[,"A"]-Asub,dat[,"A.C"],dat[,"A.G"],dat[,"A.T"]),Theta,deltad,deltas,laVec,nuVec,m,1)
-    if (deb){
-        ALLSlow <- logLikFunOneBaseSlow(dat[,"A"],cbind(dat[,"A"]-Asub,dat[,"A.C"],dat[,"A.G"],dat[,"A.T"]),Theta,deltad,deltas,laVec,nuVec,m,1)
-        stopifnot(all.equal(ALL,ALLSlow))
-    }
 
     Csub <- dat[,"C.A"]+dat[,"C.G"]+dat[,"C.T"]
     CLL <- logLikFunOneBaseFast(dat[,"C"],cbind(dat[,"C.A"],dat[,"C"]-Csub,dat[,"C.G"],dat[,"C.T"]),Theta,deltad,deltas,laVec,nuVec,m,2)
-    if (deb){
-        CLLSlow <- logLikFunOneBaseSlow(dat[,"C"],cbind(dat[,"C.A"],dat[,"C"]-Csub,dat[,"C.G"],dat[,"C.T"]),Theta,deltad,deltas,laVec,nuVec,m,2)
-        stopifnot(all.equal(CLL,CLLSlow))
-    }
-
 
     Gsub <- dat[,"G.A"]+dat[,"G.C"]+dat[,"G.T"]
     GLL <- logLikFunOneBaseFast(dat[,"G"],cbind(dat[,"G.A"],dat[,"G.C"],dat[,"G"]-Gsub,dat[,"G.T"]),Theta,deltad,deltas,laVec,nuVec,m,3)
-    if (deb){
-        GLLSlow <- logLikFunOneBaseSlow(dat[,"G"],cbind(dat[,"G.A"],dat[,"G.C"],dat[,"G"]-Gsub,dat[,"G.T"]),Theta,deltad,deltas,laVec,nuVec,m,3)
-        stopifnot(all.equal(CLL,CLLSlow))
-    }
 
     Tsub <- dat[,"T.A"]+dat[,"T.C"]+dat[,"T.G"]
     TLL <- logLikFunOneBaseFast(dat[,"T"],cbind(dat[,"T.A"],dat[,"T.C"],dat[,"T.G"],dat[,"T"]-Tsub),Theta,deltad,deltas,laVec,nuVec,m,4)
-    if (deb){
-        TLLSlow <- logLikFunOneBaseSlow(dat[,"T"],cbind(dat[,"T.A"],dat[,"T.C"],dat[,"T.G"],dat[,"T"]-Tsub),Theta,deltad,deltas,laVec,nuVec,m,4)
-        stopifnot(all.equal(TLL,TLLSlow))
-    }
+
     return(ALL+CLL+GLL+TLL)
 }
 
