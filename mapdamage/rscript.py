@@ -20,7 +20,7 @@ def misincorporation_plot(opt):
     output = opt.folder / "Fragmisincorporation_plot.pdf"
 
     logger = logging.getLogger(__name__)
-    logger.info("Saving misincorporation plot to %r", output)
+    logger.info("Saving misincorporation plot to '%s'", output)
 
     return _log_call(
         [
@@ -47,7 +47,7 @@ def length_distribution_plot(opt):
     output = opt.folder / "Length_plot.pdf"
 
     logger = logging.getLogger(__name__)
-    logger.info("Saving length distribution plot to %r", output)
+    logger.info("Saving length distribution plot to '%s'", output)
 
     return _log_call(
         [
@@ -70,13 +70,13 @@ def check_r_libraries():
     logger = logging.getLogger(__name__)
     script = construct_path("stats/checkLibraries.R")
     missing_libries = False
-    with open(os.devnull, "w") as null:
-        for library in ["ggplot2", "gam", "Rcpp", "RcppGSL"]:
-            command = ["Rscript", script, library]
 
-            if not _log_call(command, log_failures=False, stdout=null, stderr=null):
-                logger.error("Required R library is missing: %r", library)
-                missing_libries = True
+    for library in ["ggplot2", "gam", "Rcpp", "RcppGSL"]:
+        command = ["Rscript", script, library]
+
+        if not _log_call(command, quiet=True):
+            logger.error("Required R library is missing: %r", library)
+            missing_libries = True
 
     return not missing_libries
 
@@ -116,17 +116,35 @@ def perform_bayesian_estimates(opt):
     )
 
 
-def _log_call(command, log_failures=True, **kwargs):
+def _log_call(command, quiet=False):
     command = [str(value) for value in command]
 
     logger = logging.getLogger(__name__)
     logger.debug("Running command %r", " ".join(command))
+    loglevel = logging.DEBUG if quiet else logging.INFO
 
     start = time.time()
-    returncode = subprocess.call(command, **kwargs)
+
+    proc = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        start_new_session=True,
+    )
+
+    try:
+        for line in proc.stdout:
+            logger.log(loglevel, "%s", line.decode("utf-8", errors="replace").rstrip())
+
+        returncode = proc.wait()
+    except:
+        proc.terminate()
+        proc.wait()
+        raise
+
     logger.debug("Call completed in %.2fs with rc %i", time.time() - start, returncode)
 
-    if returncode and log_failures:
+    if returncode and not quiet:
         logger.error("Command returned error %i: %r", returncode, " ".join(command))
 
     return not returncode
