@@ -1,66 +1,54 @@
 import logging
-import os
 import subprocess
 import time
 
+from pathlib import Path
 from pkg_resources import resource_filename
 
 from mapdamage.version import __version__
 
 
-def construct_path(name, folder="Rscripts"):
-    """Construct a path to the mapdamage package data given the name
-    """
-    return resource_filename("mapdamage", os.path.join(folder, name))
-
-
-def misincorporation_plot(opt):
-    fmut = opt.folder / "misincorporation.txt"
-    fcomp = opt.folder / "dnacomp.txt"
-    output = opt.folder / "Fragmisincorporation_plot.pdf"
+def misincorporation_plot(options):
+    folder = options.folder.absolute()
+    fmut = folder / "misincorporation.txt"
+    fcomp = folder / "dnacomp.txt"
+    output = folder / "Fragmisincorporation_plot.pdf"
 
     logger = logging.getLogger(__name__)
     logger.info("Saving misincorporation plot to '%s'", output)
 
-    return _log_call(
-        [
-            "Rscript",
-            construct_path("mapDamage.R"),
-            fcomp,
-            output,
-            opt.refplot,
-            fmut,
-            opt.readplot,
-            opt.ymax,
-            opt.folder,
-            opt.title,
-            __version__,
-        ]
+    return _rscript_call(
+        Path("mapDamage.R"),
+        COMP=fcomp,
+        PDFOUT=output,
+        AROUND=options.refplot,
+        MISINCORP=fmut,
+        LENGTH=options.readplot,
+        YMAX=options.ymax,
+        FOLDER=folder,
+        TITLE=options.title,
+        VERSION=__version__,
     )
 
 
-def length_distribution_plot(opt):
+def length_distribution_plot(options):
     """optional length distribution and cumulative C>T mutations plots, per strand
     """
-    fmut = opt.folder / "misincorporation.txt"
-    flength = opt.folder / "lgdistribution.txt"
-    output = opt.folder / "Length_plot.pdf"
+    folder = options.folder.absolute()
+    fmut = folder / "misincorporation.txt"
+    flength = folder / "lgdistribution.txt"
+    output = folder / "Length_plot.pdf"
 
     logger = logging.getLogger(__name__)
     logger.info("Saving length distribution plot to '%s'", output)
 
-    return _log_call(
-        [
-            "Rscript",
-            construct_path("lengths.R"),
-            flength,
-            output,
-            fmut,
-            opt.length,
-            opt.title,
-            __version__,
-            int(opt.log_level not in ("DEBUG", "INFO")),
-        ]
+    return _rscript_call(
+        Path("lengths.R"),
+        LGDIST=flength,
+        PDFOUT=output,
+        MISINCORP=fmut,
+        TITLE=options.title,
+        VERSION=__version__,
     )
 
 
@@ -80,42 +68,47 @@ def check_r_libraries():
     return not missing_libries
 
 
-def perform_bayesian_estimates(opt):
-    """Runs the Bayesian estimation program, using the options opt
+def perform_bayesian_estimates(options):
+    """Runs the Bayesian estimation program
     """
     logger = logging.getLogger(__name__)
     logger.info("Performing Bayesian estimates")
+    folder = options.folder.absolute()
 
-    return _log_call(
-        [
-            "Rscript",
-            construct_path("stats/runGeneral.R"),
-            opt.rand,
-            opt.burn,
-            opt.adjust,
-            opt.iter,
-            int(opt.forward),
-            int(opt.reverse),
-            int(not opt.var_disp),
-            int(not opt.diff_hangs),
-            0,
-            int(opt.fix_nicks),
-            int(not opt.single_stranded),
-            opt.seq_length,
-            str(opt.folder) + "/",
-            construct_path("stats/"),
-            opt.folder / "Stats_out",
-            int(opt.log_level == "DEBUG"),
-            int(opt.log_level not in ("DEBUG", "INFO")),
-            int(opt.jukes_cantor),
-            opt.folder / "acgt_ratio.csv",
-            int(opt.use_raw_nick_freq),
-            int(opt.theme_bw),
-        ]
+    return _rscript_call(
+        Path("stats") / "runGeneral.R",
+        GRID_ITER=options.rand,
+        BURN_IN=options.burn,
+        ADJUST_ITER=options.adjust,
+        ITERATIONS=options.iter,
+        FORWARD_ONLY=bool(options.forward),
+        REVERSE_ONLY=bool(options.reverse),
+        FIX_DISP=not options.var_disp,
+        SAME_OVERHANGS=not options.diff_hangs,
+        NU_SAMPLES=0,
+        FIX_NU=bool(options.fix_nicks),
+        DS_PROTOCOL=not options.single_stranded,
+        SUB_LENGTH=options.seq_length,
+        PATH_TO_DAT=str(folder) + "/",
+        OUT_FILE_BASE=folder / "Stats_out",
+        VERBOSE=bool(options.log_level == "DEBUG"),
+        QUIET=bool(options.log_level not in ("DEBUG", "INFO")),
+        JUKES_CANTOR=bool(options.jukes_cantor),
+        USE_RAW_NICK_FREQ=bool(options.use_raw_nick_freq),
+        USE_BW_THEME=bool(options.theme_bw),
     )
 
 
-def _log_call(command, quiet=False):
+def _rscript_call(filepath, **kwargs):
+    cwd = Path(resource_filename("mapdamage", "Rscripts")) / filepath.parent
+    command = ["Rscript", filepath.name]
+    for item in sorted(kwargs.items()):
+        command.append("%s=%s" % item)
+
+    return _log_call(command, cwd=cwd)
+
+
+def _log_call(command, quiet=False, cwd=None):
     command = [str(value) for value in command]
 
     logger = logging.getLogger(__name__)
@@ -129,6 +122,7 @@ def _log_call(command, quiet=False):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         start_new_session=True,
+        cwd=cwd,
     )
 
     try:

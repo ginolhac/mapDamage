@@ -1,12 +1,4 @@
-# R script mapdamage
-# Enable full backtraces on errors
-on_error <- function(e)
-  {
-    traceback(2)
-    quit(status = 1)
-  }
-options(error = on_error)
-
+source("common.r")
 
 NUCLEOTIDES <- c("A", "C", "G", "T", "Total")
 MISMATCHES  <- c("A>C", "A>G", "A>T", "C>A", "C>G", "C>T", "G>A", "G>C", "G>T", "T>A", "T>C", "T>G")
@@ -15,16 +7,15 @@ DELETIONS   <- c("A>-", "C>-", "G>-", "T>-")
 CLIPPING    <- c("S")
 EVERYTHING  <- c(NUCLEOTIDES, MISMATCHES, INSERTIONS, DELETIONS, CLIPPING)
 
-args <- commandArgs(trailingOnly = TRUE)
-OPT.COMP      <- args[1]
-OPT.PDFOUT    <- args[2]
-OPT.AROUND    <- as.numeric(args[3])
-OPT.MISINCORP <- args[4]
-OPT.LENGTH    <- as.numeric(args[5])
-OPT.YMAX      <- as.numeric(args[6])
-OPT.FOLDER    <- args[7]
-OPT.TITLE     <- args[8]
-OPT.VERSION   <- args[9]
+OPT.COMP      <- getArgument("COMP")
+OPT.PDFOUT    <- getArgument("PDFOUT")
+OPT.AROUND    <- getArgument("AROUND", as.integer)
+OPT.MISINCORP <- getArgument("MISINCORP")
+OPT.LENGTH    <- getArgument("LENGTH", as.integer)
+OPT.YMAX      <- getArgument("YMAX", as.numeric)
+OPT.FOLDER    <- getArgument("FOLDER")
+OPT.TITLE     <- getArgument("TITLE")
+OPT.VERSION   <- getArgument("VERSION")
 
 
 draw.open.rect <- function(xleft, ybottom, xright, ytop, padding = 0) {

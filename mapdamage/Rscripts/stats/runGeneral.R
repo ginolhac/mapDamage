@@ -1,20 +1,5 @@
-#! /usr/bin/Rscript
-#Parses the command line arguments and calls the main program
-
-#Enable full backtraces on errors
-on_error <- function(e)
-  {
-    traceback(2)
-    quit(status = 1)
-  }
-options(error = on_error)
-
-rm(list=ls())
-graphics.off()
-
-# Assuming the user is not using this script directly
-argsList <- commandArgs(TRUE)
-
+#!/usr/bin/Rscript
+source("../common.r")
 
 #######################################################
 #
@@ -59,31 +44,45 @@ start_vals <- list(
 #
 #######################################################
 
-grid_iter <- as.integer(argsList[1])                 # Number of random starting points for the grid search
-burn_in <- as.integer(argsList[2])                   # Burn in period
-adjust_iter <- as.integer(argsList[3])               # Adjust proposal variance parameters iterations
-iterations <- as.integer(argsList[4])                # Iterations
+# Number of random starting points for the grid search
+grid_iter <- getArgument("GRID_ITER", as.integer)
+# Burn in period
+burn_in <- getArgument("BURN_IN", as.integer)
+# Adjust proposal variance parameters iterations
+adjust_iter <- getArgument("ADJUST_ITER", as.integer)
+# Iterations
+iterations <- getArgument("ITERATIONS", as.integer)
 
-forward_only <- as.logical(as.numeric(argsList[5]))  # Taking only the 5' end of the seqs 
-reverse_only <- as.logical(as.numeric(argsList[6]))  # Taking only the 3' end of the seqs 
-fix_disp <- as.logical(as.numeric(argsList[7]))      # Geom instead of neg Bin 
-same_overhangs <- as.logical(as.numeric(argsList[8]))# The overhangs are the same on both sides
+# Taking only the 5' end of the seqs 
+forward_only <- getArgument("FORWARD_ONLY", as.logical)
+# Taking only the 3' end of the seqs 
+reverse_only <- getArgument("REVERSE_ONLY", as.logical)
+# Geom instead of neg Bin 
+fix_disp <- getArgument("FIX_DISP", as.logical)
+# The overhangs are the same on both sides
+same_overhangs <- getArgument("SAME_OVERHANGS", as.logical)
 
-nu_samples <- as.integer(argsList[9])                # Estimate the nu vector using the Briggs model (Should be similiar ammount to the number of sequences use this on your own risk....)
-fix_nu <- as.logical(as.numeric(argsList[10]))       # Set 1 at 5' end and 0 at 3' end or else estimates it with GAM
-ds_protocol <- as.logical(as.numeric(argsList[11]))  # Single stranded protocol C>T at both sides
-sub_length <- as.integer(argsList[12])               # How long sequence to use from each side 
+# Estimate the nu vector using the Briggs model (Should be similiar ammount to the number of sequences use this on your own risk....)
+nu_samples <- getArgument("NU_SAMPLES", as.integer)
+# Set 1 at 5' end and 0 at 3' end or else estimates it with GAM
+fix_nu <- getArgument("FIX_NU", as.logical)
+# Single stranded protocol C>T at both sides
+ds_protocol <- getArgument("DS_PROTOCOL", as.logical)
+# How long sequence to use from each side 
+sub_length <- getArgument("SUB_LENGTH", as.integer)
 
-path_to_dat <- argsList[13]                          # Absolute path to the dataset
-path_to_mapDamage_stats <- argsList[14]              # Absolute path to the mapDamage-stats folder
-out_file_base  <- argsList[15]                       # Base file name of the output
-verbose <- as.logical(as.numeric(argsList[16]))      # These options control the volume of the output
-quiet <- as.logical(as.numeric(argsList[17]))
+# Absolute path to the dataset
+path_to_dat <- getArgument("PATH_TO_DAT")
+# Base file name of the output
+out_file_base  <- getArgument("OUT_FILE_BASE")
+# These options control the volume of the output
+verbose <- getArgument("VERBOSE", as.logical)
+quiet <- getArgument("QUIET", as.logical)
 
-jukes_cantor <- as.logical(as.numeric(argsList[18])) # Fix the transition and transversion ratio and acgt frequencies are equal
-path_to_acgt <- argsList[19] 
-use_raw_nick_freq <- as.logical(as.numeric(argsList[20]))
-use_bw_theme <- as.logical(as.numeric(argsList[21]))
+# Fix the transition and transversion ratio and acgt frequencies are equal
+jukes_cantor <- getArgument("JUKES_CANTOR", as.logical)
+use_raw_nick_freq <- getArgument("USE_RAW_NICK_FREQ", as.logical)
+use_bw_theme <- getArgument("USE_BW_THEME", as.logical)
 
 
 #######################################################
@@ -92,4 +91,4 @@ use_bw_theme <- as.logical(as.numeric(argsList[21]))
 #
 #######################################################
 
-source(paste(path_to_mapDamage_stats,"main.R",sep=""))
+source("main.R")

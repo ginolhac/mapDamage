@@ -6,19 +6,19 @@ suppressPackageStartupMessages(library(gam))
 suppressPackageStartupMessages(library(RcppGSL))
 
 #Miscellaneous functions
-source(paste(path_to_mapDamage_stats,"function.R",sep=""))
+source("function.R")
 
 #Prior and proposal distributions for the parameters
-source(paste(path_to_mapDamage_stats,"priorPropose.R",sep=""))
+source("priorPropose.R")
 
 #Update functions for the gibbs sampler
-source(paste(path_to_mapDamage_stats,"postConditonal.R",sep=""))
+source("postConditonal.R")
 
 #functions for the grid search
-source(paste(path_to_mapDamage_stats,"start.R",sep=""))
+source("start.R")
 
 #functions for loading the data
-source(paste(path_to_mapDamage_stats,"data.R",sep=""))
+source("data.R")
 
 
 #######################################################

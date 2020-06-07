@@ -1,19 +1,10 @@
-# Enable full backtraces on errors
-on_error <- function(e)
-  {
-    traceback(2)
-    quit(status = 1)
-  }
-options(error = on_error)
+source("common.r")
 
-
-args <- commandArgs(trailingOnly = TRUE)
-OPT.LGDIST    <- args[1]
-OPT.PDFOUT    <- args[2]
-OPT.MISINCORP <- args[3]
-OPT.LENGTH    <- args[4]
-OPT.TITLE     <- args[5]
-OPT.VERSION   <- args[6]
+OPT.LGDIST    <- getArgument("LGDIST")
+OPT.PDFOUT    <- getArgument("PDFOUT")
+OPT.MISINCORP <- getArgument("MISINCORP")
+OPT.TITLE     <- getArgument("TITLE")
+OPT.VERSION   <- getArgument("VERSION")
 
 MISMATCHES  <- c("C>T", "G>A")
 
