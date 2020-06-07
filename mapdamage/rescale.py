@@ -1,5 +1,4 @@
 import csv
-import sys
 import mapdamage
 import pysam
 import math
@@ -7,56 +6,47 @@ import logging
 import time
 
 
-def phred_pval_to_char(pval):
-    """Transforming error rate to ASCII character using the Phred scale"""
+class RescaleError(RuntimeError):
+    pass
+
+
+def _phred_pval_to_char(pval):
+    """ Transforming error rate to ASCII character using the Phred scale"""
     return chr(int(round(-10 * math.log10(abs(pval))) + 33))
 
 
-def phred_char_to_pval(ch):
-    """Transforming ASCII character in the Phred scale to the error rate"""
+def _phred_char_to_pval(ch):
+    """ Transforming ASCII character in the Phred scale to the error rate"""
     return 10 ** (-(float(ord(ch)) - float(33)) / 10)
 
 
-def get_corr_prob(folder, rescale_length_5p, rescale_length_3p):
+def _get_corr_prob(filepath, rescale_length_5p, rescale_length_3p):
+    """ Reads the damage probability correction table, and returns a dictionary with the
+    structure {(ref_nt, read_nt, position): probability}
     """
-    Reads the damage probability correction file, returns a
-    dictionary with this structure
-    position (one based)  -  CT  -  probability
-                          -  GA  -  probability
-    """
-    full_path = folder / "Stats_out_MCMC_correct_prob.csv"
-    if not full_path.is_file():
-        sys.exit(
-            "Missing file, the file \n\tStats_out_MCMC_correct_prob.csv\nshould be in the folder\n\t"
-            + folder
-            + "\nDid you run the MCMC estimates of the parameters?"
-        )
+    logger = logging.getLogger(__name__)
+    logger.info("Reading corrected probabilities from '%s'", filepath)
+
     try:
-        with open(full_path) as fi:
-            fi_handle = csv.DictReader(fi)
+        with filepath.open(newline="") as handle:
+            reader = csv.DictReader(handle, strict=True)
             corr_prob = {}
-            for line in fi_handle:
-                if line["Position"] in corr_prob:
-                    sys.exit(
-                        "This file has multiple position definitions %s, line %d: %s"
-                        % (folder, fi_handle.line_num, corr_prob[line["Position"]])
-                    )
-                else:
-                    corr_prob[int(line["Position"])] = {
-                        "C.T": float(line["C.T"]),
-                        "G.A": float(line["G.A"]),
-                    }
+            for line in reader:
+                position = int(line["Position"])
 
-            # Exclude probabilities for positions outside of user-specified region
-            for key in list(corr_prob.keys()):
-                if key < -rescale_length_3p or key > rescale_length_5p:
-                    corr_prob.pop(key)
+                # Exclude probabilities for positions outside of user-specified region
+                if -rescale_length_3p <= position <= rescale_length_5p:
+                    corr_prob[("C", "T", position)] = float(line["C.T"])
+                    corr_prob[("G", "A", position)] = float(line["G.A"])
+
             return corr_prob
-    except csv.Error as e:
-        sys.exit("File %s, line %d: %s" % (full_path, fi_handle.line_num, e,))
+    except FileNotFoundError:
+        raise RescaleError("File does not exist; please re-run mapDamage")
+    except csv.Error as error:
+        raise RescaleError("Error while reading line %d: %s" % (reader.line_num, error))
 
 
-def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length, direction="both"):
+def _corr_this_base(corr_prob, nt_seq, nt_ref, pos, length, direction="both"):
     """
     The position specific damaging correction, using the input
     corr_prob dictionary holding the damage correcting values
@@ -70,50 +60,28 @@ def corr_this_base(corr_prob, nt_seq, nt_ref, pos, length, direction="both"):
     if pos == 0:
         # not using 0 based indexing
         raise SystemError
-    if nt_seq == "T" and nt_ref == "C":
-        # an C to T transition
-        subs = "C.T"
-    elif nt_seq == "A" and nt_ref == "G":
-        # an G to A transition
-        subs = "G.A"
-    else:
-        # other transitions/transversions are not affected by damage
-        return 0
 
-    back_pos = pos - length - 1
     # position from 3' end
+    back_pos = pos - length - 1
 
-    if pos in corr_prob:
-        p5_corr = corr_prob[pos][subs]
-        # correction from 5' end
-    else:
-        p5_corr = 0
-
-    if back_pos in corr_prob:
-        p3_corr = corr_prob[back_pos][subs]
-        # correction from 3' end
-    else:
-        p3_corr = 0
-
-    if direction == "forward":
-        return p5_corr
-    elif direction == "backward":
-        return p3_corr
-    elif direction == "both":
-        if pos < abs(back_pos):
-            # then we use the forward correction
-            return p5_corr
-        else:
-            # else the backward correction
-            return p3_corr
-    else:
+    if direction == "both":
+        if pos >= abs(back_pos):
+            pos = back_pos
+    elif direction == "reverse":
+        pos = back_pos
+    elif direction != "forward":
         # this should not happen
-        raise SystemExit("Abnormal direction in the rescaling procedure")
+        raise RescaleError(
+            "Abnormal direction in the rescaling procedure (%r); please submit a bug-"
+            "report on github" % (direction,)
+        )
+
+    return corr_prob.get((nt_ref, nt_seq, pos), 0)
 
 
-def initialize_subs():
+def _initialize_subs():
     """Initialize a substitution table, to track the expected substitution counts"""
-    per_qual = dict(list(zip(list(range(0, 130)), [0] * 130)))
+    per_qual = dict(zip(range(130), [0] * 130))
     subs = {
         "CT-before": per_qual.copy(),
         "TC-before": per_qual.copy(),
@@ -137,26 +105,26 @@ def initialize_subs():
     return subs
 
 
-def record_subs(subs, nt_seq, nt_ref, nt_qual, nt_newqual, prob_corr):
+def _record_subs(subs, nt_seq, nt_ref, nt_qual, nt_newqual, prob_corr):
     """ record the expected substitution change, prob_corr is the excact version for nt_qual"""
     if nt_seq == "T" and nt_ref == "C":
         sub_type = "CT"
         subs["CT-pvals"] += prob_corr
-        subs["CT-pvals_before"] += 1 - phred_char_to_pval(nt_qual)
+        subs["CT-pvals_before"] += 1 - _phred_char_to_pval(nt_qual)
     elif nt_seq == "A" and nt_ref == "G":
         sub_type = "GA"
         subs["GA-pvals"] += prob_corr
-        subs["GA-pvals_before"] += 1 - phred_char_to_pval(nt_qual)
+        subs["GA-pvals_before"] += 1 - _phred_char_to_pval(nt_qual)
     elif nt_seq == "C" and nt_ref == "T":
         sub_type = "TC"
-        subs["TC-pvals"] += 1 - phred_char_to_pval(nt_qual)
+        subs["TC-pvals"] += 1 - _phred_char_to_pval(nt_qual)
         if nt_qual != nt_newqual:
             raise SystemError(
                 "Internal error: rescaling qualities for the wrong transitions"
             )
     elif nt_seq == "G" and nt_ref == "A":
         sub_type = "AG"
-        subs["AG-pvals"] += 1 - phred_char_to_pval(nt_qual)
+        subs["AG-pvals"] += 1 - _phred_char_to_pval(nt_qual)
         if nt_qual != nt_newqual:
             raise SystemError(
                 "Internal error: rescaling qualities for the wrong transitions"
@@ -165,13 +133,13 @@ def record_subs(subs, nt_seq, nt_ref, nt_qual, nt_newqual, prob_corr):
         sub_type = "NN"
     if sub_type != "NN":
         # record only transitions
-        subs[sub_type + "-before"][int(ord(nt_qual)) - 33] += 1
-        subs[sub_type + "-after"][int(ord(nt_newqual)) - 33] += 1
+        subs[sub_type + "-before"][ord(nt_qual) - 33] += 1
+        subs[sub_type + "-after"][ord(nt_newqual) - 33] += 1
     if nt_ref in ["A", "C", "G", "T"]:
         subs[nt_ref] += 1
 
 
-def qual_summary_subs(subs):
+def _qual_summary_subs(subs):
     """Calculates summary statistics for the substition table subs"""
     for i in [
         "CT-before",
@@ -193,80 +161,50 @@ def qual_summary_subs(subs):
                         subs[key] = subs[i][qv]
 
 
-def print_subs(subs):
+def _print_subs(subs):
     """Print the substition table"""
-    logger = logging.getLogger(__name__)
-    log = logger.info
+    log = logging.getLogger(__name__).info
+    log("Expected substition frequencies before and after rescaling:")
+    for sub in ("CT", "TC", "GA", "AG"):
+        base_count = subs[sub[0]]
 
-    log(
-        "\tThe expected substition frequencies before and after scaling using the scaled qualities as probalities:"
-    )
-    if subs["C"] != 0:
-        # the special case of no substitutions
-        log(
-            "\tCT\t"
-            + str(subs["CT-pvals_before"] / subs["C"])
-            + "\t\t"
-            + str(subs["CT-pvals"] / subs["C"])
-        )
-    else:
-        log("\tCT\tNA\t\tNA")
-    if subs["T"] != 0:
-        log(
-            "\tTC\t"
-            + str(subs["TC-pvals"] / subs["T"])
-            + "\t\t"
-            + str(subs["TC-pvals"] / subs["T"])
-        )
-    else:
-        log("\tTC\tNA\t\tNA")
-    if subs["G"] != 0:
-        log(
-            "\tGA\t"
-            + str(subs["GA-pvals_before"] / subs["G"])
-            + "\t\t"
-            + str(subs["GA-pvals"] / subs["G"])
-        )
-    else:
-        log("\tGA\tNA\t\tNA")
-    if subs["A"] != 0:
-        log(
-            "\tAG\t"
-            + str(subs["AG-pvals"] / subs["A"])
-            + "\t\t"
-            + str(subs["AG-pvals"] / subs["A"])
-        )
-    else:
-        log("\tAG\tNA\t\tNA")
-    log("\tQuality metrics before and after scaling")
-    log("\tCT-Q0 \t" + str(subs["CT-before-Q0"]) + "\t\t" + str(subs["CT-after-Q0"]))
-    log("\tCT-Q10 \t" + str(subs["CT-before-Q10"]) + "\t\t" + str(subs["CT-after-Q10"]))
-    log("\tCT-Q20 \t" + str(subs["CT-before-Q20"]) + "\t\t" + str(subs["CT-after-Q20"]))
-    log("\tCT-Q30 \t" + str(subs["CT-before-Q30"]) + "\t\t" + str(subs["CT-after-Q30"]))
-    log("\tCT-Q40 \t" + str(subs["CT-before-Q40"]) + "\t\t" + str(subs["CT-after-Q40"]))
-    log("\tGA-Q0 \t" + str(subs["GA-before-Q0"]) + "\t\t" + str(subs["GA-after-Q0"]))
-    log("\tGA-Q10 \t" + str(subs["GA-before-Q10"]) + "\t\t" + str(subs["GA-after-Q10"]))
-    log("\tGA-Q20 \t" + str(subs["GA-before-Q20"]) + "\t\t" + str(subs["GA-after-Q20"]))
-    log("\tGA-Q30 \t" + str(subs["GA-before-Q30"]) + "\t\t" + str(subs["GA-after-Q30"]))
-    log("\tGA-Q40 \t" + str(subs["GA-before-Q40"]) + "\t\t" + str(subs["GA-after-Q40"]))
+        if base_count:
+            pvals_key = sub + "-pvals"
+            pvals = subs[pvals_key]
+            pvals_before = subs.get(pvals_key + "_before", pvals)
+
+            log(
+                "    %s>%s    %.4f    %.4f",
+                sub[0],
+                sub[1],
+                pvals_before / base_count,
+                pvals / base_count,
+            )
+        else:
+            log("\t%s\tNA\t\tNA", sub)
+
+    log("Quality metrics before and after scaling:")
+    for sub in ("CT", "GA"):
+        for qual in (0, 10, 20, 30, 40):
+            before = subs["%s-before-Q%i" % (sub, qual)]
+            after = subs["%s-after-Q%i" % (sub, qual)]
+
+            log("    %s-Q%02i% 10i% 10i", sub, qual, before, after)
 
 
-def rescale_qual_read(bam, read, ref, corr_prob, subs, debug=False, direction="both"):
+def _rescale_qual_read(bam, read, ref, corr_prob, subs, direction="both"):
     """
     bam              a pysam bam object
     read             a pysam read object
     ref              a pysam fasta ref file
     reflengths       a dictionary holding the length of the references
     subs             a dictionary holding the corrected number of substition before and after scaling
-    corr_prob dictionary from get_corr_prob
+    corr_prob dictionary from _get_corr_prob
     returns a read with rescaled quality score
 
     Iterates through the read and reference, rescales the quality
     according to corr_prob
     """
-    if not debug:
-        # no need to log when unit testing
-        logger = logging.getLogger(__name__)
     raw_seq = read.query
     # external coordinates 5' and 3' , 0-based offset
     coordinate = mapdamage.align.get_coordinates(read)
@@ -292,7 +230,7 @@ def rescale_qual_read(bam, read, ref, corr_prob, subs, debug=False, direction="b
         # pair of the reference and the sequence
         if (nt_seq == "T" and nt_ref == "C") or (nt_seq == "A" and nt_ref == "G"):
             # need to rescale this subs.
-            pdam = 1 - corr_this_base(
+            pdam = 1 - _corr_this_base(
                 corr_prob,
                 nt_seq,
                 nt_ref,
@@ -300,27 +238,26 @@ def rescale_qual_read(bam, read, ref, corr_prob, subs, debug=False, direction="b
                 length_read,
                 direction=direction,
             )
-            pseq = 1 - phred_char_to_pval(nt_qual)
+            pseq = 1 - _phred_char_to_pval(nt_qual)
             newp = pdam * pseq  # this could be numerically unstable
-            newq = phred_pval_to_char(1 - newp)
+            newq = _phred_pval_to_char(1 - newp)
             number_of_rescaled_bases += 1 - pdam
         else:
             # don't rescale, other bases
-            newp = 1 - phred_char_to_pval(nt_qual)
+            newp = 1 - _phred_char_to_pval(nt_qual)
             newq = nt_qual
         if pos_on_read < length_read:
             new_qual[pos_on_read] = newq
-            record_subs(subs, nt_seq, nt_ref, nt_qual, new_qual[pos_on_read], newp)
+            _record_subs(subs, nt_seq, nt_ref, nt_qual, new_qual[pos_on_read], newp)
             if nt_seq != "-":
                 pos_on_read += 1
             # done with the aligned portion of the read
         else:
-            if not debug:
-                logger = logging.getLogger(__name__)
-                logger.warning(
-                    "The aligment of the read is longer than the actual read %s",
-                    read.qname,
-                )
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                "The aligment of the read is longer than the actual read %s",
+                read.qname,
+            )
             break
     new_qual = "".join(new_qual)
 
@@ -345,105 +282,103 @@ def rescale_qual_read(bam, read, ref, corr_prob, subs, debug=False, direction="b
     return read
 
 
-def rescale_qual(ref, options, debug=False):
+def _rescale_qual_core(ref, options):
+    """Iterates through BAM file, writing new BAM file with rescaled qualities.
     """
-    ref                a pysam fasta ref file
-    bam_filename       name of a BAM/SAM file to read
-    fi                 file containing the csv with correction probabilities
-    reflengths         dictionary with the reference lengths
-    options            options from the command line parsing
-
-    Iterates through BAM file, makes a new BAM file with rescaled qualities.
-    """
-    logger = logging.getLogger(__name__)
-    if not debug:
-        # no need to log when unit testing
-        logger = logging.getLogger(__name__)
-        logger.info(
-            "Rescaling BAM: '%s' -> '%s'", options.filename, options.rescale_out
-        )
-    start_time = time.time()
-
-    # open SAM/BAM files
-    bam = pysam.AlignmentFile(options.filename)
-    if debug:
-        write_mode = "wh"
-    else:
-        write_mode = "wb"
-    bam_out = pysam.AlignmentFile(options.rescale_out, write_mode, template=bam)
-    corr_prob = get_corr_prob(
-        options.folder,
+    corr_prob = _get_corr_prob(
+        filepath=options.folder / "Stats_out_MCMC_correct_prob.csv",
         rescale_length_5p=options.rescale_length_5p,
         rescale_length_3p=options.rescale_length_3p,
     )
-    subs = initialize_subs()
-    first_pair = True
-    number_of_non_proper_pairs = 0
 
-    for hit in bam:
-        if hit.is_unmapped:
-            pass
-        elif not hit.qual and not debug:
-            logger.warning(
-                "Cannot rescale base PHRED scores for read '%s'; no scores assigned.",
-                hit.qname,
-            )
-        elif hit.is_paired:
-            if first_pair and not debug:
-                # assuming the ends are non-overlapping
-                logger.warning(
-                    "Warning! Assuming the pairs are non-overlapping, facing inwards and correctly paired."
-                )
-                first_pair = False
-            # 5p --------------> 3p
-            # 3p <-------------- 5p
-            # pair 1 (inwards)
-            # 5p ---->
-            #             <---- 5p
-            #     A         B
-            # pair 2 (outwards), this happens if the reference is RC this is not supported
-            #             ----> 3p
-            # 3p <----
-            #     A         B
-            # Correct outwards pairs from the 3p and inwards pairs with the 5p end
-            if (
-                (not hit.is_reverse)
-                and hit.mate_is_reverse
-                and (hit.pnext > hit.pos)
-                and hit.tid == hit.mrnm
-            ):
-                # the inwards case mate A
-                hit = rescale_qual_read(
-                    bam, hit, ref, corr_prob, subs, direction="forward", debug=debug
-                )
-            elif (
-                hit.is_reverse
-                and (not hit.mate_is_reverse)
-                and (hit.pnext < hit.pos)
-                and hit.tid == hit.mrnm
-            ):
-                # the inwards case mate B
-                hit = rescale_qual_read(
-                    bam, hit, ref, corr_prob, subs, direction="forward", debug=debug
-                )
-            else:
-                number_of_non_proper_pairs += 1
-                # cannot do much with conflicting pairing information
-        else:
-            hit = rescale_qual_read(bam, hit, ref, corr_prob, subs, debug=debug)
+    n_pairs = 0
+    n_improper_pairs = 0
+    n_reads_without_quals = 0
+    subs = _initialize_subs()
 
-        bam_out.write(hit)
-    if number_of_non_proper_pairs != 0 and not debug:
+    with pysam.AlignmentFile(options.filename) as bam_in:
+        with pysam.AlignmentFile(options.rescale_out, "wb", template=bam_in) as bam_out:
+            for hit in bam_in:
+                if hit.is_unmapped:
+                    pass
+                elif not hit.qual:
+                    n_reads_without_quals += 1
+                elif hit.is_paired:
+                    n_pairs += 1
+                    # 5p --------------> 3p
+                    # 3p <-------------- 5p
+                    # pair 1 (inwards)
+                    # 5p ---->
+                    #             <---- 5p
+                    #     A         B
+                    # pair 2 (outwards); this is not supported
+                    #             ----> 3p
+                    # 3p <----
+                    #     A         B
+                    # Correct outwards pairs from the 3p and inwards pairs with the 5p end
+                    if (
+                        (not hit.is_reverse)
+                        and hit.mate_is_reverse
+                        and (hit.pnext > hit.pos)
+                        and hit.tid == hit.mrnm
+                    ):
+                        # the inwards case mate A
+                        hit = _rescale_qual_read(
+                            bam_in, hit, ref, corr_prob, subs, direction="forward"
+                        )
+                    elif (
+                        hit.is_reverse
+                        and (not hit.mate_is_reverse)
+                        and (hit.pnext < hit.pos)
+                        and hit.tid == hit.mrnm
+                    ):
+                        # the inwards case mate B
+                        hit = _rescale_qual_read(
+                            bam_in, hit, ref, corr_prob, subs, direction="forward"
+                        )
+                    else:
+                        n_improper_pairs += 1
+                        # cannot do much with conflicting pairing information
+                else:
+                    hit = _rescale_qual_read(bam_in, hit, ref, corr_prob, subs)
+
+                bam_out.write(hit)
+
+    logger = logging.getLogger(__name__)
+    if n_pairs:
         logger.warning(
-            "Number of non-rescaled reads due to improper pairing:  %d",
-            number_of_non_proper_pairs,
+            "Processed %i paired reads, assumed to be non-overlapping, facing inwards "
+            "and correctly paired; %i of these were excluded as improperly paired.",
+            n_pairs,
+            n_improper_pairs,
         )
+
+    if n_reads_without_quals:
+        logger.warning("Skipped %i reads without quality scores", n_reads_without_quals)
+
     if subs["TC-before"] != subs["TC-after"] or subs["AG-before"] != subs["AG-after"]:
-        sys.exit(
-            "Qualities for T.C and A.G transitions should not change in the rescaling, please contact the authors."
+        raise RescaleError(
+            "Qualities for T.C and A.G transitions should not change in the rescaling. "
+            "Please file a bug on github."
         )
-    qual_summary_subs(subs)
-    bam.close()
-    bam_out.close()
-    print_subs(subs)
+
+    _qual_summary_subs(subs)
+    _print_subs(subs)
+
+
+def rescale_qual(ref, options):
+    logger = logging.getLogger(__name__)
+    logger.info("Rescaling BAM: '%s' -> '%s'", options.filename, options.rescale_out)
+    start_time = time.time()
+
+    try:
+        _rescale_qual_core(ref, options)
+    except RescaleError as error:
+        logger.error("%s", error)
+        return 1
+    except Exception as error:
+        logger.error("Unhandled exception: %s", error)
+        return 1
+
     logger.debug("Rescaling completed in %f seconds", time.time() - start_time)
+    return 0

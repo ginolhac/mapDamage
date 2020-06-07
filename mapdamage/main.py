@@ -118,8 +118,7 @@ def main(argv):
     # rescale the qualities
     if options.rescale_only:
         logger.info("Starting rescaling...")
-        mapdamage.rescale.rescale_qual(ref, options)
-        return 0
+        return mapdamage.rescale.rescale_qual(ref, options)
 
     # open SAM/BAM file
     reader = mapdamage.reader.BAMReader(
@@ -246,7 +245,7 @@ def main(argv):
 
     # rescale the qualities
     if options.rescale:
-        mapdamage.rescale.rescale_qual(ref, options)
+        return mapdamage.rescale.rescale_qual(ref, options)
 
     # need the fasta reference still open for rescaling
     ref.close()
