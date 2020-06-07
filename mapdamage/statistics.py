@@ -1,5 +1,7 @@
 import collections
+import csv
 import logging
+import os
 
 import mapdamage
 
@@ -124,32 +126,43 @@ def check_table_and_warn_if_dmg_freq_is_low(folder):
     """ Returns true if the damage frequencies are too low to allow
     Bayesian estimation of DNA damages, i.e < 1% at first position.
     """
-    total = 0.0
     logger = logging.getLogger(__name__)
-    for filename in ("5pCtoT_freq.txt", "3pGtoA_freq.txt"):
-        if not (folder / filename).is_file():
-            logger.error(
-                "Required table has not been created (%r), bayesian computation cannot be performed",
-                filename,
-            )
-            return False
+    filename = "misincorporation.txt"
+    mismatches = {
+        "5p": {"C": 0, "C>T": 0},
+        "3p": {"G": 0, "G>A": 0},
+    }
 
-        with (folder / filename).open() as handle:
-            for line in handle:
-                freq = line.strip().split("\t")
-                if freq[0] == "1":
-                    total += float(freq[1])
-                    break
-            else:
-                logger.error(
-                    "Could not find pos = 1 in table %r, bayesian computation cannot be performed",
-                    filename,
-                )
+    try:
+        with open(os.path.join(folder, filename), newline="") as csvfile:
+            reader = csv.DictReader(csvfile, delimiter="\t")
+            if not reader.fieldnames:
+                logger.error("%r is empty; please re-run mapDamage", filename)
                 return False
+
+            for row in reader:
+                if int(row["Pos"]) == 1:
+                    counts = mismatches[row["End"]]
+                    for key in counts:
+                        counts[key] += int(row[key])
+    except (csv.Error, IOError, OSError, KeyError) as error:
+        logger.error("Error reading misincorporation table: %s", error)
+        return False
+
+    if not (mismatches["5p"]["C"] and mismatches["3p"]["G"]):
+        logger.error(
+            "Insufficient data in %r; cannot perform Bayesian computation", filename
+        )
+        return False
+
+    total = 0.0
+    total += mismatches["5p"]["C>T"] / mismatches["5p"]["C"]
+    total += mismatches["3p"]["G>A"] / mismatches["3p"]["G"]
 
     if total < 0.01:
         logger.warning(
-            "DNA damage levels are too low, the Bayesian computation should not be performed (%f < 0.01)",
+            "DNA damage levels are too low, the Bayesian computation should not be "
+            "performed (%f < 0.01)",
             total,
         )
 

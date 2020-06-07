@@ -92,18 +92,7 @@ calculate.mutation.table <- function(filename, length)
   }
 
 
-write.mutation.table <- function(tbl, end, mismatch, filename)
-  {
-    columns <- c("pos", sprintf("%s%s", end, mismatch))
-    tbl[is.na(tbl)] <- 0 # Python doesn't like NAs
-    write.table(tbl[tbl$End == end, c("Pos", mismatch)],
-                row.names = FALSE, col.names = columns,
-                sep = "\t", quote = FALSE,
-                file = filename)
-  }
-
-
-plot.mutations <- function(end, axis.at, start.i, end.i, modifier) {
+plot.mutations <- function(mut, end, axis.at, start.i, end.i, modifier) {
   do.plot <- function(tbl, end, modifier, mismatches, color, width) {
     subtable <- tbl[tbl$End == end, c("Pos", mismatches)]
     rates    <- rowSums(subtable) - subtable$Pos
@@ -157,15 +146,12 @@ plot.base.composition(com, "T", "red",   OPT.AROUND, xlabels = TRUE,  ylabels.at
 
 # Misincorporation patterns
 mut <- calculate.mutation.table(OPT.MISINCORP, OPT.LENGTH)
-# Write table of post-morten damage frequencies to tables
-write.mutation.table(mut, "5p", "C>T", paste(OPT.FOLDER, "/5pCtoT_freq.txt", sep = ""))
-write.mutation.table(mut, "3p", "G>A", paste(OPT.FOLDER, "/3pGtoA_freq.txt", sep = ""))
 
 par(mar = c(1, 2, 1, 1))
-plot.mutations("5p", 2, 1, OPT.LENGTH, 1)
+plot.mutations(mut, "5p", 2, 1, OPT.LENGTH, 1)
 
 par(mar = c(1, 1, 1, 2))
-plot.mutations("3p", 4, -OPT.LENGTH, -1, -1)
+plot.mutations(mut, "3p", 4, -OPT.LENGTH, -1, -1)
 
 # graphics.off() calls dev.off() for all devices but doesn't return anything (avoid null device message)
 graphics.off()
