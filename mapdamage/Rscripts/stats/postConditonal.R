@@ -120,16 +120,13 @@ updateLambdaRight <- function(cp){
         laVecStar <- c(cp$laVec[1:(cp$m/2)],laVecStarRight[(cp$m/2+1):cp$m])
     } else {
         #left and right are the same
-        print("You shouldn't be calling this function if the overhangs are the same")
-        stop()
+        abort("You shouldn't be calling this function if the overhangs are the same")
     }
     if (cp$forward_only){
-        print("You shouldn't be calling this function if you are only considering the forward part")
-        stop()
+        abort("You shouldn't be calling this function if you are only considering the forward part")
     }
     if (cp$reverse_only){
-        print("You shouldn't be calling this function if you are only considering the reverse part")
-        stop()
+        abort("You shouldn't be calling this function if you are only considering the reverse part")
     }
     new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,laVecStar,cp$nuVec,cp$m)
     new_lik  <- new_lik_func+priorLambdaRight(lambda_right_star)

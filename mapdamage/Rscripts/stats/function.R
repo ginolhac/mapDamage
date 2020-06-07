@@ -2,16 +2,13 @@
 getPmat <- function(tmu,tv_ti_ratio,acgt){
     #Returns the evolutionary substitution matrix
     if (sum(acgt>=1)!=0 || sum(acgt<=0)!=0){
-        write("The ACGT frequencies must be in the range 0 to 1",stderr())
-        stop()
+        abort("The ACGT frequencies must be in the range 0 to 1")
     }
     if (all.equal(sum(acgt),1)!=TRUE){
-        write("The ACGT frequencies do not sum to 1",stderr())
-        stop()
+        abort("The ACGT frequencies do not sum to 1")
     }
     if (tv_ti_ratio<=0){
-        write("The transversion and transtition ratio cannot go under 0",stderr())
-        stop()
+        abort("The transversion and transtition ratio cannot go under 0")
     }
     #Returns the substitution probability matrix.
     if (identical(tv_ti_ratio,1) && identical(acgt,c(.25,.25,.25,.25))){
@@ -91,8 +88,7 @@ metroDesc <- function(lpr,lol){
 seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
     #Returns the position specific probability of being in an overhang
     if (is.na(fo_only) || is.na(re_only)){
-        write("Must give parameters to fo_only or re_only",stderr())
-        stop()
+        abort("Must give parameters to fo_only or re_only")
     }
     psum <- matrix(ncol=1,nrow=m)
     pvals <- dnbinom(c(1:m)-1,prob=lambda,size=lambda_disp)
@@ -103,8 +99,7 @@ seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
         #Only the forward part
         return(c(psum))
     }else if (re_only && fo_only){
-        write("Shouldn't call this function with forward and reverse only.",stderr())
-        stop()
+        abort("Shouldn't call this function with forward and reverse only.")
     }else if (re_only) {
         #The reverse part
         return(rev(c(psum)))
@@ -404,8 +399,7 @@ postPredCheck <- function(da,output,samples=10000){
     } else if (output$cu_pa$reverse_only){
         bres <- seq(from=nrow(dat),to=1,by=-2)
     }else {
-        write("There is something fishy with the options",stderr())
-        stop()
+        abort("There is something fishy with the options")
     }
     labs <- dat[bres,"Pos"]
     #Sample from the posterior predicitive distibution

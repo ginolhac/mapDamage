@@ -28,8 +28,7 @@ source("data.R")
 #######################################################
 
 if (forward_only && reverse_only){
-    write("Cannot specify using only the 5' end and the 3' end which makes no sense",stderr())
-    stop()
+    abort("Cannot specify using only the 5' end and the 3' end which makes no sense")
 }
 
 fow_dat <-readMapDamData(path_to_dat)
@@ -100,11 +99,9 @@ cu_pa$laVec <- seqProbVecLambda(cu_pa$Lambda,cu_pa$LambdaDisp,nrow(cu_pa$dat),cu
 if (!cu_pa$same_overhangs){
     #The overhangs are not the same
     if (cu_pa$forward_only){
-        write("Cannot use different overhangs with only the 5' end",stderr())
-        stop()
+        abort("Cannot use different overhangs with only the 5' end")
     } else if (cu_pa$reverse_only){
-        write("Cannot use different overhangs with only the 3' end",stderr())
-        stop()
+        abort("Cannot use different overhangs with only the 3' end")
     }
     cu_pa$laVecRight <- seqProbVecLambda(cu_pa$LambdaRight,cu_pa$LambdaDisp,nrow(cu_pa$dat),cu_pa$forward_only,cu_pa$reverse_only)
 }
