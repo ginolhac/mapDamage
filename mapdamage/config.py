@@ -411,7 +411,7 @@ def parse_args(argv):
 
     # check folder
     if not options.folder and options.filename:
-        options.folder = "results_" + options.filename.stem
+        options.folder = Path(options.filename.stem + ".mapDamage")
 
     # check destination for rescaled bam
     if not options.rescale_out and (options.rescale or options.rescale_only):
