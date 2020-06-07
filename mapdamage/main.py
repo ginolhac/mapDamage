@@ -40,13 +40,17 @@ import mapdamage
 import mapdamage.config
 import mapdamage.statistics
 
+
+# Log format for terminal and log-file output
 _LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
+# Shorter 'asctime' format for terminal output; log-file uses default dates and times
+_TIMESTAMP_FORMAT = "%H:%M:%S"
 
 
 def main(argv):
     start_time = time.time()
 
-    coloredlogs.install(fmt=_LOG_FORMAT)
+    coloredlogs.install(fmt=_LOG_FORMAT, datefmt=_TIMESTAMP_FORMAT)
     logger = logging.getLogger(__name__)
 
     try:
