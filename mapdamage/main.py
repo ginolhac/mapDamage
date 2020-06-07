@@ -52,12 +52,13 @@ def main(argv):
     try:
         options = mapdamage.config.parse_args(argv)
     except mapdamage.config.ArgumentError as error:
-        if error.argument_name:
-            logging.error("%s %s", error.argument_name, error.message)
-        else:
-            logging.error("%s", error.message)
+        if error.message:
+            if error.argument_name:
+                logging.error("%s %s", error.argument_name, error.message)
+            elif error:
+                logging.error("%s", error.message)
 
-        logging.error("See 'mapDamage --help' for more information")
+            logging.error("See 'mapDamage --help' for more information")
         return 1
 
     handler = logging.FileHandler(options.folder / "Runtime_log.txt")

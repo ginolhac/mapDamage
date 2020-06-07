@@ -64,7 +64,7 @@ class CustomHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
 class ThrowingArgumentParser(argparse.ArgumentParser):
     def exit(self, status=0, message=None):
         if status:
-            raise ArgumentError(None, message.strip())
+            raise ArgumentError(None, message.strip() if message else None)
 
         sys.exit(status)
 
