@@ -28,7 +28,7 @@ def write_base_comp(fasta, destination):
 def read_base_comp(filename):
     """Read the base compition from a file created by write_base_comp
     """
-    with open("names.csv", newline="") as csvfile:
+    with open(filename, newline="") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             return row
