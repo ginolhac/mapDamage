@@ -37,16 +37,6 @@ joinFowAndRev <- function(fo,re,nrPos){
     return(out)
 }
 
-getSeqLen <- function(pa){
-    #Path to the mapDamage folder to get the length distribution
-    le_dat_min <- read.table(paste(pa,"lengthDistribStrd-.txt",sep=""),header=TRUE)
-    le_dat_plu <- read.table(paste(pa,"lengthDistribStrd+.txt",sep=""),header=TRUE)
-    les <- list(Length=le_dat_min$Length,Occurences=le_dat_min$Occurences+le_dat_plu$Occurences)
-    les$Length <- les$Length[les$Occurences!=0]
-    les$Occurences <- les$Occurences[les$Occurences!=0]/sum(les$Occurences)
-    return(les)
-}
-
 readBaseFreqs <- function(fol){
     #Get the nucleotide composition of the genome
     fil <- "dnacomp_genome.csv"

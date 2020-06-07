@@ -88,34 +88,6 @@ metroDesc <- function(lpr,lol){
     }
 }
 
-genOverHang <- function(la){
-    #Currently not used in the main code but could used to generate
-    #overhangs like Philip
-    r <- runif(1)
-    i <- -1
-    p <- 0
-    while (p< r){
-        if (i==-1){
-            term <- 1
-        }else {
-            term  <- 0
-        }
-        p <-p+ (la*((1-la)**(i+1))+term)/2
-        i <- i+1
-    }
-    return(i)
-}
-
-sampleHJ <- function(x,size,prob){
-    #Convenience function since sample wasn't good enough
-    if (length(prob)==1){
-        return(rep(x,size))
-    }else {
-        return(sample(x,size=size,prob=prob,replace=TRUE))
-    }
-}
-
-
 seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
     #Returns the position specific probability of being in an overhang
     if (is.na(fo_only) || is.na(re_only)){
@@ -142,97 +114,6 @@ seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
         return(c(psum))
     }
 }
-
-# The following is an MC simulation code to mimic the
-# nick frequency part in the model from Philip
-sourceCpp(code='
-// [[Rcpp::depends(RcppGSL)]]
-#include <RcppGSL.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-
-int genOverHang(double la, double la_disp) {
-  double r = ((double) rand() / (RAND_MAX));
-  int i = -1;
-  double p = 0;
-  double term = -500;
-  while (p < r) {
-    if (i == -1) {
-      term = 1;
-    } else {
-      term = 0;
-    }
-    p = p + (gsl_ran_negative_binomial_pdf(i + 1, la, la_disp) + term) / 2;
-    i++;
-  }
-  return (i);
-}
-
-// [[Rcpp::export]] 
-Rcpp::NumericVector seqProbVecNuWithLengths(
-  Rcpp::NumericVector la,
-  Rcpp::NumericVector la_disp,
-  Rcpp::NumericVector nu,
-  Rcpp::NumericVector m,
-  Rcpp::NumericVector lengths,
-  Rcpp::NumericVector mLe,
-  Rcpp::NumericVector fo,
-  Rcpp::NumericVector iter,
-  Rcpp::NumericVector ds_protocol
-) {
-  srand(time(0));
-
-  Rcpp::NumericVector output(mLe[0]);
-  Rcpp::NumericVector reduced_output(m[0]);
-  if (ds_protocol[0] == 0) {
-    for (int j = 0; j < m[0]; j++) {
-      reduced_output(j) = 1;
-    }
-    return (reduced_output);
-  } else {
-    for (int i = 0; i < iter[0]; i++) {
-
-      double left_o_hang = genOverHang(la[0], la_disp[0]);
-      double right_o_hang = genOverHang(la[0], la_disp[0]);
-      double o_hang = left_o_hang + right_o_hang;
-
-      if (o_hang >= lengths(i)) {
-        // Single stranded sequence
-        for (int j = 0; j < lengths(i); j++) {
-          output(j) = output(j) + 1;
-        }
-      } else {
-        Rcpp::NumericVector r = Rcpp::runif(1);
-        if (r[0] < (1 - nu[0]) / ((lengths[i] - o_hang - 1) * nu[0] + (1 - nu[0]))) {
-          for (int j = 0; j < (lengths[i] - right_o_hang); j++) {
-            output(j) = output(j) + 1;
-          }
-          // The right overhang is always G>A for the double stranded but
-          // Here we will make the assumption that the pattern is symmetric
-          // for practical reasons We can\'t  do that ....
-        } else {
-          Rcpp::NumericVector sa = floor(Rcpp::runif(1, 0, lengths[i] - o_hang)) + left_o_hang;
-          for (int j = 0; j <= sa[0]; j++) {
-            output(j) = output(j) + 1;
-          }
-        }
-      }
-    }
-    if (fo(0)) {
-      // Only considering the forward part
-      for (int j = 0; j < m[0]; j++) {
-        reduced_output(j) = output(j) / iter(0);
-      }
-    } else {
-      for (int j = 0; j < m[0] / 2; j++) {
-        reduced_output(j) = output(j) / iter(0);
-        reduced_output(m[0] - j - 1) = 1 - output(j) / iter(0);
-      }
-    }
-    return (reduced_output);
-  }
-}', cacheDir=paste(path.expand("~"), ".mapDamage", sep="/"))
-
 
 sourceCpp(code='
 // [[Rcpp::depends(RcppGSL)]]
@@ -309,7 +190,7 @@ logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
 
 getParams <- function(cp){
     #Utility function nice to update the MCMC iterations matrix
-    return(c(cp$Theta,cp$Rho,cp$DeltaD,cp$DeltaS,cp$Lambda,cp$LambdaRight,cp$LambdaDisp,cp$Nu))
+    return(c(cp$Theta,cp$Rho,cp$DeltaD,cp$DeltaS,cp$Lambda,cp$LambdaRight,cp$LambdaDisp))
 }
 
 plotTrace<- function(dat,main,k=111){
@@ -322,8 +203,7 @@ plotEverything <- function(mcmcOut,hi=0,pl,thin=100){
     #histogram of the MCMC iterations
     if (sum(c(cu_pa$same_overhangs==FALSE,
                     cu_pa$fix_disp==FALSE,
-                    cu_pa$fix_ti_tv==FALSE,
-                    cu_pa$nuSamples!=0))>1){
+                    cu_pa$fix_ti_tv==FALSE))>1){
         #Check if I need to add a extra row
         a_extra_row <- 1
     }else {
@@ -344,9 +224,6 @@ plotEverything <- function(mcmcOut,hi=0,pl,thin=100){
         if (!mcmcOut$cu_pa$fix_disp){
             hist(mcmcOut$out[,"LambdaDisp"],main=expression(sigma[lambda]),xlab="",freq=FALSE)
         }
-        if (mcmcOut$cu_pa$nuSamples!=0){
-            hist(mcmcOut$out[,"Nu"],main=expression(nu),xlab="",freq=FALSE)
-        }
         hist(mcmcOut$out[,"LogLik"],main="LogLik",xlab="",freq=FALSE)
     }else {
         plotTrace(mcmcOut$out[,"Theta"],main=expression(theta))
@@ -361,9 +238,6 @@ plotEverything <- function(mcmcOut,hi=0,pl,thin=100){
         }
         if (!mcmcOut$cu_pa$fix_disp){
             plotTrace(mcmcOut$out[,"LambdaDisp"],main=expression(sigma[lambda]))
-        }
-        if (mcmcOut$cu_pa$nuSamples!=0){
-            plotTrace(mcmcOut$out[,"Nu"],main=expression(nu))
         }
         plotTrace(mcmcOut$out[,"LogLik"],main="LogLik")
     }
@@ -381,8 +255,6 @@ adjustPropVar <- function(mcmc,propVar){
         if (i=="LogLik"){
             next
         } else if (i=="LambdaRight" & mcmc$cu_pa$same_overhangs){
-            next
-        } else if (i=="Nu" & mcmc$cu_pa$nuSamples==0){
             next
         } else if (i=="LambdaDisp" & mcmc$cu_pa$fix_disp){
             next
@@ -402,8 +274,8 @@ adjustPropVar <- function(mcmc,propVar){
 runGibbs <- function(cu_pa,iter){
     #Sampling over the conditional posterior distribution
     #for the parameters.
-    esti <- matrix(nrow=iter,ncol=9)
-    colnames(esti) <- c("Theta","Rho","DeltaD","DeltaS","Lambda","LambdaRight","LambdaDisp","Nu","LogLik")
+    esti <- matrix(nrow=iter,ncol=8)
+    colnames(esti) <- c("Theta","Rho","DeltaD","DeltaS","Lambda","LambdaRight","LambdaDisp","LogLik")
     for (i in 1:iter){
         cu_pa<-updateTheta(cu_pa)
         if (!cu_pa$fix_ti_tv){
@@ -421,11 +293,7 @@ runGibbs <- function(cu_pa,iter){
             #Allowing dispersion in the overhangs
             cu_pa<-updateLambdaDisp(cu_pa)
         }
-        if (cu_pa$nuSamples!=0){
-            #Update the nu parameter by via MC estimation
-            cu_pa<-updateNu(cu_pa)
-        }
-        esti[i,c(1:8)] <- getParams(cu_pa)
+        esti[i,c(1:7)] <- getParams(cu_pa)
         esti[i,"LogLik"] <- logLikAll(cu_pa$dat,cu_pa$ThetaMat,cu_pa$DeltaD,cu_pa$DeltaS,cu_pa$laVec,cu_pa$nuVec,cu_pa$m)
         if (! (i %% 1000) && cu_pa$verbose){
             cat("MCMC-Iter\t",i,"\t",esti[i,"LogLik"],"\n")
@@ -461,24 +329,7 @@ simPredCheck <- function(da,output){
         laVec <- c(laVecLeft[1:(output$cu_pa$m/2)],laVecRight[(output$cu_pa$m/2+1):output$cu_pa$m])
     }
     #Constructing the nu vector
-    if (output$cu_pa$nuSamples !=0){
-        write("The MC sampling for the nu vector hasn't gone through a extensive testing procedure",stderr())
-        stop()
-        nuVec <- seqProbVecNuWithLengths(sample(output$out[,"Lambda"],1),
-                                         sample(output$out[,"LambdaDisp"],1),
-                                         sample(output$out[,"Nu"],1),
-                                         nrow(cu_pa$dat),
-                                         sampleHJ(output$cu_pa$lengths$Length,
-                                                 size=output$cu_pa$laSamples,
-                                                 prob=output$cu_pa$lengths$Occurences),
-                                         output$cu_pa$mLe,
-                                         output$cu_pa$forward_only,
-                                         output$cu_pa$nuSamples,
-                                         output$cu_pa$ds_protocol)
-        nuVec <- c(nuVec,rev(1-nuVec))
-    }else {
-        nuVec <- output$cu_pa$nuVec
-    }
+    nuVec <- output$cu_pa$nuVec
 
     #Sample the other parameters
     des <- sample(output$out[,"DeltaS"],1)
@@ -607,9 +458,6 @@ writeMCMC <- function(out,filename){
     }
     if (!out$cu_pa$fix_disp){
         parameters <- c(parameters,"LambdaDisp")
-    }
-    if (out$cu_pa$nuSamples!=0){
-        parameters <- c(parameters,"Nu")
     }
     parameters <- c(parameters,"LogLik")
     write.csv(out$out[,parameters],paste(filename,".csv",sep=""))

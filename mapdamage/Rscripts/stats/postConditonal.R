@@ -165,21 +165,3 @@ updateLambdaDisp <- function(cp){
     }
     return(cp)
 }
-
-updateNu <- function(cp){
-    old_lik  <- cp$old_lik+priorNu(cp$Nu)
-    nu_star <- proposeNu(cp$Nu,1)
-    if (nu_star<0 || nu_star>1){
-        return(cp)
-    }
-    nu_Vec_star <- seqProbVecNuWithLengths(cp$Lambda,cp$LambdaDisp,nu_star,cp$m,sampleHJ(cp$lengths$Length,size=cp$nuSamples,prob=cp$lengths$Occurences),cp$mLe,cp$forward_only,cu_pa$nuSamples,cu_pa$ds_protocol)
-    new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,cp$laVec,nu_Vec_star,cp$m)
-    new_lik  <- new_lik_func+priorNu(nu_star)
-    if (metroDesc(new_lik,old_lik)) {
-        #Accept
-        cp$Nu  <- nu_star
-        cp$nuVec  <- nu_Vec_star
-        cp$old_lik <- new_lik_func
-    }
-    return(cp)
-}

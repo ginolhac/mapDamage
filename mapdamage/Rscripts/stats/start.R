@@ -46,10 +46,6 @@ logLikAllOptimize  <- function(x,cp){
 gridSearch <- function(cp,iter){
     #Starts the Markov chain in local maxima for "quicker" burn-in period
     #No theoretical reasoning behind this but seems to work well in practice.
-    if (cp$nuSamples!=0){
-        write("Can't use the grid search with simulated nu vector",stderr())
-        stop()
-    }
     if(!cp$quiet){
         cat("Starting grid search, starting from random values\n")
     }

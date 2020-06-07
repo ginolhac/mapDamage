@@ -15,7 +15,6 @@ proposeParameters <- list(
                           Lambda=0.008,
                           LambdaRight=0.008,
                           LambdaDisp=0.015,
-                          Nu=0.001
                           )
 
 #######################################################
@@ -62,8 +61,6 @@ fix_disp <- getArgument("FIX_DISP", as.logical)
 # The overhangs are the same on both sides
 same_overhangs <- getArgument("SAME_OVERHANGS", as.logical)
 
-# Estimate the nu vector using the Briggs model (Should be similiar ammount to the number of sequences use this on your own risk....)
-nu_samples <- getArgument("NU_SAMPLES", as.integer)
 # Set 1 at 5' end and 0 at 3' end or else estimates it with GAM
 fix_nu <- getArgument("FIX_NU", as.logical)
 # Single stranded protocol C>T at both sides
@@ -73,8 +70,6 @@ sub_length <- getArgument("SUB_LENGTH", as.integer)
 
 # Absolute path to the dataset
 path_to_dat <- getArgument("PATH_TO_DAT")
-# Base file name of the output
-out_file_base  <- getArgument("OUT_FILE_BASE")
 # These options control the volume of the output
 verbose <- getArgument("VERBOSE", as.logical)
 quiet <- getArgument("QUIET", as.logical)

@@ -114,12 +114,3 @@ proposeLambdaDisp <- function(x=NA,ra=NA){
         return(0)
     }
 }
-
-proposeNu <- function(x=NA,ra=NA){
-    sh1 <- proposeParameters$Nu
-    if (!is.na(ra)){
-        return(rnorm(1,mean=x,sd=sh1))
-    } else {
-        return(0)
-    }
-}

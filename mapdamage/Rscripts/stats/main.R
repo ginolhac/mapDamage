@@ -27,12 +27,6 @@ source("data.R")
 #
 #######################################################
 
-#This used for the Briggs MC estimation
-if (nu_samples!=0){
-    start_vals$lengths <- getSeqLen(path_to_dat)
-    start_vals$le  <- floor(weighted.mean(x=start_vals$lengths$Length,w=start_vals$lengths$Occurences))
-}
-
 if (forward_only && reverse_only){
     write("Cannot specify using only the 5' end and the 3' end which makes no sense",stderr())
     stop()
@@ -71,7 +65,6 @@ cu_pa <- list(
               Lambda=start_vals$lambda,
               LambdaRight=start_vals$lambda_right,
               LambdaDisp=start_vals$lambda_disp,
-              Nu=start_vals$nu,
               m=nrow(dat),
               meanLength=NA,
               lengths=NA,
@@ -79,7 +72,6 @@ cu_pa <- list(
               laVec=NA,
               nuVec=NA,
               iter=iterations,
-              nuSamples=nu_samples,
               fix_nu=fix_nu,
               ds_protocol=ds_protocol,
               forward_only=forward_only,
@@ -94,13 +86,6 @@ cu_pa <- list(
               use_raw_nick_freq = use_raw_nick_freq,
               use_bw_theme = use_bw_theme
               )
-
-if (nu_samples!=0){
-    #Need the lengths for the Briggs MC estimation
-    cu_pa$meanLength <- start_vals$le
-    cu_pa$lengths  <- start_vals$lengths
-    cu_pa$mLe  <- max(start_vals$lengths$Length)
-}
 
 cu_pa$ThetaMat <- getPmat(cu_pa$Theta,cu_pa$Rho,cu_pa$acgt)
 
@@ -130,27 +115,7 @@ if (!cu_pa$same_overhangs){
 #
 #######################################################
 
-if (!cu_pa$ds_protocol & cu_pa$nuSamples!=0){
-    #Using the single stranded protocol with nu samples which makes
-    #no sense
-    write("Silly to use the MC estimation for nu_i if using the single stranded protocol", stderr())
-    stop()
-}else if (cu_pa$nuSamples!=0 & cu_pa$fix_nu) {
-    #Using the fixed nu parameter with nu samples which makes no sense
-    write("Silly to use the MC estimation for nu_i and use fix_nu ", stderr())
-    stop()
-}else if (cu_pa$nuSamples!=0){
-    #Using the nu vector
-    #IF ds protocol we set nu_vector as 1
-    cu_pa$nuVec <- seqProbVecNuWithLengths(cu_pa$Lambda,
-                                       cu_pa$LambdaDisp,
-                               cu_pa$Nu,nrow(cu_pa$dat),
-                               sampleHJ(cu_pa$lengths$Length,size=cu_pa$nuSamples,prob=cu_pa$lengths$Occurences),
-                                              cu_pa$mLe,
-                                     cu_pa$forward_only,
-                                        cu_pa$nuSamples,
-                                      cu_pa$ds_protocol)
-}else if (!cu_pa$ds_protocol){
+if (!cu_pa$ds_protocol){
     #The single stranded protocol
     cu_pa$nuVec <- rep(1,nrow(dat))
 }else if (fix_nu){
@@ -254,29 +219,25 @@ if (!cu_pa$quiet){
     cat("Done with the iterations, finishing up\n")
 }
 
-if (out_file_base!=""){
-    cat("Writing and plotting to files\n")
-    #Print everything to file
-    writeMCMC(mcmcOut,paste(out_file_base,"_MCMC_iter",sep=""))
-    #Trace plot
-    pdf(paste(out_file_base,"_MCMC_trace.pdf",sep=""))
-    plotEverything(mcmcOut,hi=0)
-    dev.off()
-    #histogram of the conditional distributions
-    pdf(paste(out_file_base,"_MCMC_hist.pdf",sep=""))
-    plotEverything(mcmcOut,hi=1)
-    dev.off()
-    #Posterior predictive plot
-    pdf(paste(out_file_base,"_MCMC_post_pred.pdf",sep=""))
-    siteProb <- postPredCheck(dat,mcmcOut)
-    dev.off()
-    #Write correcting probabilities
-    write.csv(siteProb,paste(out_file_base,"_MCMC_correct_prob.csv",sep=""))
-} else {
-    cat("Plotting\n")
-    plotEverything(mcmcOut,hi=0)
-    X11()
-    plotEverything(mcmcOut,hi=1)
-    X11()
-    postPredCheck(dat,mcmcOut)
-}
+
+cat("Writing and plotting to files\n")
+# Print everything to file
+writeMCMC(mcmcOut, paste(path_to_dat, "Stats_out_MCMC_iter", sep=""))
+
+# Trace plot
+pdf(paste(path_to_dat, "Stats_out_MCMC_trace.pdf", sep=""))
+plotEverything(mcmcOut,hi=0)
+dev.off()
+
+# histogram of the conditional distributions
+pdf(paste(path_to_dat, "Stats_out_MCMC_hist.pdf", sep=""))
+plotEverything(mcmcOut,hi=1)
+dev.off()
+
+# Posterior predictive plot
+pdf(paste(path_to_dat, "Stats_out_MCMC_post_pred.pdf", sep=""))
+siteProb <- postPredCheck(dat,mcmcOut)
+dev.off()
+
+# Write correcting probabilities
+write.csv(siteProb, paste(path_to_dat, "Stats_out_MCMC_correct_prob.csv", sep=""))
