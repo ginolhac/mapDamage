@@ -68,11 +68,10 @@ def check_r_libraries():
     """Checks if the necessary R libraries are here, signal otherwise
     """
     logger = logging.getLogger(__name__)
-    script = construct_path("stats/checkLibraries.R")
     missing_libries = False
 
     for library in ["ggplot2", "gam", "Rcpp", "RcppGSL"]:
-        command = ["Rscript", script, library]
+        command = ["Rscript", "-e", "library(%s)" % (library,)]
 
         if not _log_call(command, quiet=True):
             logger.error("Required R library is missing: %r", library)
