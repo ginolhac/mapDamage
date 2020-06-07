@@ -1,5 +1,3 @@
-import mapdamage
-
 # from Martin Kircher, description of CIGAR operations
 # O BAM Description
 # M 0 alignment match (can be a sequence match or mismatch)
