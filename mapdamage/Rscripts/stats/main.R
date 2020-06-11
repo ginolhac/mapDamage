@@ -31,17 +31,15 @@ if (forward_only && reverse_only){
     abort("Cannot specify using only the 5' end and the 3' end which makes no sense")
 }
 
-fow_dat <-readMapDamData(path_to_dat)
-rev_dat <-readMapDamData(path_to_dat,forward=0)
-if (forward_only){
+if (forward_only) {
     #Taking only the forward part
-    dat <- fow_dat[1:sub_length,]
-}else if (reverse_only){
+    dat <- readMapDamData(path_to_dat, sub_length=sub_length, direction="forward")
+} else if (reverse_only) {
     #Taking only the reverse part
-    dat <- rev_dat[sub_length:1,]
-}else {
+    dat <- readMapDamData(path_to_dat, sub_length=sub_length, direction="reverse")
+} else {
     #Using both ends
-    dat <- joinFowAndRev(fow_dat,rev_dat,sub_length)
+    dat <- readMapDamData(path_to_dat, sub_length=sub_length, direction="both")
 }
 
 #Getting everything ready for the mutation model

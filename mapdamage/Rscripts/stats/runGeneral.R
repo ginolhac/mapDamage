@@ -14,7 +14,7 @@ proposeParameters <- list(
                           DeltaS=0.009,
                           Lambda=0.008,
                           LambdaRight=0.008,
-                          LambdaDisp=0.015,
+                          LambdaDisp=0.015
                           )
 
 #######################################################

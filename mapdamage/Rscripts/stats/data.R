@@ -1,45 +1,34 @@
-#Functions to load the raw data
-sumTheChr <- function(da,co){
-    #Sum up the columns for the different chromosomes
-    return(tapply(da[[co]],da$Pos,sum))
+
+readMapDamData <- function(folder, direction="both", sub_length=12) {
+    nucleotides <- c("A", "C", "G", "T")
+    mismatches <- c("A.C", "A.G", "A.T",
+                    "C.A", "C.G", "C.T",
+                    "G.A", "G.C", "G.T",
+                    "T.A", "T.C", "T.G")
+
+    data <- read.table(paste(folder, "misincorporation.txt", sep=""), header=TRUE)
+    data <- data[data$Pos <= sub_length, ]
+    data[data$End == "3p", "Pos"] <- -data[data$End == "3p", "Pos"]
+
+    if (direction == "forward") {
+        data <- data[data$End == "5p",]
+    } else if (direction == "reverse") {
+        data <- data[data$End == "3p",]
+    } else if (direction != "both") {
+        abort("invalid direction '%s'", direction)
+    }
+
+    return(aggregate(
+        data[, c(nucleotides, mismatches)],
+        list(Pos=data[, "Pos"]),
+        sum
+    ))
 }
 
-readMapDamData <- function(folder,forward=1){
-    #Reads in the data from mapdamage
-    #Sums up the position counts for the different chromosomes
-    fil <- "misincorporation.txt"
-    raw_dat <- read.table(paste(folder,fil,sep=""),header=TRUE)
-    if (forward==1){
-        raw_dat_plus <- raw_dat[raw_dat$End=="5p" & raw_dat$Std=="+",] 
-        raw_dat_minus <- raw_dat[raw_dat$End=="5p" & raw_dat$Std=="-",]
-    } else {
-        raw_dat_plus <- raw_dat[raw_dat$End=="3p" & raw_dat$Std=="+",]
-        raw_dat_minus <- raw_dat[raw_dat$End=="3p" & raw_dat$Std=="-",] 
-    }
-    dat <- matrix(nrow=max(raw_dat_plus$Pos),ncol=length(colnames(raw_dat_plus))-3)
-    colnames(dat) <- colnames(raw_dat_plus)[c(-1,-2,-3)]
-    dat[,"Pos"] <- seq(from=1,to=nrow(dat),by=1)
-    if (forward!=1){
-        dat[,"Pos"] <- - dat[,"Pos"]
-    }
-    for (i in colnames(raw_dat)[c(-1,-2,-3,-4)]){
-        dat[,i] <- sumTheChr(raw_dat_plus,i)+sumTheChr(raw_dat_minus,i)
-    }
-    return(dat)
-}
 
-joinFowAndRev <- function(fo,re,nrPos){
-    #Joins the 5' and 3' end with nrPos bases for each end
-    te <- fo[1:nrPos,]
-    te2 <- re[nrPos:1,]
-    out <- rbind(te,te2)
-    out[,"Pos"] <- c(1:nrPos,-c(nrPos:1))
-    return(out)
-}
+readBaseFreqs <- function(folder) {
+    # Get the nucleotide composition of the genome
+    data <- read.csv(paste(folder, "dnacomp_genome.csv", sep=""), header=TRUE)
 
-readBaseFreqs <- function(fol){
-    #Get the nucleotide composition of the genome
-    fil <- "dnacomp_genome.csv"
-    dat <- read.csv(paste(fol,fil,sep=""),header=TRUE)
-    return(c(dat$A,dat$C,dat$G,dat$T))
+    return(c(data$A, data$C, data$G, data$T))
 }
