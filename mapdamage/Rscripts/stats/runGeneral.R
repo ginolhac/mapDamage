@@ -3,11 +3,11 @@ source("../common.r")
 
 #######################################################
 #
-#                  Proposal parameters 
+#                  Proposal parameters
 #
 #######################################################
 
-proposeParameters <- list( 
+proposeParameters <- list(
                           Theta=0.0003,
                           Rho=0.001,
                           DeltaD=0.001,
@@ -52,11 +52,9 @@ adjust_iter <- getArgument("ADJUST_ITER", as.integer)
 # Iterations
 iterations <- getArgument("ITERATIONS", as.integer)
 
-# Taking only the 5' end of the seqs 
-forward_only <- getArgument("FORWARD_ONLY", as.logical)
-# Taking only the 3' end of the seqs 
-reverse_only <- getArgument("REVERSE_ONLY", as.logical)
-# Geom instead of neg Bin 
+# Taking the 5p, 3p, or both ends of the seqs
+termini <- getArgument("TERMINI")
+# Geom instead of neg Bin
 fix_disp <- getArgument("FIX_DISP", as.logical)
 # The overhangs are the same on both sides
 same_overhangs <- getArgument("SAME_OVERHANGS", as.logical)
@@ -65,7 +63,7 @@ same_overhangs <- getArgument("SAME_OVERHANGS", as.logical)
 fix_nu <- getArgument("FIX_NU", as.logical)
 # Single stranded protocol C>T at both sides
 ds_protocol <- getArgument("DS_PROTOCOL", as.logical)
-# How long sequence to use from each side 
+# How long sequence to use from each side
 sub_length <- getArgument("SUB_LENGTH", as.integer)
 
 # Absolute path to the dataset

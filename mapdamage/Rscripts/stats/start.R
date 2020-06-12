@@ -1,17 +1,17 @@
-#Runs likelihood optimization in the beginning to 
+#Runs likelihood optimization in the beginning to
 #start in a better place.
 
 logLikAllOptimize  <- function(x,cp){
     #Optimizer wrapper for the log likelihood function
-    Theta      <- x["Theta"]       
-    DeltaD      <- x["DeltaD"]       
+    Theta      <- x["Theta"]
+    DeltaD      <- x["DeltaD"]
     DeltaS      <- x["DeltaS"]
     Lambda      <- x["Lambda"]
     LambdaRight <- x["LambdaRight"]
     LambdaDisp  <- x["LambdaDisp"]
     Rho         <- x["Rho"]
     if (sum(c(DeltaD,DeltaS,Lambda,LambdaRight)>1)>0 || sum(c(Theta,DeltaD,DeltaS,Lambda,LambdaRight,Rho)<0)>0){
-        #This very convenient for lazy people, using a unbounded optimization method Nelder-Mead 
+        #This very convenient for lazy people, using a unbounded optimization method Nelder-Mead
         #just returning Inf when we are outside the boundary.
         return(Inf)
     }
@@ -25,21 +25,24 @@ logLikAllOptimize  <- function(x,cp){
     }else {
         disp_to_use = LambdaDisp
     }
-    leftLaVec  <- seqProbVecLambda(Lambda,disp_to_use,cu_pa$m,cu_pa$forward_only,cu_pa$reverse_only)
-    rightLaVec  <- seqProbVecLambda(LambdaRight,disp_to_use,cu_pa$m,cu_pa$forward_only,cu_pa$reverse_only)
+    leftLaVec  <- seqProbVecLambda(Lambda, disp_to_use, cu_pa$m, cu_pa$termini)
+    rightLaVec  <- seqProbVecLambda(LambdaRight, disp_to_use, cu_pa$m, cu_pa$termini)
     if (cp$same_overhangs){
         rightLaVec <- leftLaVec
     }
-    if (cp$forward_only){
+
+    if (cp$termini == "5p") {
         #Only using the forward end
         laVec <- leftLaVec
-    }else if (cp$reverse_only){
+    } else if (cp$termini == "3p") {
         #Only using the backward end
         laVec <- rightLaVec
-    }else {
+    } else {
         #Both ends
+        stopifnot(cp$termini == "both")
         laVec <- c(leftLaVec[1:(cu_pa$m/2)],rightLaVec[(cu_pa$m/2+1):cu_pa$m])
     }
+
     return(-logLikAll(cp$dat,theta_mat,DeltaD,DeltaS,laVec,cp$nuVec,cp$m))
 }
 
@@ -81,7 +84,7 @@ gridSearch <- function(cp,iter){
     cp$DeltaD <- minParams$par["DeltaD"]
     cp$DeltaS <- minParams$par["DeltaS"]
     cp$Lambda <- minParams$par["Lambda"]
-    
+
     #Only update the other ones if the user requested for them
     if (!cp$fix_ti_tv){
         cp$Rho  <- minParams$par["Rho"]
@@ -94,8 +97,8 @@ gridSearch <- function(cp,iter){
     }
 
     #Now calculating matrix and vectors accompanying the optimal values
-    cp$laVec <- seqProbVecLambda(cp$Lambda,cp$LambdaDisp,nrow(cp$dat),cp$forward_only,cp$reverse_only)
-    cp$laVecRight <- seqProbVecLambda(cp$Lambda,cp$LambdaDisp,nrow(cp$dat),cp$forward_only,cp$reverse_only)
+    cp$laVec <- seqProbVecLambda(cp$Lambda, cp$LambdaDisp, nrow(cp$dat), cp$termini)
+    cp$laVecRight <- seqProbVecLambda(cp$Lambda, cp$LambdaDisp, nrow(cp$dat), cp$termini)
     cp$ThetaMat <- getPmat(cp$Theta,cp$Rho,cp$acgt)
     cp$old_lik <- - minVal
 

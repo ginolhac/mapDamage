@@ -85,28 +85,26 @@ metroDesc <- function(lpr,lol){
     }
 }
 
-seqProbVecLambda <- function(lambda,lambda_disp,m,fo_only=NA,re_only=NA){
+seqProbVecLambda <- function(lambda, lambda_disp, m, termini="both"){
     #Returns the position specific probability of being in an overhang
-    if (is.na(fo_only) || is.na(re_only)){
-        abort("Must give parameters to fo_only or re_only")
-    }
     psum <- matrix(ncol=1,nrow=m)
     pvals <- dnbinom(c(1:m)-1,prob=lambda,size=lambda_disp)
     for (i in 1:m){
         psum[i,1] <- (1-sum(pvals[1:i]))/2
     }
-    if (fo_only){
+
+    if (termini == "5p"){
         #Only the forward part
         return(c(psum))
-    }else if (re_only && fo_only){
-        abort("Shouldn't call this function with forward and reverse only.")
-    }else if (re_only) {
+    } else if (termini == "3p") {
         #The reverse part
         return(rev(c(psum)))
-    }else{
+    } else if (termini == "both") {
         #Both ends
         psum <- c(psum[1:(m/2),1],rev(psum[1:(m/2),1]))
         return(c(psum))
+    } else {
+        abort("Invalid value for termini: '%s'", termini)
     }
 }
 
@@ -308,19 +306,14 @@ simPredCheck <- function(da,output){
         laVec <- seqProbVecLambda(sample(output$out[,"Lambda"],1),
                                   sample(output$out[,"LambdaDisp"],1),
                                   output$cu_pa$m,
-                                  output$cu_pa$forward_only,
-                                  cu_pa$reverse_only)
+                                  output$cu_pa$termini)
     }else {
         laVecLeft <- seqProbVecLambda(sample(output$out[,"Lambda"],1),
                                       sample(output$out[,"LambdaDisp"],1),
-                                      output$cu_pa$m,
-                                      0,
-                                      0)
+                                      output$cu_pa$m)
         laVecRight <- seqProbVecLambda(sample(output$out[,"LambdaRight"],1),
                                        sample(output$out[,"LambdaDisp"],1),
-                                       output$cu_pa$m,
-                                       0,
-                                       0)
+                                       output$cu_pa$m)
         laVec <- c(laVecLeft[1:(output$cu_pa$m/2)],laVecRight[(output$cu_pa$m/2+1):output$cu_pa$m])
     }
     #Constructing the nu vector
@@ -392,11 +385,11 @@ postPredCheck <- function(da,output,samples=10000){
     da <- cbind(1:(nrow(da)),da)
     colnames(da)[1] <- "oneBased"
     #Get the breaks depending on parameters for pretty plots
-    if (!output$cu_pa$forward_only || !output$cu_pa$reverse_only){
+    if (output$cu_pa$termini == "both") {
         bres <- c(seq(from=1,to=floor(nrow(da)/2),by=2),rev(seq(from=nrow(dat),to=floor(nrow(da)/2)+1,by=-2)))
-    }else if (output$cu_pa$forward_only) {
+    } else if (output$cu_pa$termini == "5p") {
         bres <- seq(from=1,to=nrow(da),by=2)
-    } else if (output$cu_pa$reverse_only){
+    } else if (output$cu_pa$termini == "3p") {
         bres <- seq(from=nrow(dat),to=1,by=-2)
     }else {
         abort("There is something fishy with the options")

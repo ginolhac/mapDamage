@@ -236,14 +236,25 @@ def _build_parser():
         help="Number of final MCMC iterations",
     )
     group.add_argument(
+        "--termini",
+        default="both",
+        choices=("5p", "3p", "both"),
+        help="Use either mismatches at 5p (forward), 3p (reverse), or both termini for "
+        "damage models",
+    )
+    group.add_argument(
         "--forward",
-        action="store_true",
-        help="Use only the 5' end of the seqs. Cannot be used together with --reverse",
+        action="store_const",
+        const="5p",
+        dest="termini",
+        help=argparse.SUPPRESS,
     )
     group.add_argument(
         "--reverse",
-        action="store_true",
-        help="Use only the 3' end of the seqs. Cannot be used together with --forward",
+        action="store_const",
+        const="3p",
+        dest="termini",
+        help=argparse.SUPPRESS,
     )
     group.add_argument(
         "--var-disp", action="store_true", help="Variable dispersion in the overhangs",
@@ -392,12 +403,6 @@ def parse_args(argv):
         parser.error("--refplot (-b) must be less than --around (-a)")
     if options.readplot > options.length:
         parser.error("--readplot (-m) must be less than --length (-l)")
-
-    # check statistic options
-    if options.forward and options.reverse:
-        parser.error(
-            "Cannot use only forward end and only reverse end for the statistics"
-        )
 
     # use filename as default for plot titles if not set
     if options.title is None:

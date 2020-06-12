@@ -27,20 +27,7 @@ source("data.R")
 #
 #######################################################
 
-if (forward_only && reverse_only){
-    abort("Cannot specify using only the 5' end and the 3' end which makes no sense")
-}
-
-if (forward_only) {
-    #Taking only the forward part
-    dat <- readMapDamData(path_to_dat, sub_length=sub_length, direction="forward")
-} else if (reverse_only) {
-    #Taking only the reverse part
-    dat <- readMapDamData(path_to_dat, sub_length=sub_length, direction="reverse")
-} else {
-    #Using both ends
-    dat <- readMapDamData(path_to_dat, sub_length=sub_length, direction="both")
-}
+dat <- readMapDamData(path_to_dat, sub_length=sub_length, termini=termini)
 
 #Getting everything ready for the mutation model
 if (jukes_cantor){
@@ -71,8 +58,7 @@ cu_pa <- list(
               iter=iterations,
               fix_nu=fix_nu,
               ds_protocol=ds_protocol,
-              forward_only=forward_only,
-              reverse_only=reverse_only,
+              termini=termini,
               fix_disp= fix_disp,
               same_overhangs= same_overhangs,
               fix_ti_tv = fix_ti_tv,
@@ -92,16 +78,15 @@ cu_pa$ThetaMat <- getPmat(cu_pa$Theta,cu_pa$Rho,cu_pa$acgt)
 #
 #######################################################
 
-cu_pa$laVec <- seqProbVecLambda(cu_pa$Lambda,cu_pa$LambdaDisp,nrow(cu_pa$dat),cu_pa$forward_only,cu_pa$reverse_only)
+cu_pa$laVec <- seqProbVecLambda(cu_pa$Lambda, cu_pa$LambdaDisp, nrow(cu_pa$dat), cu_pa$termini)
 
 if (!cu_pa$same_overhangs){
     #The overhangs are not the same
-    if (cu_pa$forward_only){
-        abort("Cannot use different overhangs with only the 5' end")
-    } else if (cu_pa$reverse_only){
-        abort("Cannot use different overhangs with only the 3' end")
+    if (cu_pa$termini != "both") {
+        abort("Cannot use different overhangs with only the %s end", cu_pa$termini)
     }
-    cu_pa$laVecRight <- seqProbVecLambda(cu_pa$LambdaRight,cu_pa$LambdaDisp,nrow(cu_pa$dat),cu_pa$forward_only,cu_pa$reverse_only)
+
+    cu_pa$laVecRight <- seqProbVecLambda(cu_pa$LambdaRight, cu_pa$LambdaDisp, nrow(cu_pa$dat), cu_pa$termini)
 }
 
 #######################################################
@@ -115,11 +100,12 @@ if (!cu_pa$ds_protocol){
     cu_pa$nuVec <- rep(1,nrow(dat))
 }else if (fix_nu){
     #Ones at the 5' end and zeros at the 3' end
-    if (cu_pa$forward_only){
+    if (cu_pa$termini == "5p") {
         cu_pa$nuVec <- rep(1,nrow(dat))
-    }else if (cu_pa$reverse_only){
+    }else if (cu_pa$termini == "3p"){
         cu_pa$nuVec <- rep(0,nrow(dat))
     }else {
+        stopifnot(cu_pa$termini == "both")
         cu_pa$nuVec <- c(rep(1,nrow(dat)/2),rep(0,nrow(dat)/2))
     }
 }else {
@@ -128,16 +114,17 @@ if (!cu_pa$ds_protocol){
     te<-(dat[,"C.T"]/dat[,"C"])/(dat[,"G.A"]/dat[,"G"]+dat[,"C.T"]/dat[,"C"])
     if (sum(is.na(te) )!=0 ){
         write("Warning, To few substitutions to assess the nick frequency, using constant nick frequency instead", stderr())
-        if (cu_pa$forward_only){
+        if (cu_pa$termini == "5p") {
             cu_pa$nuVec <- rep(1,nrow(dat))
-        }else if (cu_pa$reverse_only){
+        } else if (cu_pa$termini == "3p") {
             cu_pa$nuVec <- rep(0,nrow(dat))
-        }else {
+        } else {
+            stopifnot(cu_pa$termini == "both")
             cu_pa$nuVec <- c(rep(1,nrow(dat)/2),rep(0,nrow(dat)/2))
         }
     } else {
         #The substitutes seem to be okay estimate the nick frequency using GAM
-        if (cu_pa$forward_only || cu_pa$reverse_only){
+        if (cu_pa$termini != "both"){
             if (cu_pa$use_raw_nick_freq){
                 #Use the frequency
                 cu_pa$nuVec <- te

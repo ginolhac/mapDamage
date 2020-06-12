@@ -1,5 +1,5 @@
 
-readMapDamData <- function(folder, direction="both", sub_length=12) {
+readMapDamData <- function(folder, termini="both", sub_length=12) {
     nucleotides <- c("A", "C", "G", "T")
     mismatches <- c("A.C", "A.G", "A.T",
                     "C.A", "C.G", "C.T",
@@ -10,12 +10,10 @@ readMapDamData <- function(folder, direction="both", sub_length=12) {
     data <- data[data$Pos <= sub_length, ]
     data[data$End == "3p", "Pos"] <- -data[data$End == "3p", "Pos"]
 
-    if (direction == "forward") {
-        data <- data[data$End == "5p",]
-    } else if (direction == "reverse") {
-        data <- data[data$End == "3p",]
-    } else if (direction != "both") {
-        abort("invalid direction '%s'", direction)
+    if (termini == "5p" || termini == "3p") {
+        data <- data[data$End == termini,]
+    } else if (termini != "both") {
+        abort("invalid termini '%s'", termini)
     }
 
     return(aggregate(

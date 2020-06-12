@@ -1,11 +1,11 @@
-#The posterior conditional function utilized by the 
-# Gibbs sampler in function.R. They have all the 
-#same form maybe they should be implemented in a 
+#The posterior conditional function utilized by the
+# Gibbs sampler in function.R. They have all the
+#same form maybe they should be implemented in a
 #smarter way.
 
-#The basic structure is the following 
+#The basic structure is the following
 
-#1. Get the old parameter 
+#1. Get the old parameter
 #2. Propose a jump
 #3. Accept it using the MH ratio
 #4. Return the old or new value based on the MH ratio
@@ -87,8 +87,8 @@ updateLambda <- function(cp){
     lambda_star <- proposeLambda(cp$Lambda,1)
     if (lambda_star<0 || lambda_star>1){
         return(cp)
-    } 
-    laVecStarLeft  <- seqProbVecLambda(lambda_star,cp$LambdaDisp,cp$m,cp$forward_only,cp$reverse_only)
+    }
+    laVecStarLeft  <- seqProbVecLambda(lambda_star, cp$LambdaDisp, cp$m, cp$termini)
     if (!cp$same_overhangs){
         #The left and right overhangs are not the same!
         laVecStar <- c(laVecStarLeft[1:(cp$m/2)],cp$laVecRight[(cp$m/2+1):cp$m])
@@ -113,8 +113,8 @@ updateLambdaRight <- function(cp){
     if (lambda_right_star<0 || lambda_right_star>1){
         #Reject this right away
         return(cp)
-    } 
-    laVecStarRight  <- seqProbVecLambda(lambda_right_star,cp$LambdaDisp,cp$m,cp$forward_only,cp$reverse_only)
+    }
+    laVecStarRight  <- seqProbVecLambda(lambda_right_star, cp$LambdaDisp, cp$m, cp$termini)
     if (!cp$same_overhangs){
         #The left and right overhangs are not the same!
         laVecStar <- c(cp$laVec[1:(cp$m/2)],laVecStarRight[(cp$m/2+1):cp$m])
@@ -122,12 +122,11 @@ updateLambdaRight <- function(cp){
         #left and right are the same
         abort("You shouldn't be calling this function if the overhangs are the same")
     }
-    if (cp$forward_only){
-        abort("You shouldn't be calling this function if you are only considering the forward part")
+
+    if (cp$termini != "both") {
+        abort("You shouldn't be calling this function if you are only considering one termini")
     }
-    if (cp$reverse_only){
-        abort("You shouldn't be calling this function if you are only considering the reverse part")
-    }
+
     new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,laVecStar,cp$nuVec,cp$m)
     new_lik  <- new_lik_func+priorLambdaRight(lambda_right_star)
     if (metroDesc(new_lik,old_lik)) {
@@ -144,13 +143,13 @@ updateLambdaDisp <- function(cp){
     lambda_disp_star <- proposeLambdaDisp(cp$LambdaDisp,1)
     if (lambda_disp_star<0 ){
         return(cp)
-    } 
+    }
     if (!cp$same_overhangs){
-        leftLaVecStar  <- seqProbVecLambda(cp$Lambda,lambda_disp_star,cp$m,cp$forward_only,cp$reverse_only)
-        rightLaVecStar  <- seqProbVecLambda(cp$LambdaRight,lambda_disp_star,cp$m,cp$forward_only,cp$reverse_only)
+        leftLaVecStar  <- seqProbVecLambda(cp$Lambda, lambda_disp_star, cp$m, cp$termini)
+        rightLaVecStar  <- seqProbVecLambda(cp$LambdaRight, lambda_disp_star, cp$m, cp$termini)
         laVecStar <- c(leftLaVecStar[1:(cp$m/2)],rightLaVecStar[(cp$m/2+1):cp$m])
     }else {
-        laVecStar  <- seqProbVecLambda(cp$Lambda,lambda_disp_star,cp$m,cp$forward_only,cp$reverse_only)
+        laVecStar  <- seqProbVecLambda(cp$Lambda, lambda_disp_star, cp$m, cp$termini)
     }
     new_lik_func  <- logLikAll(cp$dat,cp$ThetaMat,cp$DeltaD,cp$DeltaS,laVecStar,cp$nuVec,cp$m)
     new_lik  <- new_lik_func+priorLambdaDisp(lambda_disp_star)
