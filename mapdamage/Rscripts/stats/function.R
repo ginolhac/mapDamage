@@ -1,20 +1,20 @@
-#Various useful functions
-getPmat <- function(tmu,tv_ti_ratio,acgt){
-    #Returns the evolutionary substitution matrix
-    if (sum(acgt>=1)!=0 || sum(acgt<=0)!=0){
+# Various useful functions
+
+getPmat <- function(tmu,tv_ti_ratio,acgt) {
+    # Returns the evolutionary substitution matrix
+    if (any(acgt >= 1) || any(acgt <= 0)) {
         abort("The ACGT frequencies must be in the range 0 to 1")
-    }
-    if (all.equal(sum(acgt),1)!=TRUE){
+    } else if (sum(acgt) != 1) {
         abort("The ACGT frequencies do not sum to 1")
-    }
-    if (tv_ti_ratio<=0){
+    } else if (tv_ti_ratio <= 0) {
         abort("The transversion and transtition ratio cannot go under 0")
     }
-    #Returns the substitution probability matrix.
-    if (identical(tv_ti_ratio,1) && identical(acgt,c(.25,.25,.25,.25))){
+
+    # Returns the substitution probability matrix.
+    if (tv_ti_ratio == 1 && identical(acgt, c(0.25, 0.25, 0.25, 0.25))) {
         return(jukesCantorPmat(tmu))
-    }else{
-        Q <- qmatHKY85(tmu,tv_ti_ratio,acgt)
+    } else {
+        Q <- qmatHKY85(tmu, tv_ti_ratio, acgt)
         r  <- eigen(Q)
         B <- r$vectors
         E  <- diag(exp(r$values))
@@ -26,83 +26,57 @@ getPmat <- function(tmu,tv_ti_ratio,acgt){
         #  |B^-1   |B
         #     Eig
         #  N  ->   N
-        out <- solve(a=t(B),b= E %*% t(B))#Little trick to avoid numerical difficulties
+
+        # Little trick to avoid numerical difficulties
+        out <- solve(a=t(B), b=E %*% t(B))
+
         rownames(out) <- c("A","C","G","T")
         colnames(out) <- c("A","C","G","T")
         return(out)
     }
 }
 
-jukesCantorPmat <- function(tmu){
-    #Using the Juke-Cantor model
-    return(matrix(rep(1/4-exp(-tmu)/4,16),nrow=4,ncol=4,dimnames=list(c("A","C","G","T"),c("A","C","G","T")))+diag(rep(exp(-tmu),4)))
+jukesCantorPmat2 <- function(tmu){
+    # Using the Juke-Cantor model
+    names <- c("A", "C", "G", "T")
+    return(matrix(1 / 4 - exp(-tmu) / 4, nrow=4, ncol=4, dimnames=list(names, names)) + diag(exp(-tmu), 4, 4))
 }
 
-qmatHKY85 <- function(tmu,tv_ti,acgt){
-    #HKY85 model
-    #               |    sum_1         pi_c * tv_ti      pi_g           pi_t * tv_ti  |
-    #               | pi_a * tv_ti     sum_2             pi_g * tv_ti   pi_t          |
-    #  Q = tmu  *   |    pi_a          pi_c * tv_ti      sum_3          pi_t * tv_ti  |
-    #               |    pi_a*tv_ti    pi_c              pi_g * tv_ti   sum_4         |
-    #returns this matrix
-    #This could be replaced with the analytical formulas for the substitutions probabilities.
+qmatHKY85 <- function(tmu, tv_ti, acgt) {
+    # HKY85 model
+    #               |  sum_1          pi_c * tv_ti   pi_g           pi_t * tv_ti  |
+    #               |  pi_a * tv_ti   sum_2          pi_g * tv_ti   pi_t          |
+    #  Q = tmu  *   |  pi_a           pi_c * tv_ti   sum_3          pi_t * tv_ti  |
+    #               |  pi_a * tv_ti   pi_c           pi_g * tv_ti   sum_4         |
+    #
+    Qmat <- rbind(
+        c(0, tv_ti, 1, tv_ti) * acgt,
+        c(tv_ti, 0, tv_ti, 1) * acgt,
+        c(1, tv_ti, 0, tv_ti) * acgt,
+        c(tv_ti, 1, tv_ti, 0) * acgt)
 
-    Qmat <- matrix(rep(acgt,4),ncol=4,byrow=TRUE)
-    diag(Qmat) <- 0
-
-    #Adjusting the transversions versus transitions
-    #-  *  -  *
-    #*  -  *  -
-    #-  *  -  *
-    #*  -  *  -
-
-    Qmat[1,2] <- tv_ti*Qmat[1,2]
-    Qmat[1,4] <- tv_ti*Qmat[1,4]
-
-    Qmat[2,1] <- tv_ti*Qmat[2,1]
-    Qmat[2,3] <- tv_ti*Qmat[2,3]
-
-    Qmat[3,2] <- tv_ti*Qmat[3,2]
-    Qmat[3,4] <- tv_ti*Qmat[3,4]
-
-    Qmat[4,1] <- tv_ti*Qmat[4,1]
-    Qmat[4,3] <- tv_ti*Qmat[4,3]
-
-    diag(Qmat) <- -apply(Qmat,1,sum)
-
-    Qmat <- tmu * Qmat
-    return(Qmat)
+    return(tmu * (Qmat - diag(rowSums(Qmat))))
 }
 
-metroDesc <- function(lpr,lol){
+metroDesc <- function(lpr, lol){
     # the logic in the Metropolis-Hastings step
     stopifnot(!is.na(lpr))
     stopifnot(!is.na(lol))
-    if (log(runif(1))<lpr-lol){
-        return(1)
-    }else {
-        return(0)
-    }
+
+    return(as.numeric(log(runif(1)) < lpr - lol))
 }
 
-seqProbVecLambda <- function(lambda, lambda_disp, m, termini="both"){
-    #Returns the position specific probability of being in an overhang
-    psum <- matrix(ncol=1,nrow=m)
-    pvals <- dnbinom(c(1:m)-1,prob=lambda,size=lambda_disp)
-    for (i in 1:m){
-        psum[i,1] <- (1-sum(pvals[1:i]))/2
-    }
+seqProbVecLambda <- function(lambda, lambda_disp, m, termini="both") {
+    # Returns the position specific probability of being in an overhang
+    pvals <- dnbinom(1:m - 1, prob=lambda, size=lambda_disp)
+    psum <- (1 - cumsum(pvals)) / 2
 
-    if (termini == "5p"){
-        #Only the forward part
-        return(c(psum))
+    if (termini == "both") {
+        return(c(psum[1:(m / 2)], rev(psum[1:(m / 2)])))
+    } else if (termini == "5p") {
+        return(psum)
     } else if (termini == "3p") {
-        #The reverse part
-        return(rev(c(psum)))
-    } else if (termini == "both") {
-        #Both ends
-        psum <- c(psum[1:(m/2),1],rev(psum[1:(m/2),1]))
-        return(c(psum))
+        return(rev(psum))
     } else {
         abort("Invalid value for termini: '%s'", termini)
     }
@@ -157,27 +131,25 @@ double logLikFunOneBaseFast(
 }', cacheDir=paste(path.expand("~"), ".mapDamage", sep="/"))
 
 
-logLikAll <- function(dat,Theta,deltad,deltas,laVec,nuVec,m){
-    #Calculates the logLikelihood for all the bases by calling
-    # logLikFunOneBaseFast for each base
-    if (deltad<0 || deltad>1 || deltas<0 || deltas>1  ){
+logLikAll <- function(dat, Theta, deltad, deltas, laVec, nuVec, m) {
+    # Calculates the logLikelihood for all the bases
+    if (deltad < 0 || deltad > 1 || deltas < 0 || deltas > 1) {
         return(-Inf)
     }
-    #A,C,G and T
 
-    Asub <- dat[,"A.C"]+dat[,"A.G"]+dat[,"A.T"]
-    ALL <- logLikFunOneBaseFast(dat[,"A"],cbind(dat[,"A"]-Asub,dat[,"A.C"],dat[,"A.G"],dat[,"A.T"]),Theta,deltad,deltas,laVec,nuVec,m,1)
+    Asub <- dat[, "A.C"] + dat[, "A.G"] + dat[, "A.T"]
+    ALL <- logLikFunOneBaseFast(dat[,"A"], cbind(dat[,"A"]-Asub,dat[,"A.C"],dat[,"A.G"],dat[,"A.T"]),Theta,deltad,deltas,laVec,nuVec,m,1)
 
-    Csub <- dat[,"C.A"]+dat[,"C.G"]+dat[,"C.T"]
-    CLL <- logLikFunOneBaseFast(dat[,"C"],cbind(dat[,"C.A"],dat[,"C"]-Csub,dat[,"C.G"],dat[,"C.T"]),Theta,deltad,deltas,laVec,nuVec,m,2)
+    Csub <- dat[, "C.A"] + dat[, "C.G"] + dat[, "C.T"]
+    CLL <- logLikFunOneBaseFast(dat[,"C"], cbind(dat[,"C.A"],dat[,"C"]-Csub,dat[,"C.G"],dat[,"C.T"]),Theta,deltad,deltas,laVec,nuVec,m,2)
 
-    Gsub <- dat[,"G.A"]+dat[,"G.C"]+dat[,"G.T"]
-    GLL <- logLikFunOneBaseFast(dat[,"G"],cbind(dat[,"G.A"],dat[,"G.C"],dat[,"G"]-Gsub,dat[,"G.T"]),Theta,deltad,deltas,laVec,nuVec,m,3)
+    Gsub <- dat[, "G.A"] + dat[, "G.C"] + dat[, "G.T"]
+    GLL <- logLikFunOneBaseFast(dat[,"G"], cbind(dat[,"G.A"],dat[,"G.C"],dat[,"G"]-Gsub,dat[,"G.T"]),Theta,deltad,deltas,laVec,nuVec,m,3)
 
-    Tsub <- dat[,"T.A"]+dat[,"T.C"]+dat[,"T.G"]
-    TLL <- logLikFunOneBaseFast(dat[,"T"],cbind(dat[,"T.A"],dat[,"T.C"],dat[,"T.G"],dat[,"T"]-Tsub),Theta,deltad,deltas,laVec,nuVec,m,4)
+    Tsub <- dat[, "T.A"] + dat[, "T.C"] + dat[, "T.G"]
+    TLL <- logLikFunOneBaseFast(dat[,"T"], cbind(dat[,"T.A"],dat[,"T.C"],dat[,"T.G"],dat[,"T"]-Tsub),Theta,deltad,deltas,laVec,nuVec,m,4)
 
-    return(ALL+CLL+GLL+TLL)
+    return(ALL + CLL + GLL + TLL)
 }
 
 
