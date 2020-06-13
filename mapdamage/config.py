@@ -132,6 +132,11 @@ def _build_parser():
 
     group = parser.add_argument_group("General options")
     group.add_argument(
+        "--merge-libraries",
+        action="store_true",
+        help="Treat BAM as containing only a single library",
+    )
+    group.add_argument(
         "--merge-reference-sequences", help=argparse.SUPPRESS, action="store_true"
     )
     group.add_argument(
@@ -169,6 +174,7 @@ def _build_parser():
         choices=("DEBUG", "INFO", "WARNING", "ERROR"),
         default="INFO",
         metavar="LEVEL",
+        type=str.upper,
         help="Logging verbosity level; one of DEBUG, INFO, WARNING, and ERROR",
     )
     group.add_argument(

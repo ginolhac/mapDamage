@@ -13,8 +13,16 @@ _BAM_PCR_DUPE = 0x400
 _BAM_CHIMERIC = 0x800
 
 
+class BAMError(RuntimeError):
+    pass
+
+
 class BAMReader:
-    def __init__(self, filepath, downsample_to=None, downsample_seed=None):
+    def __init__(
+        self, filepath, merge_libraries=False, downsample_to=None, downsample_seed=None,
+    ):
+        log = logging.getLogger(__name__)
+
         self.filepath = Path(filepath)
         self.downsample_to = downsample_to
         self.downsample_seed = downsample_seed
@@ -25,11 +33,48 @@ class BAMReader:
 
         self.handle = pysam.AlignmentFile(self.filepath)
 
+        self._merge_libraries = merge_libraries
+        self._readgroups = {}
+        self._libraries = {}
+
+        if merge_libraries:
+            self._readgroups[None] = ("*", "*")
+            self._libraries[("*", "*")] = set((None,))
+        else:
+            self._readgroups = self._collect_readgroups(log, self.handle)
+            for readgroup, library in self._readgroups.items():
+                self._libraries.setdefault(library, set()).add(readgroup)
+
+        log.info("Found %i libraries in BAM file", len(self._libraries))
+
     def close(self):
         self.handle.close()
 
     def get_references(self):
         return dict(zip(self.handle.references, self.handle.lengths))
+
+    def get_libraries(self):
+        return self._libraries.keys()
+
+    def get_sample_and_library(self, read):
+        if self._merge_libraries:
+            return self._readgroups[None]
+
+        try:
+            readgroup = read.get_tag("RG")
+        except KeyError:
+            raise BAMError(
+                "Read %r has no read-group. Either fix BAM or use --merge-libraries"
+                % (read.query_name,)
+            )
+
+        try:
+            return self._readgroups[readgroup]
+        except KeyError:
+            raise BAMError(
+                "Read %r has read-group not listed in BAM header (%r); either fix BAM "
+                "or use --merge-libraries" % (read.query_name, readgroup)
+            )
 
     def __iter__(self):
         log = logging.getLogger(__name__)
@@ -45,6 +90,28 @@ class BAMReader:
             return self._downsample_to_fixed_number(
                 self.handle, self.downsample_to, self.downsample_seed
             )
+
+    @classmethod
+    def _collect_readgroups(cls, log, handle):
+        readgroups = {}
+        for readgroup in handle.header.get("RG", ()):
+            log.debug(
+                "Found readgroup %r with SM=%r and LB=%r",
+                readgroup.get("ID"),
+                readgroup.get("SM"),
+                readgroup.get("LB"),
+            )
+
+            try:
+                readgroups[readgroup["ID"]] = (readgroup["SM"], readgroup["LB"])
+            except KeyError as error:
+                raise BAMError(
+                    "Incomplete readgroup found: %s is missing %s. "
+                    "Either fix BAM use --merge-libraries"
+                    % (readgroup.get("ID", "Unnamed readgroup"), error)
+                )
+
+        return readgroups
 
     @classmethod
     def _filter_reads(cls, handle):

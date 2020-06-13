@@ -7,19 +7,21 @@ import mapdamage
 
 
 class MisincorporationRates:
-    def __init__(self, length):
+    def __init__(self, libraries, length):
         self.length = length
         self.data = {}
-        for end in ("5p", "3p"):
-            table_end = self.data[end] = {}
-            for strand in ("+", "-"):
-                table_strand = table_end[strand] = {}
-                for mut in mapdamage.seq.HEADER:
-                    table_strand[mut] = dict.fromkeys(range(length), 0)
+        for library in libraries:
+            table_lib = self.data[library] = {}
+            for end in ("5p", "3p"):
+                table_end = table_lib[end] = {}
+                for strand in ("+", "-"):
+                    table_strand = table_end[strand] = {}
+                    for mut in mapdamage.seq.HEADER:
+                        table_strand[mut] = dict.fromkeys(range(length), 0)
 
-    def update(self, read, seq, refseq, end):
+    def update(self, read, seq, refseq, end, library):
         strand = "-" if read.is_reverse else "+"
-        subtable = self.data[end][strand]
+        subtable = self.data[library][end][strand]
 
         for index, nt_seq, nt_ref in zip(range(self.length), seq, refseq):
             if nt_seq in "ACGT-" and nt_ref in "ACGT-":
@@ -32,10 +34,10 @@ class MisincorporationRates:
                     mut = "%s>%s" % (nt_ref, nt_seq)
                     subtable[mut][index] += 1
 
-    def update_soft_clipping(self, read):
+    def update_soft_clipping(self, read, library):
         def update_table(end, std, bases):
             for i in range(0, min(bases, self.length)):
-                self.data[end][std]["S"][i] += 1
+                self.data[library][end][std]["S"][i] += 1
 
         strand = "-" if read.is_reverse else "+"
         for nbases, idx in mapdamage.align.parse_cigar(read.cigar, 4):
@@ -54,35 +56,41 @@ class MisincorporationRates:
 
 
 class DNAComposition:
-    def __init__(self, around, length):
+    def __init__(self, libraries, around, length):
         keys = {
             "3p": list(range(-length, 0)) + list(range(1, around + 1)),
             "5p": list(range(-around, 0)) + list(range(1, length + 1)),
         }
 
         self.data = {}
-        for end in ("5p", "3p"):
-            tab_end = self.data[end] = {}
-            for strand in ("+", "-"):
-                tab_strand = tab_end[strand] = {}
-                for letters in mapdamage.seq.LETTERS:
-                    tab_strand[letters] = dict.fromkeys(keys[end], 0)
+        for library in libraries:
+            tab_lib = self.data[library] = {}
+            for end in ("5p", "3p"):
+                tab_end = tab_lib[end] = {}
+                for strand in ("+", "-"):
+                    tab_strand = tab_end[strand] = {}
+                    for letters in mapdamage.seq.LETTERS:
+                        tab_strand[letters] = dict.fromkeys(keys[end], 0)
 
-    def update_read(self, read, length):
+    def update_read(self, read, length, library):
         strand, seq = "+", read.query
         if read.is_reverse:
             strand, seq = "-", mapdamage.seq.revcomp(seq)
 
-        self._update_table(self.data["5p"][strand], seq, range(1, length + 1))
+        self._update_table(self.data[library]["5p"][strand], seq, range(1, length + 1))
         self._update_table(
-            self.data["3p"][strand], reversed(seq), range(-1, -length - 1, -1)
+            self.data[library]["3p"][strand], reversed(seq), range(-1, -length - 1, -1)
         )
 
-    def update_reference(self, read, before, after):
+    def update_reference(self, read, before, after, library):
         strand = "-" if read.is_reverse else "+"
 
-        self._update_table(self.data["5p"][strand], before, range(-len(before), 0))
-        self._update_table(self.data["3p"][strand], after, range(1, len(after) + 1))
+        self._update_table(
+            self.data[library]["5p"][strand], before, range(-len(before), 0)
+        )
+        self._update_table(
+            self.data[library]["3p"][strand], after, range(1, len(after) + 1)
+        )
 
     def write(self, filepath):
         with filepath.open("wt") as handle:
@@ -96,30 +104,37 @@ class DNAComposition:
 
 
 class FragmentLengths:
-    def __init__(self):
+    def __init__(self, libraries):
         self.data = {
-            (kind, strand): collections.defaultdict(int)
-            for kind in ("pe", "se")
-            for strand in ("+", "-")
+            library: {
+                (kind, strand): collections.defaultdict(int)
+                for kind in ("pe", "se")
+                for strand in ("+", "-")
+            }
+            for library in libraries
         }
 
-    def update(self, read, coordinate):
+    def update(self, read, library):
         strand = "-" if read.is_reverse else "+"
+        data = self.data[library]
 
         if read.is_paired:
             if read.is_read1 and read.is_proper_pair:
                 length = abs(read.template_length)
-                self.data[("pe", strand)][length] += 1
+                data[("pe", strand)][length] += 1
         else:
-            length = max(coordinate) - min(coordinate)
-            self.data[("se", strand)][length] += 1
+            data[("se", strand)][read.reference_length] += 1
 
     def write(self, filepath):
         with open(filepath, "wt") as handle:
-            handle.write("Std\tKind\tLength\tOccurences\n")
-            for (pe_or_se, strand), lengths in sorted(self.data.items()):
-                for length, count in sorted(lengths.items()):
-                    handle.write("%s\t%s\t%d\t%d\n" % (strand, pe_or_se, length, count))
+            handle.write("Sample\tLibrary\tStd\tKind\tLength\tOccurences\n")
+            for (sample, library), reads in sorted(self.data.items()):
+                for (pe_or_se, strand), lengths in sorted(reads.items()):
+                    for length, count in sorted(lengths.items()):
+                        handle.write(
+                            "%s\t%s\t%s\t%s\t%d\t%d\n"
+                            % (sample, library, strand, pe_or_se, length, count)
+                        )
 
 
 def check_table_and_warn_if_dmg_freq_is_low(folder):
@@ -170,17 +185,19 @@ def check_table_and_warn_if_dmg_freq_is_low(folder):
 
 
 def _write_freq_table(table, columns, out, offset=0):
-    out.write("Chr\tEnd\tStd\tPos\t%s\n" % ("\t".join(columns)))
+    out.write("Sample\tLibrary\tEnd\tStd\tPos\t%s\n" % ("\t".join(columns)))
 
-    for (end, strands) in sorted(table.items()):
-        for (strand, subtable) in sorted(strands.items()):
-            subtable["Total"] = {}
-            for index in sorted(subtable[columns[0]]):
-                subtable["Total"][index] = sum(
-                    subtable[letter][index] for letter in mapdamage.seq.LETTERS
-                )
+    for (sample, library), ends in sorted(table.items()):
+        for (end, strands) in sorted(ends.items()):
+            for (strand, subtable) in sorted(strands.items()):
+                subtable["Total"] = {}
+                for index in sorted(subtable[columns[0]]):
+                    subtable["Total"][index] = sum(
+                        subtable[letter][index] for letter in mapdamage.seq.LETTERS
+                    )
 
-                out.write("*\t%s\t%s\t%d" % (end, strand, index + offset))
-                for base in columns:
-                    out.write("\t%d" % subtable[base][index])
-                out.write("\n")
+                    row = [sample, library, end, strand, str(index + offset)]
+                    row.extend(str(subtable[base][index]) for base in columns)
+
+                    out.write("\t".join(row))
+                    out.write("\n")

@@ -2,7 +2,6 @@
 
 import mapdamage.align
 import mapdamage.composition
-import mapdamage.reader
 import mapdamage.rescale
 import mapdamage.rscript
 import mapdamage.seq

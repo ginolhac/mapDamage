@@ -39,6 +39,7 @@ import pysam
 import mapdamage
 import mapdamage.config
 import mapdamage.statistics
+import mapdamage.reader
 
 
 # Log format for terminal and log-file output
@@ -125,6 +126,7 @@ def main(argv):
         filepath=options.filename,
         downsample_to=options.downsample,
         downsample_seed=options.downsample_seed,
+        merge_libraries=options.merge_libraries,
     )
 
     if reader.is_stream and options.rescale:
@@ -141,11 +143,15 @@ def main(argv):
         return 1
 
     # for misincorporation patterns, record mismatches
-    misincorp = mapdamage.statistics.MisincorporationRates(options.length)
+    misincorp = mapdamage.statistics.MisincorporationRates(
+        libraries=reader.get_libraries(), length=options.length
+    )
     # for fragmentation patterns, record base compositions
-    dnacomp = mapdamage.statistics.DNAComposition(options.around, options.length)
+    dnacomp = mapdamage.statistics.DNAComposition(
+        libraries=reader.get_libraries(), around=options.around, length=options.length
+    )
     # for length distributions
-    lgdistrib = mapdamage.statistics.FragmentLengths()
+    lgdistrib = mapdamage.statistics.FragmentLengths(libraries=reader.get_libraries())
 
     logger.info("Reading from '%s'", options.filename)
     if options.minqual != 0:
@@ -158,10 +164,12 @@ def main(argv):
     for read in reader:
         counter += 1
 
+        library = reader.get_sample_and_library(read)
+
         # external coordinates 5' and 3' , 3' is 1-based offset
         coordinate = mapdamage.align.get_coordinates(read)
         # record aligned length for single-end reads
-        lgdistrib.update(read, coordinate)
+        lgdistrib.update(read, library)
         # fetch reference name, chromosome or contig names
         chrom = reader.handle.getrname(read.tid)
 
@@ -196,16 +204,16 @@ def main(argv):
             before = beforerev
 
         # record soft clipping when present
-        misincorp.update_soft_clipping(read)
+        misincorp.update_soft_clipping(read, library)
         # count misincorparations by comparing read and reference base by base
-        misincorp.update(read, seq, refseq, "5p")
+        misincorp.update(read, seq, refseq, "5p", library)
         # do the same with sequences align to 3'-ends
-        misincorp.update(read, reversed(seq), reversed(refseq), "3p")
+        misincorp.update(read, reversed(seq), reversed(refseq), "3p", library)
 
         # compute base composition for reads
-        dnacomp.update_read(read, options.length)
+        dnacomp.update_read(read, options.length, library)
         # compute base composition for genomic regions
-        dnacomp.update_reference(read, before, after)
+        dnacomp.update_reference(read, before, after, library)
 
         if counter % 50_000 == 0:
             logger.debug("%10d filtered alignments processed", counter)
