@@ -63,7 +63,7 @@ metroDesc <- function(lpr, lol){
     stopifnot(!is.na(lpr))
     stopifnot(!is.na(lol))
 
-    return(as.numeric(log(runif(1)) < lpr - lol))
+    return(log(runif(1)) < lpr - lol)
 }
 
 seqProbVecLambda <- function(lambda, lambda_disp, m, termini="both") {
