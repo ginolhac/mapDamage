@@ -1,2 +1,7 @@
-include mapdamage/Rscripts/mapDamage.R
-include mapdamage/Rscripts/stats/*R
+include *.cfg
+include *.ini
+include *.txt
+include mapdamage/seqtk/kseq.h
+include mapdamage/seqtk/README.md
+include mapdamage/seqtk/seqtk.c
+recursive-include mapdamage/Rscripts *.r
