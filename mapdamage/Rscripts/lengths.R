@@ -12,8 +12,6 @@ MISMATCHES <- c("C>T", "G>A")
 
 plot.length.distribution <- function(tbl) {
   tbl <- aggregate(tbl$Occurences, tbl[, c("Kind", "Std", "Length")], sum)
-  min_len <- min(tbl$Length)
-  max_len <- max(tbl$Length)
 
   row <- 1
   data <- matrix(0, nrow = 4, ncol = max(tbl$Length))
@@ -26,8 +24,16 @@ plot.length.distribution <- function(tbl) {
     }
   }
 
+  # The sum of space and width defines the width of each bar + padding
+  space <- 0.2
+  width <- 1.0
+
+  # Start and end the axis on a number divisible by 10
+  min_len <- floor(min(tbl$Length) / 10) * 10
+  max_len <- ceiling(max(tbl$Length) / 10) * 10
+
   colors <- c(rgb(1:0, 0, 0:1, 1 / 2), grey.colors(3))
-  barplot(data, border = NA, col = colors, axes = FALSE, axisnames = FALSE, main = "Length distribution", xlim = range(tbl$Length))
+  barplot(data, width = width, space = space, border = NA, col = colors, axes = FALSE, axisnames = FALSE, main = "Length distribution", xlim = c(min_len, max_len) * (space + width))
 
   legend("topright",
     c("+ strand (SE)", "- strand (SE)", "+ strand (PE)", "- strand (PE)"),
@@ -37,7 +43,7 @@ plot.length.distribution <- function(tbl) {
   mtext("Occurences", side = 2, line = 2.5, cex = 0.7)
   mtext("Read length", side = 1, line = 2, cex = 0.7)
   xcoord <- seq(min_len, max_len, 10)
-  axis(side = 1, labels = xcoord, at = xcoord, las = 2, cex.axis = 0.6)
+  axis(side = 1, labels = xcoord, at = (xcoord - 0.5) * (width + space), las = 2, cex.axis = 0.6)
   axis(side = 2, labels = TRUE, las = 2, cex.axis = 0.6)
 }
 
