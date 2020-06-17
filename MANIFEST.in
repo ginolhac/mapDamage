@@ -4,4 +4,4 @@ include *.txt
 include mapdamage/seqtk/kseq.h
 include mapdamage/seqtk/README.md
 include mapdamage/seqtk/seqtk.c
-recursive-include mapdamage/Rscripts *.r
+recursive-include mapdamage/r *.r

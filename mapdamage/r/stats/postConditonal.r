@@ -1,5 +1,5 @@
 # The posterior conditional function utilized by the
-# Gibbs sampler in function.R. They have all the
+# Gibbs sampler in function.r. They have all the
 # same form maybe they should be implemented in a
 # smarter way.
 

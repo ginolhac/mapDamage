@@ -84,4 +84,4 @@ use_bw_theme <- getArgument("USE_BW_THEME", as.logical)
 #
 #######################################################
 
-source("main.R")
+source("main.r")

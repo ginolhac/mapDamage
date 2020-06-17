@@ -18,7 +18,7 @@ def misincorporation_plot(options):
     logger.info("Saving misincorporation plot to '%s'", output)
 
     return _rscript_call(
-        Path("mapDamage.R"),
+        Path("mapDamage.r"),
         COMP=fcomp,
         PDFOUT=output,
         AROUND=options.refplot,
@@ -43,7 +43,7 @@ def length_distribution_plot(options):
     logger.info("Saving length distribution plot to '%s'", output)
 
     return _rscript_call(
-        Path("lengths.R"),
+        Path("lengths.r"),
         LGDIST=flength,
         PDFOUT=output,
         MISINCORP=fmut,
@@ -76,7 +76,7 @@ def perform_bayesian_estimates(options):
     folder = options.folder.absolute()
 
     return _rscript_call(
-        Path("stats") / "runGeneral.R",
+        Path("stats") / "runGeneral.r",
         GRID_ITER=options.rand,
         BURN_IN=options.burn,
         ADJUST_ITER=options.adjust,
@@ -97,7 +97,7 @@ def perform_bayesian_estimates(options):
 
 
 def _rscript_call(filepath, **kwargs):
-    cwd = Path(resource_filename("mapdamage", "Rscripts")) / filepath.parent
+    cwd = Path(resource_filename("mapdamage", "r")) / filepath.parent
     command = ["Rscript", filepath.name]
     for item in sorted(kwargs.items()):
         command.append("%s=%s" % item)

@@ -6,19 +6,19 @@ suppressPackageStartupMessages(library(gam))
 suppressPackageStartupMessages(library(RcppGSL))
 
 #Miscellaneous functions
-source("function.R")
+source("function.r")
 
 #Prior and proposal distributions for the parameters
-source("priorPropose.R")
+source("priorPropose.r")
 
 #Update functions for the gibbs sampler
-source("postConditonal.R")
+source("postConditonal.r")
 
 #functions for the grid search
-source("start.R")
+source("start.r")
 
 #functions for loading the data
-source("data.R")
+source("data.r")
 
 
 #######################################################

@@ -30,7 +30,7 @@ setup(
     version="2.2.0",
     author="Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson",
     packages=["mapdamage"],
-    package_data={"mapdamage": ["Rscripts/*.R", "Rscripts/stats/*.R", "tests/*"]},
+    package_data={"mapdamage": ["r/*.r", "r/stats/*.r", "tests/*"]},
     entry_points={"console_scripts": ["mapDamage=mapdamage.main:entry_point"]},
     url="https://github.com/ginolhac/mapDamage",
     license="LICENSE.txt",
