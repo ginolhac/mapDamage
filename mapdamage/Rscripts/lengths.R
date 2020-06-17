@@ -16,7 +16,7 @@ plot.length.distribution <- function(tbl) {
   max_len <- max(tbl$Length)
 
   row <- 1
-  data <- matrix(nrow = 4, ncol = max_len)
+  data <- matrix(0, nrow = 4, ncol = max(tbl$Length))
   for (kind in c("se", "pe")) {
     for (strand in c("+", "-")) {
       subtbl <- subset(tbl, Std == strand & Kind == kind)
