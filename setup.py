@@ -2,6 +2,16 @@
 # -*- coding: utf-8 -*-
 import os
 import subprocess
+import sys
+
+# Version check prior to non-stdlib imports
+if sys.version_info < (3, 5):
+    sys.stderr.write(
+        "ERROR: mapDamage requires Python v3.5 or above, but "
+        "Python v%i.%i was used\n" % sys.version_info[:2]
+    )
+    sys.exit(1)
+
 
 from setuptools import setup, Extension
 from setuptools.command.build_py import build_py as SetuptoolsBuildPy
