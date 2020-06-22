@@ -107,7 +107,7 @@ class BAMReader:
             except KeyError as error:
                 raise BAMError(
                     "Incomplete readgroup found: %s is missing %s. "
-                    "Either fix BAM use --merge-libraries"
+                    "Either fix BAM or use --merge-libraries"
                     % (readgroup.get("ID", "Unnamed readgroup"), error)
                 )
 
