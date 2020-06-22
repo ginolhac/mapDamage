@@ -215,7 +215,7 @@ def main(argv):
         # compute base composition for genomic regions
         dnacomp.update_reference(read, before, after, library)
 
-        if counter % 50_000 == 0:
+        if counter % 50000 == 0:
             logger.debug("%10d filtered alignments processed", counter)
 
     logger.debug("Done. %d filtered alignments processed", counter)
