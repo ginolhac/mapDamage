@@ -15,7 +15,7 @@ conda install -c bioconda mapdamage2=2.2.1
 * python3 version **2.2.1** **with** R and 4 mandatory packages for the Bayesian inference:
 
 ```
-conda install -c bioconda mapdamage2=2.2.1=pyr36_1
+conda install -c bioconda mapdamage2=2.2.1=pyr40_0
 ```
 
 ---
