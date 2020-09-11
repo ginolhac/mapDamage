@@ -37,7 +37,7 @@ class GitVersionBuild(SetuptoolsBuildPy):
 setup(
     cmdclass={"build_py": GitVersionBuild},
     name="mapdamage",
-    version="2.2.0",
+    version="2.2.1",
     author="Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson",
     packages=["mapdamage"],
     package_data={"mapdamage": ["r/*.r", "r/stats/*.r", "tests/*"]},
