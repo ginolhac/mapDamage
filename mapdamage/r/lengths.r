@@ -12,13 +12,14 @@ MISMATCHES <- c("C>T", "G>A")
 
 plot.length.distribution <- function(tbl) {
   tbl <- aggregate(tbl$Occurences, tbl[, c("Kind", "Std", "Length")], sum)
+  # PE reads with unknown template lengths (Length = 0) are counted but not plotted
+  tbl <- subset(tbl, Length > 0)
 
   row <- 1
   data <- matrix(0, nrow = 4, ncol = max(tbl$Length))
   for (kind in c("se", "pe")) {
     for (strand in c("+", "-")) {
-      # PE reads with unknown template lengths (Length = 0) are counted but not plotted
-      subtbl <- subset(tbl, Std == strand & Kind == kind & Length > 0)
+      subtbl <- subset(tbl, Std == strand & Kind == kind)
 
       data[row, subtbl$Length] <- subtbl$x
       row <- row + 1
