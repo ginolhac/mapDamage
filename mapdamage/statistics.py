@@ -138,7 +138,7 @@ class FragmentLengths:
 
 
 def check_table_and_warn_if_dmg_freq_is_low(folder):
-    """ Returns true if the damage frequencies are too low to allow
+    """Returns true if the damage frequencies are too low to allow
     Bayesian estimation of DNA damages, i.e < 1% at first position.
     """
     logger = logging.getLogger(__name__)

@@ -178,7 +178,10 @@ def _build_parser():
         help="Logging verbosity level; one of DEBUG, INFO, WARNING, and ERROR",
     )
     group.add_argument(
-        "--no-plot", dest="no_r", help=argparse.SUPPRESS, action="store_true",
+        "--no-plot",
+        dest="no_r",
+        help=argparse.SUPPRESS,
+        action="store_true",
     )
 
     # options for plotting damage patterns
@@ -263,10 +266,14 @@ def _build_parser():
         help=argparse.SUPPRESS,
     )
     group.add_argument(
-        "--var-disp", action="store_true", help="Variable dispersion in the overhangs",
+        "--var-disp",
+        action="store_true",
+        help="Variable dispersion in the overhangs",
     )
     group.add_argument(
-        "--jukes-cantor", action="store_true", help="Use Jukes Cantor instead of HKY85",
+        "--jukes-cantor",
+        action="store_true",
+        help="Use Jukes Cantor instead of HKY85",
     )
     group.add_argument(
         "--diff-hangs",
@@ -285,7 +292,9 @@ def _build_parser():
         help="Use the raw nick frequency vector without smoothing",
     )
     group.add_argument(
-        "--single-stranded", action="store_true", help="Single stranded protocol",
+        "--single-stranded",
+        action="store_true",
+        help="Single stranded protocol",
     )
     group.add_argument(
         "--theme-bw",

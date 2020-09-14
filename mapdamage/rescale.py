@@ -21,7 +21,7 @@ def _phred_char_to_pval(ch):
 
 
 def _get_corr_prob(filepath, rescale_length_5p, rescale_length_3p):
-    """ Reads the damage probability correction table, and returns a dictionary with the
+    """Reads the damage probability correction table, and returns a dictionary with the
     structure {(ref_nt, read_nt, position): probability}
     """
     logger = logging.getLogger(__name__)
@@ -283,8 +283,7 @@ def _rescale_qual_read(bam, read, ref, corr_prob, subs, direction="both"):
 
 
 def _rescale_qual_core(ref, options):
-    """Iterates through BAM file, writing new BAM file with rescaled qualities.
-    """
+    """Iterates through BAM file, writing new BAM file with rescaled qualities."""
     corr_prob = _get_corr_prob(
         filepath=options.folder / "Stats_out_MCMC_correct_prob.csv",
         rescale_length_5p=options.rescale_length_5p,

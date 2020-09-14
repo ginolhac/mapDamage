@@ -32,8 +32,7 @@ def misincorporation_plot(options):
 
 
 def length_distribution_plot(options):
-    """optional length distribution and cumulative C>T mutations plots, per strand
-    """
+    """optional length distribution and cumulative C>T mutations plots, per strand"""
     folder = options.folder.absolute()
     fmut = folder / "misincorporation.txt"
     flength = folder / "lgdistribution.txt"
@@ -53,8 +52,7 @@ def length_distribution_plot(options):
 
 
 def check_r_libraries():
-    """Checks if the necessary R libraries are here, signal otherwise
-    """
+    """Checks if the necessary R libraries are here, signal otherwise"""
     logger = logging.getLogger(__name__)
     missing_libries = False
 
@@ -69,8 +67,7 @@ def check_r_libraries():
 
 
 def perform_bayesian_estimates(options):
-    """Runs the Bayesian estimation program
-    """
+    """Runs the Bayesian estimation program"""
     logger = logging.getLogger(__name__)
     logger.info("Performing Bayesian estimates")
     folder = options.folder.absolute()

@@ -19,7 +19,11 @@ class BAMError(RuntimeError):
 
 class BAMReader:
     def __init__(
-        self, filepath, merge_libraries=False, downsample_to=None, downsample_seed=None,
+        self,
+        filepath,
+        merge_libraries=False,
+        downsample_to=None,
+        downsample_seed=None,
     ):
         log = logging.getLogger(__name__)
 

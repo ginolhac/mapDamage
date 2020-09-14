@@ -20,8 +20,8 @@ def get_coordinates(read):
 
 
 def get_around(coord, chrom, reflengths, length, ref):
-    """ return reference sequences before and after the read
-  check for extremities and return what is available """
+    """return reference sequences before and after the read
+    check for extremities and return what is available"""
     coord_min = min(coord)
     coord_max = max(coord)
 
@@ -36,9 +36,9 @@ def get_around(coord, chrom, reflengths, length, ref):
 
 
 def align(cigarlist, seq, ref):
-    """ insert gaps according to the cigar string
-  deletion: gaps to be inserted into read sequences,
-  insertions: gaps to be inserted into reference sequence """
+    """insert gaps according to the cigar string
+    deletion: gaps to be inserted into read sequences,
+    insertions: gaps to be inserted into reference sequence"""
     lref = list(ref)
     for nbr, idx in parse_cigar(cigarlist, 1):
         lref[idx:idx] = ["-"] * nbr
@@ -51,9 +51,9 @@ def align(cigarlist, seq, ref):
 
 
 def align_with_qual(cigarlist, seq, qual, threshold, ref):
-    """ insert gaps according to the cigar string
-  deletion: gaps to be inserted into read sequences and qualities,
-  insertions: gaps to be inserted into reference sequence """
+    """insert gaps according to the cigar string
+    deletion: gaps to be inserted into read sequences and qualities,
+    insertions: gaps to be inserted into reference sequence"""
     lref = list(ref)
     for nbr, idx in parse_cigar(cigarlist, 1):
         lref[idx:idx] = ["-"] * nbr
@@ -74,8 +74,8 @@ def align_with_qual(cigarlist, seq, qual, threshold, ref):
 
 
 def parse_cigar(cigarlist, ope):
-    """ for a specific operation (mismach, match, insertion, deletion... see above)
-  return occurences and index in the alignment """
+    """for a specific operation (mismach, match, insertion, deletion... see above)
+    return occurences and index in the alignment"""
     tlength = 0
     coordinate = []
     # count matches, indels and mismatches

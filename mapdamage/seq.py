@@ -74,7 +74,7 @@ def read_fasta_index(filename):
 
 def compare_sequence_dicts(fasta_dict, bam_dict):
     """Compares a FASTA and BAM sequence dictionary, and prints any differences.
-  Returns true if all required sequences are found, false otherwise."""
+    Returns true if all required sequences are found, false otherwise."""
     if fasta_dict == bam_dict:
         return True
 
