@@ -82,6 +82,8 @@ seqProbVecLambda <- function(lambda, lambda_disp, m, termini="both") {
     }
 }
 
+
+cat("Compiling C++ extension. This may take a moment ..\n")
 sourceCpp(code='
 // [[Rcpp::depends(RcppGSL)]]
 #include <RcppGSL.h>
@@ -129,6 +131,7 @@ double logLikFunOneBaseFast(
     }
     return result;
 }')
+cat("Compilation of C++ extension completed\n")
 
 
 logLikAll <- function(dat, Theta, deltad, deltas, laVec, nuVec, m) {
