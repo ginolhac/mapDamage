@@ -128,7 +128,7 @@ double logLikFunOneBaseFast(
         result += p1 + p2;
     }
     return result;
-}', cacheDir=paste(path.expand("~"), ".mapDamage", sep="/"))
+}')
 
 
 logLikAll <- function(dat, Theta, deltad, deltas, laVec, nuVec, m) {
