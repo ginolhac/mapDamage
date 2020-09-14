@@ -1,4 +1,5 @@
 import logging
+import os
 import subprocess
 import time
 
@@ -72,6 +73,10 @@ def perform_bayesian_estimates(options):
     logger.info("Performing Bayesian estimates")
     folder = options.folder.absolute()
 
+    # Disable compile time warnings for Rcpp code; these are outside of our control
+    env = dict(os.environ)
+    env["PKG_CPPFLAGS"] = env.get("PKG_CPPFLAGS", "") + " -w"
+
     return _rscript_call(
         Path("stats") / "runGeneral.r",
         GRID_ITER=options.rand,
@@ -90,19 +95,20 @@ def perform_bayesian_estimates(options):
         JUKES_CANTOR=bool(options.jukes_cantor),
         USE_RAW_NICK_FREQ=bool(options.use_raw_nick_freq),
         USE_BW_THEME=bool(options.theme_bw),
+        env=env,
     )
 
 
-def _rscript_call(filepath, **kwargs):
+def _rscript_call(filepath, env=None, **kwargs):
     cwd = Path(resource_filename("mapdamage", "r")) / filepath.parent
     command = ["Rscript", filepath.name]
     for item in sorted(kwargs.items()):
         command.append("%s=%s" % item)
 
-    return _log_call(command, cwd=cwd)
+    return _log_call(command, cwd=cwd, env=env)
 
 
-def _log_call(command, quiet=False, cwd=None):
+def _log_call(command, quiet=False, cwd=None, env=None):
     command = [str(value) for value in command]
 
     logger = logging.getLogger(__name__)
@@ -117,6 +123,7 @@ def _log_call(command, quiet=False, cwd=None):
         stderr=subprocess.STDOUT,
         start_new_session=True,
         cwd=cwd,
+        env=env,
     )
 
     try:
