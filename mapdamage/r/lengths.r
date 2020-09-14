@@ -17,7 +17,8 @@ plot.length.distribution <- function(tbl) {
   data <- matrix(0, nrow = 4, ncol = max(tbl$Length))
   for (kind in c("se", "pe")) {
     for (strand in c("+", "-")) {
-      subtbl <- subset(tbl, Std == strand & Kind == kind)
+      # PE reads with unknown template lengths (Length = 0) are counted but not plotted
+      subtbl <- subset(tbl, Std == strand & Kind == kind & Length > 0)
 
       data[row, subtbl$Length] <- subtbl$x
       row <- row + 1
