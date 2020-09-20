@@ -30,12 +30,31 @@ plot.length.distribution <- function(tbl) {
   space <- 0.2
   width <- 1.0
 
+  # Limit x-range to visible points. This helps exclude extreme datapoints
+  heights <- colSums(data) / sum(data)
+  extreme_x <- length(heights)
+  while (heights[extreme_x] < 0.00005) {
+    extreme_x <- extreme_x - 1
+  }
+
   # Start and end the axis on a number divisible by 10
   min_len <- floor(min(tbl$Length) / 10) * 10
-  max_len <- ceiling(max(tbl$Length) / 10) * 10
+  max_len <- ceiling(extreme_x / 10) * 10
+
+  if (max_len < ncol(data)) {
+    cat(sprintf(
+      "WARNING: Truncated extreme data-points corresponding to %.2f%% of reads\n",
+      sum(heights[-(1:max_len)]) * 100
+    ))
+
+    data <- data[, 1:max_len]
+    main.text <- "Length distribution (truncated)"
+  } else {
+    main.text <- "Length distribution"
+  }
 
   colors <- c(rgb(1:0, 0, 0:1, 1 / 2), grey.colors(3))
-  barplot(data, width = width, space = space, border = NA, col = colors, axes = FALSE, axisnames = FALSE, main = "Length distribution", xlim = c(min_len, max_len) * (space + width))
+  barplot(data, width = width, space = space, border = NA, col = colors, axes = FALSE, axisnames = FALSE, main = main.text, xlim = c(min_len, max_len) * (space + width))
 
   legend("topright",
     c("+ strand (SE)", "- strand (SE)", "+ strand (PE)", "- strand (PE)"),
