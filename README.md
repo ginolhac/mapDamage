@@ -24,8 +24,6 @@ conda install -c bioconda mapdamage2=2.2.1=pyr40_0
 
 * From version `2.2.1` the `master` branch is requiring **python3** as `python2` is not supported from 2020-01-01.
 
-* Users with versions dating prior to June 12 2013 please update. A nasty bug that caused the statistical part of `mapDamage` to use half of the data for estimation of the damage parameters, sorry for the inconvenience.
-
 ### Introduction
 
 Complete documentation, instructions, examples, screenshots and FAQ are available at [this address](http://ginolhac.github.io/mapDamage/).
