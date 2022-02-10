@@ -4,25 +4,25 @@
 
 ![Conda](https://anaconda.org/bioconda/mapdamage2/badges/latest_release_date.svg) ![Conda](https://anaconda.org/bioconda/mapdamage2/badges/version.svg) [![Project Status: Inactive – The project has reached a stable, usable state but is no longer being actively developed; support/maintenance will be provided as time allows.](https://www.repostatus.org/badges/latest/inactive.svg)](https://www.repostatus.org/#inactive)
 
-#### `bioconda` installation
+#### Regular installation
 
-* python3 version **2.2.1**
+Refers to the detailed instructions on the [dedicated page](http://ginolhac.github.io/mapDamage/)
 
-```
-conda install -c bioconda mapdamage2=2.2.1
-```
+Briefly:
 
-* python3 version **2.2.1** **with** R and 4 mandatory packages for the Bayesian inference:
-
-```
-conda install -c bioconda mapdamage2=2.2.1=pyr40_0
-```
+- Download a [release](https://github.com/ginolhac/mapDamage/releases) as `zip` or `tgz` file
+- Decompress the archive
+- Install both [R](http://www.r-project.org/) and the 4 mandatory packages.
+- Install the pythin package `pysam`
+- Install `mapDamage`, once in the archive folder, for a user: `python setup.py install --user`
 
 ---
 
 ### Important
 
 * From version `2.2.1` the `master` branch is requiring **python3** as `python2` is not supported from 2020-01-01.
+
+* Users with versions dating prior to June 12 2013 please update. A nasty bug that caused the statistical part of `mapDamage` to use half of the data for estimation of the damage parameters, sorry for the inconvenience.
 
 ### Introduction
 
