@@ -12,7 +12,7 @@ Briefly:
 - Decompress the archive
 - Install both [R](http://www.r-project.org/) and the 4 mandatory packages.
 - Install the pythin package `pysam`
-- Install `mapDamage`, once in the archive folder, for a user: `python setup.py install --user`
+- Install `mapDamage`, once in the archive folder, for a user: `python3 setup.py install --user`
 
 ---
 
