@@ -34,7 +34,7 @@ plot.base.composition <- function(tbl, base, color, around, ylabels.at = c(), xl
 
   plot.axis <- function(yaxis.at) {
     axis(side = yaxis.at, labels = (yaxis.at == ylabels.at), line = 0, las = 2, cex.axis = 0.8)
-    if ((yaxis.at == 2) && (yaxis.at == ylabels.at)) {
+    if ((yaxis.at == 2) && all(yaxis.at == ylabels.at)) {
       mtext("Frequency", side = 2, line = 2.5, cex = 0.6)
     }
 
