@@ -30,17 +30,15 @@ plot and quantify damage patterns from a SAM/BAM file
 :Output: tabulated tables, pdf
 """
 import logging
-import time
 import sys
+import time
 
 import coloredlogs
-import pysam
-
 import mapdamage
 import mapdamage.config
-import mapdamage.statistics
 import mapdamage.reader
-
+import mapdamage.statistics
+import pysam
 
 # Log format for terminal and log-file output
 _LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"
@@ -50,6 +48,9 @@ _TIMESTAMP_FORMAT = "%H:%M:%S"
 
 def main(argv):
     start_time = time.time()
+
+    # Silence log-messages from HTSLIB
+    pysam.set_verbosity(0)
 
     coloredlogs.install(fmt=_LOG_FORMAT, datefmt=_TIMESTAMP_FORMAT)
     logger = logging.getLogger(__name__)
