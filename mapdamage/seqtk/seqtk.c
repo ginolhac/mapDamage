@@ -24,99 +24,137 @@
 */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-
-#include <stdio.h>
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <zlib.h>
 #include <string.h>
+#include <zlib.h>
 
 #include "kseq.h"
 KSEQ_INIT(gzFile, gzread)
 
-/* constant table */
-
-unsigned char seq_nt4_table[256] = {
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 0, 4, 1, 4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 0, 4, 1, 4, 4, 4, 2, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
-
-static PyObject *stk_comp(PyObject *self, PyObject *args)
+int
+mapdamage_set(PyObject *dict, const char *key, PyObject *value)
 {
-    gzFile fp;
-    kseq_t *seq;
-    int l, sig;
-    char *filename = NULL;
+    if (value == NULL) {
+        return 1;
+    }
 
-    if (!PyArg_ParseTuple(args, "s", &filename))
-    {
+    int result = PyDict_SetItemString(dict, key, value);
+    Py_DECREF(value);
+
+    return result;
+}
+
+int
+mapdamage_set_long(PyObject *dict, const char *key, long value)
+{
+    return mapdamage_set(dict, key, PyLong_FromLong(value));
+}
+
+static PyObject *
+mapdamage_stk_comp(PyObject *self, PyObject *args)
+{
+    char *filename = NULL;
+    if (PyArg_ParseTuple(args, "s", &filename) == 0) {
         return NULL;
     }
 
-    fp = gzopen(filename, "r");
-    if (!fp)
-    {
-        return PyErr_SetFromErrnoWithFilename(PyExc_OSError, filename);
+    gzFile fp = gzopen(filename, "r");
+    if (fp == NULL) {
+        PyErr_SetFromErrnoWithFilename(PyExc_OSError, filename);
+        return NULL;
     }
 
-    PyObject *results = PyList_New(0);
+    // Cannot fail; kseq_init will segfault if calloc fails
+    kseq_t *seq = kseq_init(fp);
 
-    seq = kseq_init(fp);
-    while (!(sig = PyErr_CheckSignals()) && (l = kseq_read(seq)) >= 0)
-    {
-        long counts[256];
+    int l = 0;
+    int sig = 1;
+    PyObject *result = PyList_New(0);
+    if (!result) {
+        goto Cleanup;
+    }
+
+    long counts[256];
+    while (!(sig = PyErr_CheckSignals()) && (l = kseq_read(seq)) >= 0) {
         memset(counts, 0, 256 * sizeof(long));
-
-        for (long i = 0; i < l; ++i)
-        {
-            const unsigned char na = seq->seq.s[i];
-
-            ++counts[na];
+        for (long i = 0; i < l; ++i) {
+            counts[(unsigned char)seq->seq.s[i]]++;
         }
 
-        PyObject *result = PyDict_New();
-        PyDict_SetItemString(result, "name", PyUnicode_FromString(seq->name.s));
-        PyDict_SetItemString(result, "len", PyLong_FromLong(l));
-        PyDict_SetItemString(result, "A", PyLong_FromLong(counts['a'] + counts['A']));
-        PyDict_SetItemString(result, "C", PyLong_FromLong(counts['c'] + counts['C']));
-        PyDict_SetItemString(result, "G", PyLong_FromLong(counts['g'] + counts['G']));
-        PyDict_SetItemString(result, "T", PyLong_FromLong(counts['t'] + counts['T']));
-        PyList_Append(results, result);
+        // If we break it will have been due to an Py* failure
+        sig = 1;
+
+        PyObject *stats = PyDict_New();
+        if (stats == NULL || PyList_Append(result, stats) != 0) {
+            Py_XDECREF(stats);
+            break;
+        }
+        Py_DECREF(stats);
+
+        PyObject *name = PyUnicode_FromString(seq->name.s);
+        if (mapdamage_set(stats, "name", name) != 0 ||
+            mapdamage_set_long(stats, "len", l) != 0 ||
+            mapdamage_set_long(stats, "A", counts['A'] + counts['a']) != 0 ||
+            mapdamage_set_long(stats, "C", counts['C'] + counts['c']) != 0 ||
+            mapdamage_set_long(stats, "G", counts['G'] + counts['g']) != 0 ||
+            mapdamage_set_long(stats, "T", counts['T'] + counts['t']) != 0) {
+            break;
+        }
     }
 
+Cleanup:
     kseq_destroy(seq);
-    gzclose(fp);
+    const int gzerr = gzclose(fp);
 
-    return sig ? NULL : results;
+    if (gzerr != Z_OK || sig || l != -1) {
+        Py_XDECREF(result);
+
+        if (gzerr != Z_OK) {
+            switch (gzerr) {
+                case Z_STREAM_ERROR:
+                    PyErr_SetString(PyExc_RuntimeError,
+                                    "Stream error while reading gzip file");
+                    break;
+                case Z_ERRNO:
+                    PyErr_SetFromErrnoWithFilename(PyExc_OSError, filename);
+                    break;
+                case Z_BUF_ERROR:
+                    PyErr_SetString(PyExc_RuntimeError,
+                                    "Buffer error while reading gzip file");
+                    break;
+                default:
+                    PyErr_SetString(PyExc_RuntimeError,
+                                    "Unexpected zlib error");
+            }
+        }
+        else if (l == -3) {
+            PyErr_SetFromErrnoWithFilename(PyExc_OSError, filename);
+        }
+        else if (l == -2) {
+            PyErr_SetString(PyExc_RuntimeError, "Malformed file");
+        }
+
+        return NULL;
+    }
+
+    return result;
 }
 
 static PyMethodDef SeqtkMethods[] = {
-    {"comp", stk_comp, METH_VARARGS, "Wrapper around seqtk stk_comp function"},
+    {"comp", mapdamage_stk_comp, METH_VARARGS,
+     "Wrapper around seqtk stk_comp function"},
     {NULL, NULL, 0, NULL},
 };
 
 static struct PyModuleDef seqtkmodule = {
-    PyModuleDef_HEAD_INIT,
-    "seqtk",
-    "Python interface to seqtk functions",
-    -1,
+    PyModuleDef_HEAD_INIT, "seqtk", "Python interface to seqtk functions", -1,
     SeqtkMethods,
 };
 
-PyMODINIT_FUNC PyInit_seqtk(void)
+PyMODINIT_FUNC
+PyInit_seqtk(void)
 {
     return PyModule_Create(&seqtkmodule);
 }
