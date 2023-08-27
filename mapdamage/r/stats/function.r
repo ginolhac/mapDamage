@@ -1,17 +1,22 @@
 # Various useful functions
 
+isNearly <- function(target, current) {
+    # Returns true if target is (nearly) equal to current
+    return(isTRUE(all.equal(target, current)))
+}
+
 getPmat <- function(tmu,tv_ti_ratio,acgt) {
     # Returns the evolutionary substitution matrix
     if (any(acgt >= 1) || any(acgt <= 0)) {
         abort("The ACGT frequencies must be in the range 0 to 1")
-    } else if (sum(acgt) != 1) {
+    } else if (!isNearly(sum(acgt), 1)) {
         abort("The ACGT frequencies do not sum to 1")
     } else if (tv_ti_ratio <= 0) {
         abort("The transversion and transtition ratio cannot go under 0")
     }
 
     # Returns the substitution probability matrix.
-    if (tv_ti_ratio == 1 && identical(acgt, c(0.25, 0.25, 0.25, 0.25))) {
+    if (isNearly(tv_ti_ratio, 1) && isNearly(acgt, c(0.25, 0.25, 0.25, 0.25))) {
         return(jukesCantorPmat(tmu))
     } else {
         Q <- qmatHKY85(tmu, tv_ti_ratio, acgt)
