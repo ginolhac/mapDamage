@@ -16,7 +16,7 @@ getPmat <- function(tmu,tv_ti_ratio,acgt) {
     }
 
     # Returns the substitution probability matrix.
-    if (isNearly(tv_ti_ratio, 1) && isNearly(acgt, c(0.25, 0.25, 0.25, 0.25))) {
+    if (identical(tv_ti_ratio, 1) && identical(acgt, c(0.25, 0.25, 0.25, 0.25))) {
         return(jukesCantorPmat(tmu))
     } else {
         Q <- qmatHKY85(tmu, tv_ti_ratio, acgt)
