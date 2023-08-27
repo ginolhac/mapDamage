@@ -11,16 +11,16 @@ Briefly:
 - Download a [release](https://github.com/ginolhac/mapDamage/releases) as `zip` or `tgz` file
 - Decompress the archive
 - Install both [R](http://www.r-project.org/) and the 4 mandatory packages.
-- Install the pythin package `pysam`
+- Install the python package `pysam`
 - Install `mapDamage`, once in the archive folder, for a user: `python3 setup.py install --user`
 
 ---
 
 ### Important
 
-* From version `2.2.1` the `main` branch is requiring **python3** as `python2` is not supported from 2020-01-01.
+- From version `2.2.1` the `main` branch is requiring **python3** as `python2` is not supported from 2020-01-01.
 
-* Users with versions dating prior to June 12 2013 please update. A nasty bug that caused the statistical part of `mapDamage` to use half of the data for estimation of the damage parameters, sorry for the inconvenience.
+- Users with versions dating prior to June 12 2013 please update. A nasty bug that caused the statistical part of `mapDamage` to use half of the data for estimation of the damage parameters, sorry for the inconvenience.
 
 ### Introduction
 
@@ -43,7 +43,7 @@ Ginolhac A, Rasmussen M, Gilbert MT, Willerslev E, Orlando L.
 [mapDamage: testing for damage patterns in ancient DNA sequences. _Bioinformatics_ 2011 **27**(15):2153-5
 http://bioinformatics.oxfordjournals.org/content/27/15/2153](http://bioinformatics.oxfordjournals.org/content/27/15/2153)
 
-
 ### Contact
+
 Please report bugs and suggest possible improvements on GitHub:
 https://github.com/ginolhac/mapDamage/issues/new
