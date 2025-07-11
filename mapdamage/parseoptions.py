@@ -82,8 +82,8 @@ def options():
     )
     group.add_option(
         "--merge-reference-sequences",
-        help="Ignore referece sequence names when tabulating reads (using '*' instead). "
-        "Useful for alignments with a large number of reference sequnces, which may otherwise result in excessive "
+        help="Ignore reference sequence names when tabulating reads (using '*' instead). "
+        "Useful for alignments with a large number of reference sequences, which may otherwise result in excessive "
         "memory or disk usage due to the number of tables generated.",
         default=False,
         action="store_true",
@@ -110,7 +110,7 @@ def options():
         "-Q",
         "--min-basequal",
         dest="minqual",
-        help="minimun base quality Phred score considered, Phred-33 assumed [%default]",
+        help="minimum base quality Phred score considered, Phred-33 assumed [%default]",
         type=int,
         default=0,
         action="store",
@@ -183,7 +183,7 @@ def options():
         "-b",
         "--refplot",
         dest="refplot",
-        help="the number of reference nucleotides to consider for ploting base composition in the region located upstream "
+        help="the number of reference nucleotides to consider for plotting base composition in the region located upstream "
         "and downstream of every read [%default]",
         type=int,
         default=10,
@@ -215,7 +215,7 @@ def options():
         "",
         "--burn",
         dest="burn",
-        help="Number of burnin iterations  [%default]",
+        help="Number of burn-in iterations  [%default]",
         type=int,
         default=10000,
         action="store",
@@ -427,7 +427,7 @@ def options():
     if options.around < 0:
         parser.error("around (-a) must be a positive integrer")
     if options.ymax <= 0 or options.ymax > 1:
-        parser.error("ymax (-b) must be an real number beetween 0 and 1")
+        parser.error("ymax (-b) must be an real number between 0 and 1")
     if options.readplot < 0:
         parser.error("readplot (-m) must be a positive integrer")
     if options.refplot < 0:
@@ -464,7 +464,7 @@ def options():
 
     # check destination for rescaled bam
     if not options.rescale_out and (options.rescale or options.rescale_only):
-        # if there are mulitiple bam files to rescale then pick first one as
+        # if there are multiple bam files to rescale then pick first one as
         # the name of the rescaled file
         if isinstance(options.filename, list):
             basename = os.path.basename(options.filename[0])

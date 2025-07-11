@@ -10,7 +10,7 @@ getPmat <- function(tmu,tv_ti_ratio,acgt){
         stop()
     }
     if (tv_ti_ratio<=0){
-        write("The transversion and transtition ratio cannot go under 0",stderr())
+        write("The transversion and transition ratio cannot go under 0",stderr())
         stop()
     }
     #Returns the substitution probability matrix.

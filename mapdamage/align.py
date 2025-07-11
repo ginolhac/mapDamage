@@ -94,8 +94,8 @@ def get_mis(read, seq, refseq, ref, length, tab, end):
 
 
 def parse_cigar(cigarlist, ope):
-    """for a specific operation (mismach, match, insertion, deletion... see above)
-    return occurences and index in the alignment"""
+    """for a specific operation (mismatch, match, insertion, deletion... see above)
+    return occurrences and index in the alignment"""
     tlength = 0
     coordinate = []
     # count matches, indels and mismatches

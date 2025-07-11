@@ -148,7 +148,7 @@ def initialize_subs():
 
 
 def record_subs(subs, nt_seq, nt_ref, nt_qual, nt_newqual, prob_corr):
-    """record the expected substitution change, prob_corr is the excact version for nt_qual"""
+    """record the expected substitution change, prob_corr is the exact version for nt_qual"""
     if nt_seq == "T" and nt_ref == "C":
         sub_type = "CT"
         subs["CT-pvals"] += prob_corr
@@ -182,7 +182,7 @@ def record_subs(subs, nt_seq, nt_ref, nt_qual, nt_newqual, prob_corr):
 
 
 def qual_summary_subs(subs):
-    """Calculates summary statistics for the substition table subs"""
+    """Calculates summary statistics for the substitution table subs"""
     for i in [
         "CT-before",
         "TC-before",
@@ -204,9 +204,9 @@ def qual_summary_subs(subs):
 
 
 def print_subs(subs):
-    """Print the substition table"""
+    """Print the substitution table"""
     print(
-        "\tThe expected substition frequencies before and after scaling using the scaled qualities as probalities:"
+        "\tThe expected substitution frequencies before and after scaling using the scaled qualities as probalities:"
     )
     if subs["C"] != 0:
         # the special case of no substitutions
@@ -280,7 +280,7 @@ def rescale_qual_read(bam, read, ref, corr_prob, subs, debug=False, direction="b
     read             a pysam read object
     ref              a pysam fasta ref file
     reflengths       a dictionary holding the length of the references
-    subs             a dictionary holding the corrected number of substition before and after scaling
+    subs             a dictionary holding the corrected number of substitution before and after scaling
     corr_prob dictionary from get_corr_prob
     returns a read with rescaled quality score
 
@@ -340,7 +340,7 @@ def rescale_qual_read(bam, read, ref, corr_prob, subs, debug=False, direction="b
         else:
             if not debug:
                 logger.warning(
-                    "Warning: The aligment of the read is longer than the actual read %s",
+                    "Warning: The alignment of the read is longer than the actual read %s",
                     (read.qname),
                 )
             break

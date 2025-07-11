@@ -55,7 +55,7 @@ class testRescaling(unittest.TestCase):
     def test_single_end_file(self):
         """Test, rescaling BAM file"""
         #
-        # The expected substition frequencies before and after scaling using the scaled qualities as probalities:
+        # The expected substitution frequencies before and after scaling using the scaled qualities as probalities:
         # CT	0.06226411977920493		0.04163524443356556
         # TC	0.020395286584806528		0.020395286584806528
         # GA	0.04400459948304954		0.03794905109091021
