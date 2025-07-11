@@ -155,12 +155,6 @@ def options():
         action="store_true",
     )
     group.add_option(
-        "--mapdamage-modules",
-        dest="mapdamage_modules",
-        help="Override the system wide installed mapDamage module",
-        default=None,
-    )
-    group.add_option(
         "--no-plot", dest="no_r", help=SUPPRESS_HELP, default=False, action="store_true"
     )
     parser.add_option_group(group)

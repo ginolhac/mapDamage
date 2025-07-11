@@ -9,6 +9,8 @@ import time
 
 import pysam
 
+import mapdamage
+
 """ Copyright (c) 2012  Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson
 and Ludovic Orlando
 
@@ -103,48 +105,8 @@ def _read_bamfile(bamfile, options):
         return _downsample_to_fixed_number(bamfile, options)
 
 
-def _check_mm_option():
-    """
-    As the user can override the system wide mapdamage modules with
-    the --mapdamage-modules, it has to happen before option parsing
-    in mapdamage.parseoptions
-    """
-    path_to_mm = None
-    for nr, arg in zip(list(range(len(sys.argv))), sys.argv):
-        if arg.startswith("--mapdamage-modules"):
-            try:
-                if "=" in arg:
-                    # the option is of the format --mapdamage-modules=AAAA
-                    arg_p = arg.split("=")
-                    path_to_mm = arg_p[1]
-                else:
-                    # the option is of the format --mapdamage-modules AAAA
-                    path_to_mm = sys.argv[nr + 1]
-                break
-            except IndexError:
-                raise SystemExit("Must specify a path to --mapdamage-modules")
-    if path_to_mm is not None:
-        if not os.path.isdir(path_to_mm):
-            raise SystemExit(
-                "The --mapdamage-modules option must be a valid path (path=%s)"
-                % path_to_mm
-            )
-        if not os.path.isdir(os.path.join(path_to_mm, "mapdamage")):
-            raise SystemExit(
-                "The --mapdamage-modules path (path=%s) must contain the mapdamage module"
-                % path_to_mm
-            )
-    return path_to_mm
-
-
 def main():
     start_time = time.time()
-
-    # the user can override the system wide mapdamage modules
-    path_to_mm = _check_mm_option()
-    if path_to_mm is not None:
-        sys.path.insert(0, path_to_mm)
-    import mapdamage
 
     options = mapdamage.parseoptions.options()
     if options is None:
