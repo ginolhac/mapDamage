@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import subprocess
 import sys
 from distutils.command.install import install as DistutilsInstall
 from distutils.core import setup
@@ -27,27 +26,10 @@ def compile_seqtk():
         raise SystemExit("Cannot compile seqtk")
 
 
-def setup_version():
-    if not os.path.exists(".git"):
-        # Release version, no .git folder
-        return
-
-    try:
-        version = subprocess.check_output(
-            ("git", "describe", "--always", "--tags", "--dirty")
-        )
-        with open(os.path.join("mapdamage", "_version.py"), "w") as handle:
-            handle.write("#!/usr/bin/env python\n")
-            handle.write("__version__ = %r\n" % (version.decode("utf-8").strip(),))
-    except (subprocess.CalledProcessError, OSError) as error:
-        raise SystemExit("Could not determine mapDamage version: %s" % (error,))
-
-
 class compileInstall(DistutilsInstall):
     # extension of the class to account for an extra compiling step
     def run(self):
         self.record = ""
-        setup_version()
         compile_seqtk()
         DistutilsInstall.run(self)
         # fixing the permission problem of seqtk
