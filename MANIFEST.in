@@ -1,2 +1,5 @@
 include mapdamage/Rscripts/mapDamage.R
 include mapdamage/Rscripts/stats/*R
+include mapdamage/seqtk/seqtk.c
+include mapdamage/seqtk/kseq.h
+include mapdamage/seqtk/README.md
