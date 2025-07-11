@@ -1,5 +1,3 @@
-import csv
-import itertools
 import subprocess
 import sys
 
@@ -30,7 +28,7 @@ def _update_table(table, sequence, indices):
             table[nt][index] += 1
 
 
-def get_base_comp(filename, destination=False):
+def get_base_comp(filename, destination=None):
     """
     Gets the basecomposition of all the sequences in filename
     and returns the value to destination if given.
@@ -58,7 +56,7 @@ def get_base_comp(filename, destination=False):
     ba_su = sum(bases.values())
     for ba in alp:
         bases[ba] = float(bases[ba]) / float(ba_su)
-    if destination == False:
+    if destination is None:
         return bases
     else:
         # write the results

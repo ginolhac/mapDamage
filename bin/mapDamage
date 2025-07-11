@@ -139,9 +139,9 @@ def _check_mm_option():
                     # the option is of the format --mapdamage-modules AAAA
                     path_to_mm = sys.argv[nr + 1]
                 break
-            except IndexError as e:
+            except IndexError:
                 raise SystemExit("Must specify a path to --mapdamage-modules")
-    if path_to_mm != None:
+    if path_to_mm is not None:
         if not os.path.isdir(path_to_mm):
             raise SystemExit(
                 "The --mapdamage-modules option must be a valid path (path=%s)"
@@ -160,7 +160,7 @@ def main():
 
     # the user can override the system wide mapdamage modules
     path_to_mm = _check_mm_option()
-    if path_to_mm != None:
+    if path_to_mm is not None:
         sys.path.insert(0, path_to_mm)
     import mapdamage
 
@@ -175,7 +175,7 @@ def main():
         return 1
 
     options = mapdamage.parseoptions.options()
-    if options == None:
+    if options is None:
         sys.stderr.write("Option parsing failed, terminating the program\n")
         return 1
 

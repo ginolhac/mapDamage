@@ -1,4 +1,3 @@
-import string
 import sys
 
 # from Martin Kircher, to complement DNA
