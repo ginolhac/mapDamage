@@ -146,16 +146,6 @@ def main():
         sys.path.insert(0, path_to_mm)
     import mapdamage
 
-    fpath_seqtk = mapdamage.rscript.construct_path("seqtk", folder="seqtk")
-    if not (os.path.isfile(fpath_seqtk) and os.access(fpath_seqtk, os.X_OK)):
-        sys.stderr.write(
-            "Seqtk executable not accessible; mapDamage has not\n"
-            "been intalled properly or current user does not\n"
-            "sufficient permissions. Expected executable at\n   "
-            "'%s'\n" % (fpath_seqtk,)
-        )
-        return 1
-
     options = mapdamage.parseoptions.options()
     if options is None:
         sys.stderr.write("Option parsing failed, terminating the program\n")
@@ -199,7 +189,7 @@ def main():
                 mapdamage.composition.read_base_comp(path_to_basecomp)
             else:
                 # Construct the base composition file
-                mapdamage.composition.get_base_comp(options.ref, path_to_basecomp)
+                mapdamage.composition.write_base_comp(options.ref, path_to_basecomp)
             mapdamage.rscript.run_stats(options)
             return 0
 
@@ -390,7 +380,7 @@ def main():
     # run the Bayesian estimation
     if not options.no_stats:
         # before running the Bayesian estimation get the base composition
-        mapdamage.composition.get_base_comp(
+        mapdamage.composition.write_base_comp(
             options.ref, os.path.join(options.folder, "dnacomp_genome.csv")
         )
         mapdamage.rscript.run_stats(options)
@@ -407,7 +397,3 @@ def main():
     logger.debug("Run completed in %f seconds" % (time.time() - start_time,))
 
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

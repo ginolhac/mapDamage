@@ -22,7 +22,7 @@ setup(
     package_data={
         "mapdamage": ["Rscripts/*.R", "Rscripts/stats/*.R", "tests/*", "seqtk/seqtk"]
     },
-    scripts=["bin/mapDamage"],
+    entry_points={"console_scripts": ["mapDamage=mapdamage.main:main"]},
     install_requires=["pysam"],
     url="https://github.com/ginolhac/mapDamage",
     license="LICENSE.txt",
