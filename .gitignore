@@ -1,20 +1,23 @@
+# Temporary files
 *.swp
 .\#*
 \#*
 *~
 *.py[cod]
+__pycache__/
 
 MANIFEST
 
-# Packages
-dist
-build
-sdist
-venv
-.eggs
-*.egg-info
+# Packaging
+MANIFEST
+dist/
+build/
+sdist/
+*.egg
+*.egg-info/
 
-mapdamage/_version.py
-mapdamage/*.so
-
-.vscode
+# Misc
+.nox/
+.vscode/
+venv/
+.venv/
