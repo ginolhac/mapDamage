@@ -55,6 +55,8 @@ mapdamage_set_long(PyObject *dict, const char *key, long value)
 static PyObject *
 mapdamage_stk_comp(PyObject *self, PyObject *args)
 {
+    (void)self;
+
     char *filename = NULL;
     if (PyArg_ParseTuple(args, "s", &filename) == 0) {
         return NULL;
@@ -69,7 +71,7 @@ mapdamage_stk_comp(PyObject *self, PyObject *args)
     // Cannot fail; kseq_init will segfault if calloc fails
     kseq_t *seq = kseq_init(fp);
 
-    int l = 0;
+    long int l = 0;
     int sig = 1;
     PyObject *result = PyList_New(0);
     if (!result) {
@@ -91,7 +93,6 @@ mapdamage_stk_comp(PyObject *self, PyObject *args)
             Py_XDECREF(stats);
             break;
         }
-        Py_DECREF(stats);
 
         PyObject *name = PyUnicode_FromString(seq->name.s);
         if (mapdamage_set(stats, "name", name) != 0 ||
@@ -100,6 +101,7 @@ mapdamage_stk_comp(PyObject *self, PyObject *args)
             mapdamage_set_long(stats, "C", counts['C'] + counts['c']) != 0 ||
             mapdamage_set_long(stats, "G", counts['G'] + counts['g']) != 0 ||
             mapdamage_set_long(stats, "T", counts['T'] + counts['t']) != 0) {
+            Py_DECREF(stats);
             break;
         }
     }
@@ -149,8 +151,15 @@ static PyMethodDef SeqtkMethods[] = {
 };
 
 static struct PyModuleDef seqtkmodule = {
-    PyModuleDef_HEAD_INIT, "seqtk", "Python interface to seqtk functions", -1,
-    SeqtkMethods,
+    .m_base = PyModuleDef_HEAD_INIT,
+    .m_name = "seqtk",
+    .m_doc = "Python interface to seqtk functions",
+    .m_size = 0,
+    .m_methods = SeqtkMethods,
+    .m_slots = NULL,
+    .m_traverse = NULL,
+    .m_clear = NULL,
+    .m_free = NULL,
 };
 
 PyMODINIT_FUNC
