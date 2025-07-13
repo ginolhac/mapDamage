@@ -2,9 +2,7 @@ import logging
 import os
 import subprocess
 import time
-
 from pathlib import Path
-from pkg_resources import resource_filename
 
 from mapdamage.version import __version__
 
@@ -100,7 +98,7 @@ def perform_bayesian_estimates(options):
 
 
 def _rscript_call(filepath, env=None, **kwargs):
-    cwd = Path(resource_filename("mapdamage", "r")) / filepath.parent
+    cwd = Path(__file__).parent / "r" / filepath.parent
     command = ["Rscript", filepath.name]
     for item in sorted(kwargs.items()):
         command.append("%s=%s" % item)
