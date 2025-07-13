@@ -127,6 +127,7 @@ def _log_call(command, quiet=False, cwd=None, env=None):
     try:
         for line in proc.stdout:
             logger.log(loglevel, "%s", line.decode("utf-8", errors="replace").rstrip())
+        proc.stdout.close()
 
         returncode = proc.wait()
     except:
