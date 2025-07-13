@@ -1,9 +1,11 @@
 import csv
-import mapdamage
-import pysam
-import math
 import logging
+import math
 import time
+
+import pysam
+
+import mapdamage
 
 
 class RescaleError(RuntimeError):
@@ -11,12 +13,12 @@ class RescaleError(RuntimeError):
 
 
 def _phred_pval_to_char(pval):
-    """ Transforming error rate to ASCII character using the Phred scale"""
+    """Transforming error rate to ASCII character using the Phred scale"""
     return chr(int(round(-10 * math.log10(abs(pval))) + 33))
 
 
 def _phred_char_to_pval(ch):
-    """ Transforming ASCII character in the Phred scale to the error rate"""
+    """Transforming ASCII character in the Phred scale to the error rate"""
     return 10 ** (-(float(ord(ch)) - float(33)) / 10)
 
 
@@ -106,7 +108,7 @@ def _initialize_subs():
 
 
 def _record_subs(subs, nt_seq, nt_ref, nt_qual, nt_newqual, prob_corr):
-    """ record the expected substitution change, prob_corr is the excact version for nt_qual"""
+    """record the expected substitution change, prob_corr is the excact version for nt_qual"""
     if nt_seq == "T" and nt_ref == "C":
         sub_type = "CT"
         subs["CT-pvals"] += prob_corr
@@ -225,7 +227,7 @@ def _rescale_qual_read(bam, read, ref, corr_prob, subs, direction="both"):
     new_qual = [-100] * length_read
     pos_on_read = 0
     number_of_rescaled_bases = 0.0
-    for (_, nt_seq, nt_ref, nt_qual) in zip(range(length_align), seq, refseq, qual):
+    for _, nt_seq, nt_ref, nt_qual in zip(range(length_align), seq, refseq, qual):
         # rescale the quality according to the triplet position,
         # pair of the reference and the sequence
         if (nt_seq == "T" and nt_ref == "C") or (nt_seq == "A" and nt_ref == "G"):

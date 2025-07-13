@@ -2,12 +2,11 @@ import argparse
 import logging
 import shutil
 import sys
-
 from argparse import ArgumentError
 from pathlib import Path
 
-from mapdamage.version import __version__
 from mapdamage.rscript import check_r_libraries
+from mapdamage.version import __version__
 
 
 def file_exist(filename):

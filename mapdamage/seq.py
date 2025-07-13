@@ -31,12 +31,12 @@ HEADER = LETTERS + ("Total",) + MUTATIONS
 
 
 def revcomp(seq):
-    """ return reverse complemented string """
+    """return reverse complemented string"""
     return seq.translate(TABLE)[::-1]
 
 
 def read_fasta_index(filename):
-    """ from a fasta index file, fai, return dictionary of references:lengths """
+    """from a fasta index file, fai, return dictionary of references:lengths"""
     logger = logging.getLogger(__name__)
 
     fai = {}

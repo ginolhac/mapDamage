@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-""" Copyright (c) 2012  Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson
+"""Copyright (c) 2012  Aurélien Ginolhac, Mikkel Schubert, Hákon Jónsson
 and Ludovic Orlando
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,16 +29,18 @@ plot and quantify damage patterns from a SAM/BAM file
 :Input: SAM/BAM
 :Output: tabulated tables, pdf
 """
+
 import logging
 import sys
 import time
 
 import coloredlogs
+import pysam
+
 import mapdamage
 import mapdamage.config
 import mapdamage.reader
 import mapdamage.statistics
-import pysam
 
 # Log format for terminal and log-file output
 _LOG_FORMAT = "%(asctime)s %(name)s %(levelname)s %(message)s"

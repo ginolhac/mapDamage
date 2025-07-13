@@ -12,7 +12,7 @@
 
 
 def get_coordinates(read):
-    """ return external coordinates of aligned read bases """
+    """return external coordinates of aligned read bases"""
     fivep = read.aend if read.is_reverse else read.pos
     threep = read.pos if read.is_reverse else read.aend
 

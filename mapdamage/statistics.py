@@ -188,8 +188,8 @@ def _write_freq_table(table, columns, out, offset=0):
     out.write("Sample\tLibrary\tEnd\tStd\tPos\t%s\n" % ("\t".join(columns)))
 
     for (sample, library), ends in sorted(table.items()):
-        for (end, strands) in sorted(ends.items()):
-            for (strand, subtable) in sorted(strands.items()):
+        for end, strands in sorted(ends.items()):
+            for strand, subtable in sorted(strands.items()):
                 subtable["Total"] = {}
                 for index in sorted(subtable[columns[0]]):
                     subtable["Total"][index] = sum(

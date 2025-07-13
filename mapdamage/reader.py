@@ -1,10 +1,8 @@
 import logging
 import random
-
 from pathlib import Path
 
 import pysam
-
 
 _BAM_UNMAPPED = 0x4
 _BAM_SECONDARY = 0x100
@@ -150,7 +148,7 @@ class BAMReader:
         downsample_to = int(downsample_to)
         rand = random.Random(seed)
         sample = [None] * downsample_to
-        for (index, record) in enumerate(cls._filter_reads(handle)):
+        for index, record in enumerate(cls._filter_reads(handle)):
             if index >= downsample_to:
                 index = rand.randint(0, index)
                 if index >= downsample_to:
